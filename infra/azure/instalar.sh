@@ -19,6 +19,7 @@
 #   instalar.sh promover <prod|qa>          pasa el trafico a la ultima revision sana
 #   instalar.sh ip <prod|qa> <abrir|cerrar> [ip]   regla temporal en el firewall de la base
 #   instalar.sh dominios <prod|qa>          enlaza dominios cuyo DNS ya apunta a Azure
+#   instalar.sh dns                         genera la solicitud para el area de DNS
 #   instalar.sh corte                       paso 21: DNS de produccion a Azure y certificados
 #
 # Archivos .env: las variables del backend exportadas de Coolify, fuera del
@@ -166,6 +167,14 @@ dns() { # <nombre> <tipo>
     | jq -r '.Answer[]?.data' | sed -e 's/\.$//' -e 's/^"//' -e 's/"$//' | tr 'A-Z' 'a-z'
 }
 apunta_a() { dns "$1" CNAME | grep -qx "$(echo "$2" | tr 'A-Z' 'a-z')"; }
+# "CNAME <destino>" si lo es; si no, "A <ip> <ip>...".
+destino_actual() {
+  local c a
+  c=$(dns "$1" CNAME | head -n 1)
+  if [ -n "$c" ]; then echo "CNAME $c"; return 0; fi
+  a=$(dns "$1" A | grep -E '^[0-9.]+$' | paste -sd ' ' - || true)
+  echo "${a:+A $a}"
+}
 
 # --------------------------------------------------------------- cloudflare
 cf() { curl -fsS -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" "https://api.cloudflare.com/client/v4/$1" "${@:2}"; }
@@ -604,19 +613,88 @@ registros_dns() {
       else
         cf_bajar_ttl "$FRONT"; cf_bajar_ttl "$API"
       fi
-    else
-      info "TXT    asuid.$API -> $txt"
-      if [ "$E" = qa ]; then
-        info "CNAME  $FRONT -> $swa_host"
-        info "CNAME  $API -> $fqdn"
-        pendiente "Crear los registros DNS de QA y los TXT asuid (listados arriba), en Cloudflare con 'DNS only'"
-      else
-        info "(corte) CNAME $FRONT -> $swa_host"
-        info "(corte) CNAME $API -> $fqdn"
-        pendiente "Bajar a 300 s el TTL de $FRONT y $API al menos 48 h antes del corte"
-      fi
     fi
   done
+  if [ -z "$CF_API_TOKEN" ]; then
+    solicitud_dns
+    pendiente "Enviar ~/solicitud-dns-cosmos.md al area de DNS (solicitud 1 ahora; la 2 es para el corte)"
+  fi
+}
+
+# Escribe la solicitud para el area que administra el DNS, con los valores
+# reales de Azure. Se puede regenerar cuando haga falta: instalar.sh dns
+solicitud_dns() {
+  local f="$HOME/solicitud-dns-cosmos.md" x
+  local p_swa p_fqdn p_txt q_swa q_fqdn q_txt act_front act_api
+  amb prod
+  p_swa=$(az staticwebapp show -g "$RG" -n "$SWA" --query defaultHostname -o tsv)
+  p_fqdn=$(az containerapp show -g "$RG" -n "$APP" --query properties.configuration.ingress.fqdn -o tsv)
+  p_txt=$(az containerapp show -g "$RG" -n "$APP" --query properties.customDomainVerificationId -o tsv)
+  amb qa
+  q_swa=$(az staticwebapp show -g "$RG" -n "$SWA" --query defaultHostname -o tsv)
+  q_fqdn=$(az containerapp show -g "$RG" -n "$APP" --query properties.configuration.ingress.fqdn -o tsv)
+  q_txt=$(az containerapp show -g "$RG" -n "$APP" --query properties.customDomainVerificationId -o tsv)
+  # Lo que resuelven hoy, como referencia para la vuelta atras.
+  act_front=$(destino_actual "$FRONT_PROD_HOST")
+  act_api=$(destino_actual "$API_PROD_HOST")
+
+  cat > "$f" <<EOF
+# Solicitud de cambios DNS: Cosmos Check-In a Azure
+
+Zona: **$DOMINIO**. Generado el $(date '+%d/%m/%Y %H:%M').
+
+Condiciones para todos los registros:
+
+- **TTL 300 s**.
+- Si la zona esta en Cloudflare: **"DNS only"** (nube gris), sin proxy. Con
+  proxy, Azure no puede validar el dominio ni emitir el certificado HTTPS.
+- Los valores se copian tal cual, sin punto final ni comillas.
+
+## Solicitud 1: ahora (no afecta a produccion)
+
+Registros nuevos para el ambiente de QA y validaciones de dominio:
+
+| Nombre | Tipo | Valor | Para que |
+|---|---|---|---|
+| \`${FRONT_QA_HOST%.$DOMINIO}\` | CNAME | \`$q_swa\` | Panel de QA |
+| \`${API_QA_HOST%.$DOMINIO}\` | CNAME | \`$q_fqdn\` | API de QA |
+| \`asuid.${API_QA_HOST%.$DOMINIO}\` | TXT | \`$q_txt\` | Azure valida que el dominio es nuestro |
+| \`asuid.${API_PROD_HOST%.$DOMINIO}\` | TXT | \`$p_txt\` | Igual, para produccion. No cambia el trafico |
+
+Y en los registros que **ya existen** de produccion, solo bajar el TTL a 300 s,
+**sin cambiar su destino**:
+
+- \`${FRONT_PROD_HOST%.$DOMINIO}\`
+- \`${API_PROD_HOST%.$DOMINIO}\`
+
+Esto ultimo se pide con al menos 48 h de antelacion al corte: asi el cambio
+del dia del corte se aplica en minutos y se puede deshacer igual de rapido.
+
+## Solicitud 2: el dia del corte, a la hora acordada
+
+Se avisa por el canal acordado al empezar la ventana. Reemplazar el destino de
+estos dos registros existentes (pasan a ser CNAME si hoy son de otro tipo):
+
+| Nombre | Tipo | Valor nuevo |
+|---|---|---|
+| \`${FRONT_PROD_HOST%.$DOMINIO}\` | CNAME | \`$p_swa\` |
+| \`${API_PROD_HOST%.$DOMINIO}\` | CNAME | \`$p_fqdn\` |
+
+Confirmar en cuanto este hecho: del otro lado se espera a que resuelva para
+emitir los certificados.
+
+### Vuelta atras
+
+Si hubiera que revertir, volver a dejar estos registros como estaban. Hoy
+resuelven a:
+
+- \`$FRONT_PROD_HOST\`: ${act_front:-sin respuesta}
+- \`$API_PROD_HOST\`: ${act_api:-sin respuesta}
+
+Si la zona usa proxy de Cloudflare, esos valores son IPs de Cloudflare: el
+destino real hay que tomarlo del panel antes del cambio.
+EOF
+  info "Solicitud para el area de DNS: $f"
 }
 
 # Enlaza los dominios cuyo DNS ya apunta a Azure. Lo que no, queda pendiente.
@@ -677,11 +755,12 @@ EOF
     cf_registro CNAME "$FRONT" "$swa_host"
     cf_registro CNAME "$API" "$fqdn"
   else
-    echo "Cambiar ahora en el DNS (modo 'DNS only'):"
+    echo "Pedir ahora al area de DNS la solicitud 2 de ~/solicitud-dns-cosmos.md:"
     echo "  CNAME $FRONT -> $swa_host"
     echo "  CNAME $API -> $fqdn"
+    echo "Se espera hasta 60 minutos a que resuelva. Si tardan mas: instalar.sh dominios prod"
   fi
-  dominios prod 30
+  dominios prod 60
   resumen
 }
 
@@ -745,7 +824,8 @@ instalar() {
   github_oidc
   suave "Configuracion de GitHub" github_config
   suave "Registros DNS" registros_dns
-  suave "Dominios de QA" dominios qa 10
+  # Sin token, los registros los crea otra area: no tiene sentido esperarlos.
+  if [ -n "$CF_API_TOKEN" ]; then suave "Dominios de QA" dominios qa 10; fi
   resumen
 }
 
@@ -757,8 +837,9 @@ case "${1:-}" in
   ip)       ip_temporal "${2:-}" "${3:-}" "${4:-}" ;;
   dominios) dominios "${2:-}" "${3:-0}"; resumen ;;
   corte)    corte ;;
+  dns)      solicitud_dns; cat "$HOME/solicitud-dns-cosmos.md" ;;
   ""|-h|--help)
-    sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,/^set -E/p' "$0" | grep '^#' | sed 's/^# \{0,1\}//'
     [ -n "${1:-}" ] || exit 1 ;;
   *)
     ENV_FILE_PROD="$1"

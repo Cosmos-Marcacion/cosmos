@@ -107,6 +107,11 @@ lista de pendientes del final.
 
 ## Fuera de esta guia (decidir con el cliente)
 
+- **El panel de hoy esta en Netlify** (`checkincosmos.netlify.app`), no en
+  Coolify. Se da de baja tras el periodo de vuelta atras.
+- **El DNS lo administra otra area**: `instalar.sh dns` genera la solicitud
+  con los valores exactos (`~/solicitud-dns-cosmos.md`).
+
 - **Los archivos subidos siguen en S3** (`AWS_*`): la guia no migra el
   almacenamiento.
 - **Repositorios**: los remotos de trabajo estan en Bitbucket; `deploy.yml`

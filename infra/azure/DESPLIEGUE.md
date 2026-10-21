@@ -7,7 +7,7 @@ produccion funcionando en Azure y Coolify apagado.
 |---|---|---|---|
 | 1. Preparacion | Reunir accesos y exportar variables de Coolify | 30 min | No |
 | 2. Instalacion | Un comando crea toda la infraestructura | 40-60 min | No |
-| 3. DNS de QA | Registros de QA y TXT de validacion | 15 min + propagacion | No |
+| 3. DNS de QA | Enviar la solicitud 1 al area de DNS | Lo que tarde esa area | No |
 | 4. GitHub | Environments, revisores y rama `develop` | 15 min | No |
 | 5. QA | Datos de prueba y validacion funcional | 1-2 h | No |
 | 6. Produccion previa | Primer despliegue a prod en Azure, sin trafico real | 30 min | No |
@@ -17,6 +17,15 @@ produccion funcionando en Azure y Coolify apagado.
 Las fases 1 a 6 se pueden hacer cualquier dia. Solo la 7 necesita ventana de
 mantenimiento.
 
+**El DNS de `cosmos.com.pe` lo administra otra area.** No hace falta acceso a
+el: el instalador genera un documento, `solicitud-dns-cosmos.md`, con lo que
+hay que pedirles y los valores exactos de Azure. Son dos solicitudes: la 1 en
+la fase 3 y la 2 durante el corte.
+
+**Situacion actual:** el panel (`checkin.cosmos.com.pe`) esta en **Netlify**
+(`checkincosmos.netlify.app`) y la API (`apicheckin.cosmos.com.pe`) en el
+servidor de AWS con Coolify (`98.87.37.45`).
+
 ---
 
 ## Fase 1. Preparacion
@@ -25,7 +34,8 @@ mantenimiento.
 
 - **Azure**: rol **Owner** en la suscripcion. Sin el, fallan las asignaciones de permisos.
 - **GitHub**: administrador del repo `Cosmos-Marcacion/cosmos`.
-- **DNS de `cosmos.com.pe`**: acceso al panel (Cloudflare, segun `.env.deploy`).
+- **Area de DNS**: un contacto y un canal para pedir los cambios y, el dia del
+  corte, avisar en el momento.
 - **Coolify**: para exportar variables y detener el backend en el corte.
 - **Servidor de AWS**: acceso SSH, para sacar el volcado de Mongo.
 
@@ -45,7 +55,7 @@ No hace falta editarlo. El instalador ignora `MONGO_URI`, `JWT_SECRET`, `PORT` y
 > `prod.env`) con otro bucket (`AWS_S3_BUCKET_NAME`) y otro remitente o
 > servidor SMTP.
 
-### 1.3 Version de Mongo de Coolify
+### 1.3 Version de Mongo
 
 En el servidor de AWS:
 
@@ -56,14 +66,6 @@ docker exec <nombre-del-contenedor-mongo> mongod --version
 
 Si la version mayor no es 7 (por ejemplo, 6.0.x), anotarla: en la fase 2 se
 exporta `MONGO_VERSION=6.0`.
-
-### 1.4 Opcional: token de Cloudflare
-
-Con el token, el instalador crea los registros DNS solo. Sin el, los imprime
-para crearlos a mano.
-
-Cloudflare > My Profile > API Tokens > Create Token > plantilla
-**Edit zone DNS** > Zone Resources: `cosmos.com.pe`. Guardar el token.
 
 ---
 
@@ -121,7 +123,6 @@ Lanzar (sustituir los valores entre `< >`):
 ```bash
 export SUB=<id-de-la-suscripcion>
 export SOPORTE_EMAIL=<correo-que-recibe-alertas>
-export CF_API_TOKEN=<token-de-cloudflare>     # opcional; omitir la linea si no hay
 # export MONGO_VERSION=6.0                    # solo si la 1.3 dio otra version
 
 ./infra/azure/instalar.sh ~/prod.env          # o: ~/prod.env ~/qa.env
@@ -169,31 +170,38 @@ Despues, relanzar el instalador en Cloud Shell.
 
 ## Fase 3. DNS de QA
 
-Si pasaste `CF_API_TOKEN`, el instalador ya creo los registros de QA, los TXT
-de validacion y bajo el TTL de los de produccion. Saltar a la 3.2.
+### 3.1 Enviar la solicitud 1 al area de DNS
 
-### 3.1 Crear los registros a mano
+Al terminar, el instalador deja en Cloud Shell el archivo
+`~/solicitud-dns-cosmos.md`. Si hiciera falta regenerarlo:
 
-Copiar los valores del bloque `== Registros DNS` de la salida (o del registro).
-En el panel DNS de `cosmos.com.pe`:
+```bash
+./infra/azure/instalar.sh dns
+```
 
-| Nombre | Tipo | Valor | Notas |
-|---|---|---|---|
-| `qa` | CNAME | `<swa-qa>.azurestaticapps.net` | Panel de QA |
-| `api-qa` | CNAME | `<ca-cosmosci-api-qa>....azurecontainerapps.io` | API de QA |
-| `asuid.api-qa` | TXT | id de verificacion de QA | Validacion de Azure |
-| `asuid.apicheckin` | TXT | id de verificacion de prod | No cambia nada hoy; prepara el corte |
+Descargarlo (Cloud Shell > **Manage files** > **Download** >
+`solicitud-dns-cosmos.md`) y enviarlo al area de DNS. Lleva todo explicado:
 
-En Cloudflare, los CNAME en **"DNS only"** (nube gris). Con la nube naranja
-Azure no puede emitir el certificado.
+- **Solicitud 1, para ya:** dos CNAME nuevos de QA (`qa`, `api-qa`), dos TXT
+  de validacion (`asuid.api-qa`, `asuid.apicheckin`) y bajar a 300 s el TTL de
+  `checkin` y `apicheckin` **sin cambiar su destino**. Nada de esto afecta a
+  produccion.
+- **Solicitud 2, para el dia del corte:** cambiar el destino de `checkin` y
+  `apicheckin`. Se envia ahora para que lo tengan preparado, pero se ejecuta
+  solo cuando se les avise (fase 7).
+- **Vuelta atras:** los destinos que tienen hoy esos dos registros.
 
-Ademas, **bajar a 300 s el TTL** de los registros actuales `checkin` y
-`apicheckin` (sin cambiar su destino). Hacerlo al menos 48 h antes del corte,
-para que el cambio final se note en minutos.
+Puntos que conviene recalcar al enviarlo:
+
+1. Si la zona esta en Cloudflare, los registros van en **"DNS only"** (nube
+   gris). Con proxy, Azure no puede emitir los certificados.
+2. El TTL de 300 s se necesita **al menos 48 h antes del corte**.
+3. Acordar con ellos la fecha y hora del corte y un canal para avisar en el
+   momento: durante la ventana se espera su cambio.
 
 ### 3.2 Enlazar los dominios de QA
 
-Cuando los registros esten creados (suelen propagar en minutos):
+Cuando el area de DNS confirme la solicitud 1 (suele propagar en minutos):
 
 ```bash
 ./infra/azure/instalar.sh dominios qa
@@ -342,14 +350,24 @@ curl https://<fqdn-de-ca-cosmosci-api-prod>/health/ready
 > `apicheckin.cosmos.com.pe`, que hasta el corte sigue siendo **el backend de
 > Coolify**. No usarlo para probar escrituras.
 
-Antes del corte, **anotar los valores actuales** de los registros `checkin` y
-`apicheckin` en el DNS. Son la vuelta atras.
+Los valores actuales de `checkin` y `apicheckin`, que sirven de vuelta atras,
+estan en la seccion "Vuelta atras" de `solicitud-dns-cosmos.md`. Pedir al area
+de DNS que los confirme contra su panel antes del corte.
 
 ---
 
 ## Fase 7. Corte (ventana de mantenimiento)
 
-Elegir un horario de bajo uso. Duracion tipica: 30 a 60 minutos.
+Elegir un horario de bajo uso, acordado con el area de DNS: tienen que estar
+disponibles durante la ventana. Duracion tipica: 30 a 60 minutos.
+
+Comprobar el dia anterior que el TTL de `checkin` y `apicheckin` ya es 300 s:
+
+```bash
+curl -s -H 'accept: application/dns-json' 'https://cloudflare-dns.com/dns-query?name=apicheckin.cosmos.com.pe&type=A' | jq '.Answer[].TTL'
+```
+
+Debe dar 300 o menos. Si da mas, pedirlo de nuevo y aplazar el corte.
 
 ### 7.1 Congelar Coolify
 
@@ -389,14 +407,15 @@ Coolify y revisar.
 ./infra/azure/instalar.sh corte
 ```
 
-Pide escribir `CORTE` para confirmar. Despues:
+Pide escribir `CORTE` para confirmar y muestra los dos cambios.
 
-- con `CF_API_TOKEN`, cambia el solo los CNAME de `checkin` y `apicheckin`;
-- sin token, muestra los dos valores: cambiarlos en el DNS en ese momento, en "DNS only".
+1. **Avisar en ese momento al area de DNS** para que ejecute la solicitud 2.
+2. El script comprueba cada minuto, hasta 60 minutos, si el DNS ya apunta a
+   Azure. En cuanto lo hace, enlaza los dominios y emite los certificados.
+3. Cuando el area de DNS confirme, el script sigue solo. No cerrar Cloud Shell.
 
-Espera hasta 30 minutos a que el DNS resuelva y enlaza los dominios con sus
-certificados. Mientras se emite el certificado de `apicheckin` (unos minutos)
-la app movil no conecta: es lo esperado.
+Mientras se emite el certificado de `apicheckin` (unos minutos) la app movil no
+conecta: es lo esperado.
 
 Si el tiempo de espera se agota, relanzar cuando el DNS ya apunte:
 
@@ -430,8 +449,10 @@ Debe terminar en `Succeeded` y dejar un archivo en la cuenta
 Solo tiene sentido en las primeras horas: lo que se escriba en Azure despues
 del corte no estara en Coolify.
 
-1. Volver a poner en el DNS los valores anotados en la fase 6.
-2. Arrancar el backend en Coolify.
+1. Pedir al area de DNS que restaure los valores de la seccion "Vuelta atras"
+   de `solicitud-dns-cosmos.md`.
+2. Arrancar el backend en Coolify. El panel de Netlify no se toca hasta el
+   cierre, asi que vuelve a servir en cuanto `checkin` apunte otra vez a el.
 
 ---
 
@@ -443,8 +464,9 @@ del corte no estara en Coolify.
   Create > metricas de CPU y de almacenamiento, umbral 80 %, grupo `ag-cosmos`.
 - [ ] Ninguna regla temporal en los firewalls de la base:
   Portal > cada cluster > Networking. Solo debe quedar la de servicios de Azure.
-- [ ] Mantener Coolify **detenido pero intacto** de 7 a 14 dias. Despues, dar
-  de baja la instancia de AWS. **Ojo**: los archivos subidos siguen en S3; esa
+- [ ] Mantener Coolify **detenido pero intacto** y el sitio de Netlify
+  (`checkincosmos`) sin borrar, de 7 a 14 dias. Despues, dar de baja la
+  instancia de AWS y el sitio de Netlify. **Ojo**: los archivos subidos siguen en S3; esa
   parte de AWS se mantiene salvo que se decida migrarla.
 - [ ] Revisar los consumos de la API tras una semana real y ajustar CPU y memoria
   (`API_CPU` y `API_MEM` en `vars.sh`, despues relanzar el instalador).
