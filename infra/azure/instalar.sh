@@ -227,6 +227,28 @@ preparar_qa_env() {
   info "Creado $ENV_FILE_QA desde $ENV_FILE_PROD (S3 bajo qa/, correo a $SOPORTE_EMAIL)."
 }
 
+# Comprueba un nombre unico en todo Azure: libre, ya nuestro, o de otro.
+# Cloud Shell corta conexiones a veces; un fallo al preguntar no es "ocupado".
+acr_existe() { az acr show -n "$1" -o none 2> /dev/null; }
+st_existe() { az storage account show -n "$1" -o none 2> /dev/null; }
+kv_existe() { az keyvault show -n "$1" -o none 2> /dev/null; }
+nombre_global() { # <descripcion> <nombre> <funcion-existe> <comando check...>
+  local que="$1" n="$2" ex="$3" r="" i; shift 3
+  "$ex" "$n" && return 0
+  for i in 1 2 3 4 5; do
+    r=$("$@" --query nameAvailable -o tsv 2> /dev/null) && break
+    info "sin respuesta de Azure al comprobar $que '$n'; reintento $i/5 en 10s..."
+    sleep 10
+  done
+  case "$r" in
+    true) return 0 ;;
+    # Ocupado: puede ser nuestro y haber fallado la consulta de antes.
+    false) reintentar 3 10 "$ex" "$n" && return 0
+           error "$que '$n' ya existe en otra suscripcion: cambiar PROY (export PROY=otro) y relanzar" ;;
+    *) error "no se pudo comprobar $que '$n': Azure no responde. Relanzar en unos minutos" ;;
+  esac
+}
+
 # ============================================================ comprobaciones
 comprobar() {
   paso "Comprobaciones previas"
@@ -255,20 +277,13 @@ comprobar() {
   az bicep version > /dev/null 2>&1 || az bicep install
 
   # Nombres globales: mejor saberlo ahora que a mitad de instalacion.
-  if ! existe az acr show -n "$ACR"; then
-    [ "$(az acr check-name -n "$ACR" --query nameAvailable -o tsv)" = true ] || error "el registro '$ACR' ya existe en otra suscripcion: cambiar PROY"
-  fi
-  if ! existe az storage account show -n "$ST"; then
-    [ "$(az storage account check-name -n "$ST" --query nameAvailable -o tsv)" = true ] || error "la cuenta '$ST' ya existe en otra suscripcion: cambiar PROY"
-  fi
+  nombre_global "el registro" "$ACR" acr_existe az acr check-name -n "$ACR"
+  nombre_global "la cuenta de almacenamiento" "$ST" st_existe az storage account check-name -n "$ST"
   local kv
   for kv in "$KV_PROD" "$KV_QA"; do
-    if ! existe az keyvault show -n "$kv" && [ -z "$(az keyvault list-deleted --query "[?name=='$kv'].name" -o tsv 2>/dev/null)" ]; then
-      local libre
-      libre=$(az rest --method post --uri "https://management.azure.com/subscriptions/$SUB/providers/Microsoft.KeyVault/checkNameAvailability?api-version=2022-07-01" \
-        --body "{\"name\":\"$kv\",\"type\":\"Microsoft.KeyVault/vaults\"}" --query nameAvailable -o tsv 2>/dev/null || echo true)
-      [ "$libre" = true ] || error "el Key Vault '$kv' ya existe en otra suscripcion: cambiar PROY"
-    fi
+    # Uno borrado se recupera al instalar: su nombre sigue siendo nuestro.
+    [ -n "$(reintentar 3 10 az keyvault list-deleted --query "[?name=='$kv'].name" -o tsv)" ] && continue
+    nombre_global "el Key Vault" "$kv" kv_existe az rest --method post       --uri "https://management.azure.com/subscriptions/$SUB/providers/Microsoft.KeyVault/checkNameAvailability?api-version=2022-07-01"       --body "{\"name\":\"$kv\",\"type\":\"Microsoft.KeyVault/vaults\"}"
   done
   info "Todo listo para empezar."
 }
