@@ -1,0 +1,259 @@
+// Piezas del sistema de diseno.
+//
+// Cada una existe porque el patron ya estaba repetido a mano en varias
+// pantallas con medidas ligeramente distintas. Al nombrarlas, una correccion
+// se aplica en toda la aplicacion en vez de en el sitio donde alguien se
+// acordo de mirar.
+//
+// Van en la capa `components` de Tailwind para que cualquier utilidad suelta
+// del marcado (`mt-4`, `w-full`) siga ganando y se pueda ajustar un caso
+// concreto sin pelear con la especificidad.
+
+@layer components {
+  // === Superficies =======================================================
+
+  .c-card {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-line);
+    border-radius: var(--c-r-lg);
+    box-shadow: var(--c-shadow-1);
+  }
+
+  .c-card-pad { padding: 1.125rem; }
+
+  /** Tarjeta sobre la que se pulsa. Se eleva al tocarla y vuelve al soltar. */
+  .c-card-tap {
+    @extend .c-card;
+    cursor: pointer;
+    transition:
+      transform var(--c-dur-1) var(--c-ease),
+      box-shadow var(--c-dur-2) var(--c-ease),
+      border-color var(--c-dur-2) var(--c-ease);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .c-card-tap:active {
+    transform: scale(0.98);
+    box-shadow: var(--c-shadow-2);
+    border-color: var(--c-line-strong);
+  }
+
+  /** Tarjeta de marca: la accion principal de una pantalla. */
+  .c-card-brand {
+    position: relative;
+    overflow: hidden;
+    color: var(--c-ink-onbrand);
+    border: 0;
+    border-radius: var(--c-r-lg);
+    background-image: linear-gradient(140deg, var(--c-accent) 0%, var(--c-brand) 100%);
+    box-shadow: var(--c-shadow-brand);
+  }
+
+  // El brillo diagonal da volumen sin necesidad de una imagen de fondo.
+  .c-card-brand::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      120deg,
+      rgba(255, 255, 255, 0.16) 0%,
+      rgba(255, 255, 255, 0) 55%
+    );
+    pointer-events: none;
+  }
+
+  // === Botones ===========================================================
+
+  .c-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.875rem; // 46px: por encima del minimo tactil de 44px.
+    padding: 0 1.125rem;
+    border-radius: var(--c-r-md);
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1;
+    border: 1px solid transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition:
+      transform var(--c-dur-1) var(--c-ease),
+      background-color var(--c-dur-2) var(--c-ease),
+      box-shadow var(--c-dur-2) var(--c-ease),
+      opacity var(--c-dur-2) var(--c-ease);
+  }
+
+  .c-btn:active:not(:disabled) { transform: scale(0.97); }
+
+  .c-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .c-btn-primary {
+    background-color: var(--c-accent);
+    color: var(--c-ink-onbrand);
+    box-shadow: var(--c-shadow-brand);
+  }
+
+  .c-btn-primary:active:not(:disabled) { background-color: var(--c-brand); }
+
+  .c-btn-ghost {
+    background-color: var(--c-surface);
+    color: var(--c-accent);
+    border-color: var(--c-line-strong);
+  }
+
+  .c-btn-ghost:active:not(:disabled) { background-color: var(--c-sunken); }
+
+  .c-btn-danger {
+    background-color: var(--c-danger);
+    color: var(--c-ink-onbrand);
+  }
+
+  .c-btn-success {
+    background-color: var(--c-success);
+    color: var(--c-ink-onbrand);
+  }
+
+  .c-btn-block { width: 100%; }
+
+  // === Campos ============================================================
+
+  .c-field { display: block; }
+
+  .c-label {
+    display: block;
+    margin-bottom: 0.375rem;
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 0.8125rem;
+    color: var(--c-ink-soft);
+  }
+
+  .c-input {
+    width: 100%;
+    min-height: 2.875rem;
+    padding: 0.625rem 0.875rem;
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-line-strong);
+    border-radius: var(--c-r-md);
+    color: var(--c-ink);
+    font-size: 1rem; // Por debajo de 16px, Safari/iOS hace zoom al enfocar.
+    transition:
+      border-color var(--c-dur-2) var(--c-ease),
+      box-shadow var(--c-dur-2) var(--c-ease);
+  }
+
+  .c-input::placeholder { color: var(--c-ink-muted); }
+
+  .c-input:focus {
+    outline: none;
+    border-color: var(--c-accent);
+    box-shadow: 0 0 0 3px var(--c-line);
+  }
+
+  .c-input:disabled {
+    background-color: var(--c-sunken);
+    color: var(--c-ink-muted);
+  }
+
+  // === Distintivos =======================================================
+
+  .c-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: var(--c-r-pill);
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .c-chip-neutral { background-color: var(--c-sunken); color: var(--c-ink-soft); }
+  .c-chip-success { background-color: rgba(20, 123, 102, 0.12); color: var(--c-success); }
+  .c-chip-warning { background-color: rgba(178, 98, 6, 0.12); color: var(--c-warning); }
+  .c-chip-danger { background-color: rgba(198, 40, 40, 0.12); color: var(--c-danger); }
+  .c-chip-brand { background-color: rgba(0, 112, 153, 0.12); color: var(--c-accent); }
+
+  // === Tipografia ========================================================
+
+  // Escala corta a proposito: cuatro tamanos cubren toda la aplicacion y
+  // evitan que cada pantalla invente el suyo.
+  .c-title {
+    font-family: "Gilroy-ExtraBold", sans-serif;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--c-ink);
+  }
+
+  .c-subtitle {
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.3;
+    color: var(--c-ink);
+  }
+
+  .c-body { font-size: 0.9375rem; line-height: 1.5; color: var(--c-ink-soft); }
+
+  .c-caption { font-size: 0.8125rem; line-height: 1.45; color: var(--c-ink-muted); }
+
+  /** Rotulo de seccion: el separador que faltaba entre bloques de una pantalla. */
+  .c-eyebrow {
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-ink-muted);
+  }
+
+  // === Estado vacio ======================================================
+
+  .c-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2.5rem 1.25rem;
+    text-align: center;
+    color: var(--c-ink-muted);
+  }
+
+  // === Accesibilidad =====================================================
+
+  /**
+   * Foco visible unificado.
+   *
+   * `:focus-visible` solo se activa con teclado, asi que no aparece un anillo
+   * al tocar con el dedo. Antes no habia ninguno: con un teclado externo
+   * conectado al tablet no se sabia donde estabas.
+   */
+  .c-card-tap:focus-visible,
+  .c-btn:focus-visible,
+  .c-input:focus-visible,
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 2px;
+  }
+
+  /** Texto solo para lectores de pantalla. */
+  .c-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}

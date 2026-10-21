@@ -1,0 +1,21 @@
+<!--
+  `role="status"` con `aria-live` hace que el lector de pantalla lea el aviso
+  cuando aparece. Antes era un `<div>` mudo: quien no ve la pantalla no se
+  enteraba de que la marcación había fallado.
+-->
+<div
+  class="toast c-anim-rise-sm"
+  [class.is-success]="type() === 'success'"
+  [class.is-error]="type() === 'error'"
+  [class.is-warning]="type() === 'warning'"
+  role="status"
+  aria-live="polite"
+>
+  <span class="toast__icon">
+    <app-icon [name]="icon()" [strokeWidth]="2.2" />
+  </span>
+  <p class="toast__text">{{ message() }}</p>
+  <button type="button" class="toast__close c-press" (click)="hide()" aria-label="Cerrar aviso">
+    <app-icon name="close" [strokeWidth]="2" />
+  </button>
+</div>

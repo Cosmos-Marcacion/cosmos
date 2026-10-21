@@ -1,0 +1,192 @@
+{
+  "@angular/animations": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "@angular/build": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "@angular/cli": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "@angular/common": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "@angular/compiler": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "@angular/compiler-cli": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "@angular/core": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "@angular/forms": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "@angular/platform-browser": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "@angular/router": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "@capacitor/cli": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "@isaacs/brace-expansion": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "@xmldom/xmldom": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "brace-expansion": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "browserslist": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "engine.io": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "fast-uri": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "flatted": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "glob": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "immutable": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "ip-address": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "js-yaml": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "lodash": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "lodash-es": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "minimatch": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "nanoid": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "node-fetch": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "pacote": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "picomatch": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "piscina": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "postcss": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "rollup": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "sigstore": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "socket.io-parser": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "tar": {
+    "severidad": "critical",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "tmp": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "vite": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  },
+  "ws": {
+    "severidad": "high",
+    "motivo": "Deuda heredada con arreglo publicado; pendiente de actualizar la dependencia.",
+    "revisarAntesDe": "2026-10-10"
+  }
+}

@@ -1,0 +1,14 @@
+// Estilos específicos para el componente de descarga de Excel
+button {
+  &:focus {
+    outline: none;
+    ring: 2px;
+    ring-color: green-500;
+  }
+}
+
+// Animación de hover suave
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}

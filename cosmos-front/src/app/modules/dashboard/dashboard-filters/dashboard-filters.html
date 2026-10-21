@@ -1,0 +1,226 @@
+<div
+  class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-5 max-w-full"
+>
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div class="flex flex-col gap-2">
+      <label for="f-named" class="text-color1-60 text-sm font-bold">Nombrada</label>
+      <div class="relative">
+        <input
+          #namedInput
+          id="f-named"
+          name="f-named"
+          (search)="selectNamed('')"
+          (focus)="getNameds()"
+          (keyup.enter)="search()"
+          type="search"
+          placeholder="Nombrada"
+          [(ngModel)]="keywords.namedId"
+          (input)="getNameds()"
+          class="w-full p-3 rounded-md border border-color2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent capitalize"
+        />
+        @if(currentNameds.length > 0) {
+        <div
+          class="absolute top-11 left-0 w-full bg-white rounded-md shadow-xl border border-color3-20 z-50 flex flex-col max-h-60 overflow-y-auto"
+        >
+          @for (named of currentNameds; track named) {
+          <div
+            class="flex items-center h-10 px-4 rounded-md cursor-pointer item py-2"
+            (click)="selectNamed(named)"
+          >
+            <span class="capitalize">{{ named }}</span>
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="f-ship" class="text-color1-60 text-sm font-bold">Navío</label>
+      <div class="relative">
+        <input
+          #shipInput
+          id="f-ship"
+          name="f-ship"
+          (search)="selectShip('')"
+          (focus)="getShips()"
+          (keyup.enter)="search()"
+          type="search"
+          placeholder="Navío"
+          [(ngModel)]="keywords.ship"
+          (input)="getShips()"
+          class="w-full p-3 rounded-md border border-color2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent capitalize"
+        />
+        @if(currentShips.length > 0) {
+        <div
+          class="absolute top-11 left-0 w-full bg-white rounded-md shadow-xl border border-color3-20 z-50 flex flex-col max-h-60 overflow-y-auto"
+        >
+          @for (ship of currentShips; track ship) {
+          <div
+            class="flex items-center h-10 px-4 rounded-md cursor-pointer item py-2"
+            (click)="selectShip(ship)"
+          >
+            <span class="capitalize">{{ ship | cap }}</span>
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="f-turn" class="text-color1-60 text-sm font-bold">Turno</label>
+      <select
+        id="f-turn"
+        name="f-turn"
+        [(ngModel)]="turn"
+        class="w-full p-3 rounded-md border border-color2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      >
+        <option value="">Todos</option>
+        @for (item of turns; track item) {
+        <option [value]="item" [selected]="item === turn">{{ item }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="f-employee" class="text-color1-60 text-sm font-bold">Empleado</label>
+      <div class="relative">
+        <input
+          #employeeInput
+          id="f-employee"
+          name="f-employee"
+          (search)="selectEmployee()"
+          (focus)="getEmployees()"
+          (keyup.enter)="search()"
+          type="search"
+          placeholder="Empleado"
+          [(ngModel)]="keywords.employee"
+          (input)="getEmployees()"
+          class="w-full p-3 rounded-md border border-color2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent capitalize"
+        />
+        @if(currentEmployees.length > 0) {
+        <div
+          class="absolute top-11 left-0 w-full bg-white rounded-md shadow-xl border border-color3-20 z-50 flex flex-col max-h-60 overflow-y-auto"
+        >
+          @for (employee of currentEmployees; track employee._id) {
+          <div
+            class="flex items-center h-10 px-4 rounded-md cursor-pointer item py-2"
+            (click)="selectEmployee(employee)"
+          >
+            <span class="capitalize"
+              >{{ employee.firstName | cap }} {{ employee.lastName | cap
+              }}</span
+            >
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="f-position" class="text-color1-60 text-sm font-bold">Cargo</label>
+      <div class="relative">
+        <input
+          #positionInput
+          id="f-position"
+          name="f-position"
+          (search)="selectPosition('')"
+          (focus)="getPositions()"
+          (keyup.enter)="search()"
+          type="search"
+          placeholder="Cargo"
+          [(ngModel)]="keywords.position"
+          (input)="getPositions()"
+          class="w-full p-3 rounded-md border border-color2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent capitalize"
+        />
+        @if(currentPositions.length > 0) {
+        <div
+          class="absolute top-11 left-0 w-full bg-white rounded-md shadow-xl border border-color3-20 z-50 flex flex-col max-h-60 overflow-y-auto"
+        >
+          @for (position of currentPositions; track position) {
+          <div
+            class="flex items-center h-10 px-4 rounded-md cursor-pointer item py-2"
+            (click)="selectPosition(position)"
+          >
+            <span class="capitalize">{{ position | cap }}</span>
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="f-start" class="text-color1-60 text-sm font-bold">Fecha Inicio</label>
+      <input
+        id="f-start"
+        type="date"
+        [(ngModel)]="startDate"
+        name="startDate"
+        (change)="validateDates()"
+        (keyup.enter)="search()"
+        class="w-full p-3 rounded-md border border-color2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        [class.border-red-400]="dateError"
+      />
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="f-end" class="text-color1-60 text-sm font-bold">Fecha Fin</label>
+      <input
+        id="f-end"
+        type="date"
+        [(ngModel)]="endDate"
+        name="endDate"
+        (change)="validateDates()"
+        (keyup.enter)="search()"
+        class="w-full p-3 rounded-md border border-color2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        [class.border-red-400]="dateError"
+      />
+    </div>
+
+    <div class="flex flex-col gap-2 justify-end">
+      <span class="text-color1-60 text-sm font-bold invisible xl:visible"
+        >&nbsp;</span
+      >
+      <div class="flex gap-2">
+        <button
+          type="button"
+          (click)="search()"
+          [disabled]="loading || !isValid"
+          class="flex-1 h-[46px] rounded-md bg-color1 text-white font-semibold transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ loading ? "Consultando..." : "Buscar" }}
+        </button>
+        <button
+          type="button"
+          (click)="clear()"
+          [disabled]="loading"
+          class="h-[46px] px-4 rounded-md border border-color2 text-color2 font-semibold transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Limpiar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-3 flex-wrap mt-3 min-h-5" aria-live="polite">
+    @if (dateError) {
+    <span class="text-sm text-red-600">{{ dateError }}</span>
+    } @else if (clearedNotice) {
+    <span class="text-sm text-color2" data-testid="cleared-notice"
+      >Filtros restablecidos. Las fechas vuelven al día de hoy.</span
+    >
+    } @else if (activeCount > 0) {
+    <span class="text-sm text-color2"
+      >{{ activeCount }} filtro{{ activeCount > 1 ? "s" : "" }} aplicado{{
+        activeCount > 1 ? "s" : ""
+      }}</span
+    >
+    }
+    <span class="text-sm text-color1-60"
+      >Los resultados se actualizan al pulsar Buscar.</span
+    >
+  </div>
+</div>

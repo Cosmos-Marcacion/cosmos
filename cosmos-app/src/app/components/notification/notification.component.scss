@@ -1,0 +1,75 @@
+// Aviso emergente.
+//
+// Baja desde arriba porque es donde el usuario no tiene el pulgar: un aviso
+// abajo tapa justo la zona con la que se esta interactuando.
+
+.toast {
+  position: fixed;
+  top: calc(0.75rem + var(--safe-area-top));
+  left: 1rem;
+  right: 1rem;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--c-r-md);
+  box-shadow: var(--c-shadow-3);
+  color: var(--c-ink-onbrand);
+  // Por encima del ancho de un movil se ancla arriba a la derecha y se limita,
+  // que es donde se espera en tablet.
+  margin-left: auto;
+  max-width: 30rem;
+}
+
+@media (min-width: 40rem) {
+  .toast {
+    left: auto;
+    right: 1.25rem;
+    width: 24rem;
+  }
+}
+
+.toast.is-success { background-color: var(--c-success); }
+.toast.is-error { background-color: var(--c-danger); }
+.toast.is-warning { background-color: var(--c-warning); }
+
+.toast__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: none;
+  border-radius: var(--c-r-pill);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.toast__icon app-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.toast__text {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.toast__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: none;
+  border-radius: var(--c-r-sm);
+  color: inherit;
+  opacity: 0.85;
+}
+
+.toast__close app-icon {
+  width: 1rem;
+  height: 1rem;
+}

@@ -1,0 +1,105 @@
+<div class="auth">
+  <div class="auth__bg" aria-hidden="true">
+    <span class="auth__veil"></span>
+  </div>
+
+  <div class="auth__content">
+    <div class="auth__card c-anim-rise">
+      <header class="auth__head">
+        <img
+          src="/images/cosmos-logotipo.png"
+          alt="Cosmos Global Logistics"
+          width="220"
+          height="34"
+        />
+        <p class="auth__tagline">Sistema de Gestión Portuaria</p>
+      </header>
+
+      <!--
+        El envío va en (ngSubmit) y no en el (click) del botón: así Enter desde
+        cualquier campo también entra, que es como se rellena un login en un
+        móvil con teclado en pantalla.
+      -->
+      <form class="auth__form" [formGroup]="form" (ngSubmit)="login()">
+        <div class="c-field">
+          <label class="c-label auth__label" for="email">
+            <app-icon name="mail" />
+            Correo electrónico
+          </label>
+          <input
+            class="c-input"
+            type="email"
+            id="email"
+            inputmode="email"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+            placeholder="Ingrese su correo"
+            formControlName="email"
+            [attr.aria-invalid]="email?.touched && email?.invalid ? 'true' : null"
+          />
+          @if (email?.touched && email?.errors?.['required']) {
+            <p class="auth__error c-anim-rise-sm">El correo es requerido</p>
+          } @else if (email?.touched && email?.errors?.['email']) {
+            <p class="auth__error c-anim-rise-sm">El correo no es válido</p>
+          }
+        </div>
+
+        <div class="c-field">
+          <label class="c-label auth__label" for="password">
+            <app-icon name="lock" />
+            Contraseña
+          </label>
+          <div class="auth__password">
+            <input
+              class="c-input"
+              [type]="isPasswordVisible() ? 'text' : 'password'"
+              id="password"
+              autocomplete="current-password"
+              placeholder="Ingrese su contraseña"
+              formControlName="password"
+              [attr.aria-invalid]="password?.touched && password?.invalid ? 'true' : null"
+            />
+            <button
+              type="button"
+              class="auth__reveal c-press"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="isPasswordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <app-icon [name]="isPasswordVisible() ? 'eyeOff' : 'eye'" />
+            </button>
+          </div>
+          @if (password?.touched && password?.errors?.['required']) {
+            <p class="auth__error c-anim-rise-sm">La contraseña es requerida</p>
+          }
+        </div>
+
+        <button
+          type="submit"
+          class="c-btn c-btn-primary c-btn-block auth__submit"
+          [disabled]="submitting()"
+        >
+          @if (submitting()) {
+            <span class="c-spinner"></span>
+            Entrando…
+          } @else {
+            Ingresar
+            <app-icon name="arrowRight" class="w-5 h-5" />
+          }
+        </button>
+
+        <!-- Isotipo local: la cabecera ya lleva el logotipo completo, y antes
+             esta imagen se descargaba de cosmos.com.pe, lo que dejaba el
+             login incompleto sin conexión. -->
+        <img
+          class="auth__mark"
+          width="44"
+          height="44"
+          src="/images/cosmos-isotipo.png"
+          alt=""
+          aria-hidden="true"
+        />
+      </form>
+    </div>
+  </div>
+</div>

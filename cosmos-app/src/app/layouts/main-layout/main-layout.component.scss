@@ -1,0 +1,206 @@
+// Armazon de la aplicacion: cabecera fija, contenido y barra inferior.
+//
+// El cajon lateral desaparece. La navegacion vive en `app-tab-bar`, siempre
+// visible y al alcance del pulgar; el boton de menu en la esquina superior
+// izquierda obligaba a recolocar el telefono para cambiar de pantalla.
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+// === Cabecera ============================================================
+
+.shell__header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  // La barra de estado de Android se superpone: el relleno superior sale de la
+  // variable que resuelve `env(safe-area-inset-top)`. Antes era un `pt-12`
+  // fijo de 48 px que, con `overlaysWebView: false`, era hueco vacio.
+  padding-top: calc(0.75rem + var(--safe-area-top));
+  background-color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--c-line);
+}
+
+.shell__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.shell__brand img {
+  width: 140px;
+  height: auto;
+}
+
+.shell__site {
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  color: var(--c-accent);
+}
+
+.shell__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  border-radius: var(--c-r-md);
+  color: var(--c-ink);
+}
+
+.shell__icon-btn app-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.shell__icon-btn:active {
+  background-color: var(--c-sunken);
+}
+
+.shell__icon-btn--sm {
+  width: 2rem;
+  height: 2rem;
+}
+
+.shell__icon-btn--sm app-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+// === Perfil ==============================================================
+
+.shell__profile {
+  position: relative;
+  flex: none;
+}
+
+.shell__avatar-btn {
+  display: block;
+  border-radius: var(--c-r-pill);
+}
+
+.shell__avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--c-r-pill);
+  object-fit: cover;
+  border: 2px solid var(--c-line);
+  background-color: var(--c-sunken);
+}
+
+.shell__avatar--lg {
+  width: 3rem;
+  height: 3rem;
+}
+
+.shell__profile-card {
+  position: absolute;
+  top: calc(100% + 0.625rem);
+  right: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+  min-width: 17rem;
+  padding: 1rem;
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--c-r-lg);
+  box-shadow: var(--c-shadow-3);
+  // Nace desde la esquina donde esta el avatar, no desde su centro.
+  transform-origin: top right;
+}
+
+.shell__profile-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.shell__profile-id {
+  flex: 1;
+  min-width: 0;
+}
+
+.shell__profile-name {
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.9375rem;
+  color: var(--c-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell__profile-id .c-caption {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell__logout {
+  margin-top: 0.25rem;
+}
+
+// === Contenido ===========================================================
+
+.shell__main {
+  flex: 1;
+  min-width: 0;
+  padding: 1.25rem 1rem;
+  // Hueco para que la barra flotante no tape el final del contenido.
+  padding-bottom: calc(var(--c-tabbar-space) + var(--safe-area-bottom));
+}
+
+/**
+ * Neutraliza las alturas de pantalla completa de las vistas.
+ *
+ * Varias pantallas se envuelven en `min-h-screen` o `h-screen` (100vh). Dentro
+ * del armazon eso no mide lo que parece: por encima ya hay una cabecera, asi
+ * que el documento acaba midiendo una pantalla **mas** la cabecera y el final
+ * del contenido cae fuera, justo debajo de la barra inferior. Cada vista ya
+ * ocupa lo que necesita, y el hueco de la barra lo reserva `.shell__main`.
+ *
+ * Se hace aqui y no editando cada plantilla porque la regla es del armazon:
+ * cualquier pantalla que se anada despues queda cubierta sin acordarse de esto.
+ */
+.shell__main ::ng-deep .min-h-screen,
+.shell__main ::ng-deep .h-screen {
+  min-height: 0;
+  height: auto;
+}
+
+/**
+ * Entrada de cada pantalla.
+ *
+ * Se aplica al componente que monta el `router-outlet`, no dentro de cada
+ * pantalla: asi las treinta rutas entran igual sin repetir nada. El
+ * desplazamiento es de 8 px, lo justo para que se lea como "ha llegado algo
+ * nuevo" y no como una animacion que hay que esperar.
+ */
+.shell__main ::ng-deep > * {
+  animation: c-rise-sm var(--c-dur-2) var(--c-ease) both;
+}
+
+/** Captura el toque fuera de la ficha de cuenta sin oscurecer la pantalla. */
+.shell__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background-color: transparent;
+}

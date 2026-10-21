@@ -1,0 +1,55 @@
+<div class="min-h-screen bg-gray-50 p-4">
+  <div class="max-w-xl mx-auto">
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div
+            class="w-3 h-3 rounded-full"
+            [class]="isConnected() ? 'bg-green-500' : 'bg-red-500'"
+          ></div>
+          <span
+            class="text-sm"
+            [class]="isConnected() ? 'text-green-600' : 'text-red-600'"
+            >{{ isConnected() ? 'Conectado' : 'Desconectado' }}</span
+          >
+        </div>
+        <div class="space-x-2">
+          <button
+            (click)="initializeDevice()"
+            [disabled]="isLoading()"
+            class="px-3 py-1 text-sm bg-blue-600 text-white rounded-md"
+          >
+            Inicializar
+          </button>
+        </div>
+      </div>
+      @if (deviceInfo()) {
+      <p class="text-xs text-gray-500 mt-2">{{ deviceInfo() }}</p>
+      }
+    </div>
+
+    @if (errorMessage()) {
+    <div class="bg-red-50 text-red-700 border border-red-200 rounded p-3 mb-3">
+      {{ errorMessage() }}
+    </div>
+    } @if (successMessage()) {
+    <div
+      class="bg-green-50 text-green-700 border border-green-200 rounded p-3 mb-3"
+    >
+      {{ successMessage() }}
+    </div>
+    }
+
+    <div class="bg-white rounded-lg shadow-sm p-6 space-y-4">
+      <div class="text-xl text-gray-700 text-center">
+        Coloque su dedo en el sensor.
+      </div>
+
+      <!-- @if (fingerprintService.toast()) {
+      <div class="text-xl text-gray-600 text-center">
+        {{ fingerprintService.toast() }}
+      </div>
+      } -->
+    </div>
+  </div>
+</div>

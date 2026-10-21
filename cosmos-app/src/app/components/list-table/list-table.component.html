@@ -1,0 +1,170 @@
+<div class="flex flex-col gap-4">
+  @for (item of data; track item._id) {
+  <div
+    (click)="toggleDetails($index)"
+    class="cursor-pointer flex items-center gap-5 border-gray-300 py-4 px-4 bg-white rounded-xl shadow-sm"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="2"
+      stroke="currentColor"
+      class="toogle w-8 h-8 p-1 text-color2 rounded-full"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m19.5 8.25-7.5 7.5-7.5-7.5"
+      />
+    </svg>
+
+    @if (headers[0].header === 'header') {
+    <div class="flex justify-between w-full">
+      @for (itemHeader of headers[0].items; track itemHeader) {
+      <div class="flex flex-col">
+        <span class="font-bold title">{{
+          item[itemHeader.up] ? item[itemHeader.up] : itemHeader.up
+        }}</span>
+        <span>{{
+          item[itemHeader.down] ? item[itemHeader.down] : itemHeader.down
+        }}</span>
+      </div>
+      }
+    </div>
+
+    }@else {
+    <div class="flex">
+      <span class="font-bold title">{{ headers[0].header }}</span>
+      <span>{{ item[headers[0].value || ""] }}</span>
+    </div>
+    }
+  </div>
+
+  @if (item.isVisible) {
+  <div class="flex flex-col gap-6 ml-12 mt-5 pb-8">
+    @for (header of headers; track header) { @if (header.value !==
+    headers[0].value) { @if (header.value === 'actions') {
+    <div class="flex items-center gap-2">
+      @for (option of header.options; track option) { @if (option === 'edit') {
+      <button
+        class="text-white bg-color2 p-2 w-9 h-9 rounded-full hover:underline"
+        title="Editar"
+        (click)="clickOptions('edit', item._id)"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="size-5"
+        >
+          <path
+            d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z"
+          />
+        </svg>
+      </button>
+      } @if (option === 'delete') {
+      <button
+        class="text-white hover:underline w-9 h-9 bg-color5 p-2 rounded-full"
+        title="Eliminar"
+        (click)="clickOptions('delete', item._id)"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="size-5"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 0 1 3.369 0c1.603.051 2.815 1.387 2.815 2.951Zm-6.136-1.452a51.196 51.196 0 0 1 3.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 0 0-6 0v-.113c0-.794.609-1.428 1.364-1.452Zm-.355 5.945a.75.75 0 1 0-1.5.058l.347 9a.75.75 0 1 0 1.499-.058l-.346-9Zm5.48.058a.75.75 0 1 0-1.498-.058l-.347 9a.75.75 0 0 0 1.5.058l.345-9Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
+      } @if (option === 'add-contact-list') {
+      <button
+        class="text-color2 hover:underline w-7"
+        title="Agregar contactos"
+        (click)="clickOptions('add-contact-list', item._id)"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="size-6"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
+          />
+        </svg>
+      </button>
+      } @if (option === 'download') {
+      <button
+        class="text-white bg-color2 p-2 w-9 h-9 rounded-full hover:underline"
+        title="Descargar"
+        (click)="clickOptions('download', item._id)"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="size-5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+          />
+        </svg>
+      </button>
+      } @if (option === 'add-employee') {
+      <button
+        class="text-white hover:underline w-9 h-9 bg-color1 p-2 rounded-full"
+        title="Asistentes"
+        (click)="clickOptions('add-employee', item._id)"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="size-5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
+          />
+        </svg>
+      </button>
+      } }
+    </div>
+    }@else {
+    <div class="flex items-center gap-2">
+      <span class="font-bold title">{{ header.header }}</span>
+      @if(header.value === 'appSecret') {
+      <span>{{ "********" }}</span>
+      } @else {
+      <span>{{ item[header.value || ""] }}</span>
+      }
+    </div>
+    } } }
+  </div>
+  } }
+</div>
+
+@if (total > limit * page) {
+<div class="flex justify-center items-center py-5">
+  <button class="text-color2 hover:underline" (click)="pageChange(page + 1)">
+    Ver más
+  </button>
+</div>
+}

@@ -1,0 +1,21 @@
+# Secretos: nunca al repositorio
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencias y builds
+node_modules/
+dist/
+coverage/
+.angular/
+playwright-report/
+test-results/
+android/app/build/
+android/.gradle/
+
+# Sistema y editor
+.DS_Store
+Thumbs.db
+.idea/

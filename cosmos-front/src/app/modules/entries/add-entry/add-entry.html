@@ -1,0 +1,182 @@
+<div class="flex w-full justify-between items-center px-10 py-5">
+  <button
+    class="bg-color1 text-white px-4 py-2 rounded-xl gilroy-bold flex items-center gap-2"
+    (click)="goBack()"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="size-6"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+      />
+    </svg>
+    Regresar
+  </button>
+</div>
+
+<div class="px-10">
+  <form
+    [formGroup]="form"
+    (ngSubmit)="save()"
+    class="flex flex-col gap-5 p-10 bg-white rounded-xl xl:w-1/2"
+  >
+    <div class="flex flex-col gap-2">
+      <label for="date" class="text-color1">{{ id ? 'Fecha de la marcación *' : 'Fecha de trabajo *' }}</label>
+      <input
+        id="date"
+        (change)="onDateChange()"
+        type="date"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="date"
+      />
+      @if (date?.errors && date?.touched) {
+      <p class="text-red-500">
+        {{ date?.errors?.['required'] ? 'La fecha es requerida' : '' }}
+      </p>
+      }
+    </div>
+
+    @if (id) {
+    <!-- Edicion: la nombrada, el turno y el empleado no cambian; solo la hora, el punto y el motivo. -->
+    <ng-container [ngTemplateOutlet]="timeField" />
+    <ng-container [ngTemplateOutlet]="pointAndReason" />
+    } @else {
+    @if (form.get('date')?.value && namedsLoaded && nameds.length === 0) {
+    <p class="text-red-500">No hay nombradas para la fecha seleccionada</p>
+    }
+    @if(nameds.length > 0 && form.get('date')?.value) {
+    <div class="flex flex-col gap-2">
+      <label for="turn" class="text-color1">Turno *</label>
+      <select
+        id="turn"
+        (change)="getNamedTurns()"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="turn"
+      >
+        <option value="">Seleccione un turno</option>
+        @for (turn of turns; track turn) {
+        <option [value]="turn">{{ turn }}</option>
+        }
+      </select>
+    </div>
+
+    @if(form.get('turn')?.value) { @if(namedsTurn.length > 0) {
+
+    <ng-container [ngTemplateOutlet]="timeField" />
+
+    <div class="flex flex-col gap-2">
+      <label for="namedId" class="text-color1">Nombrada *</label>
+      <select
+        id="namedId"
+        (change)="getCurrentEmployees()"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="namedId"
+      >
+        <option [value]="null">Seleccione una nombrada</option>
+        @for (named of namedsTurn; track named.named.staff_vessel_id) {
+        @if(named.named.staff_transmission_id) {
+        <option [value]="named.named.staff_transmission_id">
+          {{ named.named.staff_transmission_id }} - {{
+          named.named.staff_vessel_number }} - {{ named.named.vessel_description
+          }}
+        </option>
+        } }
+      </select>
+      @if (namedId?.errors && namedId?.touched) {
+      <p class="text-red-500">La nombrada es requerida</p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="employeeId" class="text-color1">Empleado *</label>
+      <select
+        id="employeeId"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="employeeId"
+      >
+        <option value="">Seleccione un empleado</option>
+        @for (employee of currentEmployees; track employee.document) {
+        <option [value]="employee.document">
+          {{ employee.firstName }} {{ employee.lastName }}
+        </option>
+        }
+      </select>
+      @if (employeeId?.errors && employeeId?.touched) {
+      <p class="text-red-500">
+        {{ employeeId?.errors?.['required'] ? 'El empleado es requerido' : '' }}
+      </p>
+      }
+    </div>
+
+    <ng-container [ngTemplateOutlet]="pointAndReason" />
+    }@else {
+    <p class="text-red-500">No hay nombradas para el turno seleccionado</p>
+    } }}
+    }
+    <button
+      class="mt-5 bg-color2 text-white px-4 py-3 rounded-xl gilroy-bold disabled:opacity-60 disabled:cursor-not-allowed w-1/2"
+      type="submit"
+      [disabled]="form.invalid || saving()"
+    >
+      {{ saving() ? 'GUARDANDO...' : 'GUARDAR' }}
+    </button>
+
+    <ng-template #timeField>
+    <div class="flex flex-col gap-2">
+      <label for="time" class="text-color1">Hora *</label>
+      <input
+        id="time"
+        type="time"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="time"
+      />
+      @if (time?.errors && time?.touched) {
+      <p class="text-red-500">La hora es requerida</p>
+      }
+    </div>
+    </ng-template>
+
+    <ng-template #pointAndReason>
+    <div class="flex flex-col gap-2">
+      <label for="pointId" class="text-color1">Punto de marcación *</label>
+      <select
+        id="pointId"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="pointId"
+      >
+        <option value="">Seleccione un punto de marcación</option>
+        @for (point of points; track point._id) {
+        <option [value]="point._id">{{ point.name }}</option>
+        }
+      </select>
+      @if (pointId?.errors && pointId?.touched) {
+      <p class="text-red-500">
+        {{ pointId?.errors?.['required'] ? 'El punto de marcación es requerido'
+        : '' }}
+      </p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="observation" class="text-color1">Motivo</label>
+      <select
+        id="observation"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="observation"
+      >
+        <option value="">Seleccione un motivo</option>
+        @for (observation of observations; track observation) {
+        <option [value]="observation">{{ observation }}</option>
+        }
+      </select>
+    </div>
+    </ng-template>
+  </form>
+</div>

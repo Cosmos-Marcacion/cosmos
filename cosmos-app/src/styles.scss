@@ -1,0 +1,210 @@
+// Hoja global de Cosmos CheckIn.
+//
+// Estaba en 638 lineas, de las que sobraba casi todo: reglas para `ion-app`,
+// `ion-header`, `ion-toolbar` e `ion-content` en una aplicacion que no tiene
+// Ionic instalado, media queries que solo repetian `padding-top: 0 !important`,
+// y 500 lineas de utilidades de color escritas a mano una por una.
+//
+// Ahora: tokens, tipografia local, utilidades generadas por bucle y las piezas
+// del sistema de diseno.
+
+// Las reglas `@use` tienen que ir antes que cualquier otra, incluidas las
+// directivas de Tailwind.
+@use "./styles/variables" as vars;
+@use "./styles/tokens";
+@use "./styles/motion";
+@use "./styles/components";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// ===========================================================================
+// Tipografia
+// ===========================================================================
+//
+// Las cuatro fuentes son locales. Antes habia ademas un `@import` remoto de
+// Raleway desde Google Fonts que no usaba ninguna pantalla: bloqueaba el
+// primer render y obligaba a tener red para arrancar el APK.
+//
+// `font-display: swap` hace que el texto se pinte con la fuente del sistema
+// mientras carga la propia, en vez de dejar la pantalla en blanco.
+
+@font-face {
+  font-family: "Gilroy-ExtraBold";
+  src: url("/font/Gilroy-ExtraBold.otf") format("opentype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy-Light";
+  src: url("/font/Gilroy-Light.otf") format("opentype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy-Regular";
+  src: url("/font/Gilroy-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy-Bold";
+  src: url("/font/Gilroy-Bold.ttf") format("truetype");
+  font-display: swap;
+}
+
+.gilroy-regular { font-family: "Gilroy-Regular", sans-serif; }
+.gilroy-bold { font-family: "Gilroy-Bold", sans-serif; }
+.gilroy-extra-bold { font-family: "Gilroy-ExtraBold", sans-serif; }
+.gilroy-light { font-family: "Gilroy-Light", sans-serif; }
+
+// ===========================================================================
+// Base
+// ===========================================================================
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  // Evita que Android reescale el texto y descuadre las tarjetas.
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  // Se declara aqui y se hereda, en vez de en el selector universal `*`. El
+  // universal obligaba al navegador a resolver la fuente para cada nodo y,
+  // sobre todo, impedia que ninguna clase de peso funcionase por herencia.
+  font-family: "Gilroy-Light", sans-serif;
+  background-color: var(--c-app);
+  color: var(--c-ink);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  position: relative;
+  padding-bottom: var(--safe-area-bottom);
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
+  // El rebote del scroll deja ver el fondo del webview y parece un fallo.
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+// La hoja anterior daba borde, radio y relleno a todo `input, select,
+// textarea` desde el selector de elemento, con un `!important` en el radio.
+// Se mantiene el mismo acabado por defecto para que un campo sin clase siga
+// viendose bien, pero ahora es el mismo aspecto que `.c-input` y sin
+// `!important`, de modo que el marcado puede ajustarlo cuando haga falta.
+input,
+select,
+textarea {
+  font-family: inherit;
+  color: var(--c-ink);
+  width: 100%;
+  min-height: 2.875rem;
+  padding: 0.625rem 0.875rem;
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--c-r-md);
+  font-size: 1rem;
+  transition:
+    border-color var(--c-dur-2) var(--c-ease),
+    box-shadow var(--c-dur-2) var(--c-ease);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px var(--c-line);
+}
+
+// Las casillas y los radios no son campos de texto: heredar el alto y el
+// relleno de arriba los deformaba.
+input[type="checkbox"],
+input[type="radio"] {
+  width: auto;
+  min-height: 0;
+  padding: 0;
+  accent-color: var(--c-accent);
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+img,
+video {
+  height: auto;
+}
+
+// ===========================================================================
+// Utilidades de color
+// ===========================================================================
+//
+// Mismos nombres de siempre (`text-color1`, `bg-color2-80`, `border-color3-20`)
+// para no tocar el marcado, pero generados en un bucle. Se anade el escalon
+// `-10`, que faltaba: `table.component.html` usaba `bg-color1-10`, una clase
+// que no existia y por tanto no pintaba nada.
+
+$c-palette: (
+  1: vars.$color1,
+  2: vars.$color2,
+  3: vars.$color3,
+  4: vars.$color4,
+  5: vars.$color5,
+  6: vars.$color6,
+  7: vars.$color7,
+);
+
+$c-alphas: (10, 20, 40, 60, 80);
+
+@each $n, $hex in $c-palette {
+  .text-color#{$n} { color: $hex; }
+  .bg-color#{$n} { background-color: $hex; }
+  .border-color#{$n} { border-color: $hex; }
+
+  @each $a in $c-alphas {
+    $rgba: rgba($hex, calc($a / 100));
+    .text-color#{$n}-#{$a} { color: $rgba; }
+    .bg-color#{$n}-#{$a} { background-color: $rgba; }
+    .border-color#{$n}-#{$a} { border-color: $rgba; }
+  }
+}
+
+// ===========================================================================
+// Compatibilidad
+// ===========================================================================
+
+// `.cont-b` reservaba 140 px al final de cuatro pantallas para que el boton
+// flotante de cerrar sesion no tapase el contenido. Ese boton ya no existe, y
+// el hueco de la barra inferior lo reserva ahora el propio armazon
+// (`.shell__main`), asi que sumaba 140 px de vacio sobre los 104 que ya habia.
+
+// Contenedor generico heredado.
+.container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+}

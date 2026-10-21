@@ -1,0 +1,65 @@
+# Gates de calidad de la aplicacion movil de Cosmos.
+#
+# Ver QA_PLAN.md (en cosmos-back) para la politica de umbrales y el detalle de
+# cada gate.
+#
+# Nota sobre la cobertura: los umbrales de `karma.conf.js` estan en 24 / 4 / 19
+# / 24, que es lo que hay medido hoy. Es la parte mas floja de los tres
+# proyectos y el trabajo pendiente mas claro; el numero esta ahi para que no
+# baje, no porque se considere suficiente.
+
+image: node:22
+
+definitions:
+  caches:
+    npmcache: ~/.npm
+
+  steps:
+    - step: &calidad
+        name: Calidad
+        caches: [npmcache]
+        script:
+          - npm ci --legacy-peer-deps
+          - npm run lint:ci
+          - npm run typecheck
+          # Karma necesita un Chrome; el arranque sin sandbox lo resuelve
+          # `karma.conf.js`, que ya declara ChromeHeadlessNoSandbox.
+          - apt-get update -qq && apt-get install -y chromium
+          - CHROME_BIN=$(which chromium) npm test
+          - npm run audit:ci
+          - npm run build
+        artifacts:
+          - coverage/**
+
+    - step: &seguridad
+        name: Analisis estatico
+        image: semgrep/semgrep
+        script:
+          # Se escanea la raiz del repositorio y no `src`: los `paths.include`
+          # de las reglas se resuelven contra el directorio del escaneo, y
+          # apuntar directamente a `src` las desactiva **en silencio**.
+          - >-
+            semgrep scan
+            --config .semgrep.yml
+            --config p/typescript
+            --config p/nodejs
+            --config p/secrets
+            --error
+            --exclude node_modules --exclude dist --exclude .angular
+            --exclude coverage --exclude android --exclude fingercosmos-plugin
+            .
+
+pipelines:
+  pull-requests:
+    '**':
+      - parallel:
+          - step: *calidad
+          - step: *seguridad
+
+  branches:
+    main:
+      - parallel:
+          - step: *calidad
+          - step: *seguridad
+      # La compilacion del APK no entra aqui: necesita el JDK 21 y las claves de
+      # firma, que no viven en el repositorio. Se lanza aparte.

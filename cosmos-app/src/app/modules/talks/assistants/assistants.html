@@ -1,0 +1,112 @@
+<div class="p-8">
+  <!-- `talk` se rellena cuando responde el servidor, pero la vista pinta antes:
+       leerlo sin guarda lanzaba un TypeError en cada entrada a la pantalla. -->
+  @if (talk) {
+  <div class="flex flex-col gap-2 capitalize items-center mb-4">
+    <h1 class="text-color1 font-bold text-center text-2xl">
+      {{ talk.branch | cap }}
+    </h1>
+    <p class="text-color1 text-center text-lg text-color2 font-bold">
+      {{ talk.workerDate | date:'dd/MM/yyyy' }} - {{ talk.turn }}
+    </p>
+  </div>
+  }
+  <div class="flex justify-between items-center gap-4">
+    <button
+      class="bg-color1 text-white px-4 py-2 rounded-xl gilroy-bold flex items-center gap-2"
+      (click)="goBack()"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="size-6"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+        />
+      </svg>
+      Regresar
+    </button>
+  </div>
+  <div
+    class="flex flex-col justify-between items-center gap-4 mt-4 xl:w-1/3 w-full"
+  >
+    <div class="relative w-full">
+      <input
+        type="search"
+        class="border border-color1-20 w-full p-2 rounded-md"
+        placeholder="Buscar empleado"
+        [(ngModel)]="employeeId"
+        (input)="searchEmployee($event)"
+      />
+      @if (employees.length > 0) {
+      <div
+        class="autocomplete absolute top-11 left-0 w-full bg-white p-4 rounded-md shadow-xl border border-color3-20 z-10"
+      >
+        @for (employee of employees; track employee._id) {
+        <div
+          (click)="selectEmployee(employee)"
+          class="autocomplete-item py-2 cursor-pointer hover:bg-gray-100 px-2 rounded"
+        >
+          <span>{{ employee.firstName }} {{ employee.lastName }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+
+  <div class="mt-4 xl:w-1/3 w-full">
+    <div class="flex items-center gap-2 mb-4">
+      <input
+        type="checkbox"
+        (change)="onSelectAll($event)"
+        [checked]="checkedAll"
+      />
+      <span class="text-color1 font-bold">Seleccionar todos</span>
+    </div>
+    <ul class="flex flex-col gap-2">
+      @for (assistant of assistants; track assistant._id) {
+      <li
+        class="flex gap-4 items-center border-b border-color1-20 py-2 bg-white px-4 rounded-md"
+      >
+        <div class="flex items-center gap-2">
+          <input
+            type="checkbox"
+            (change)="selectAssistant($event,assistant._id)"
+            [checked]="assistant.isAssistant"
+          />
+        </div>
+        <div class="flex flex-col w-full">
+          <div class="flex items-center justify-between gap-2 w-full">
+            <span class="capitalize text-color1 font-bold"
+              >{{ assistant.name | cap }}</span
+            >
+            @if (assistant.isAbsence) {
+            <label
+              title="Falta"
+              class="bg-color5 text-white text-sm font-bold rounded-full w-5 h-5 border-0 flex justify-center gilroy-bold"
+              >F</label
+            >
+            } @else if (assistant.isEntry) {
+            <label
+              title="Registró su ingreso"
+              class="bg-color4 text-white text-sm font-bold rounded-full w-5 h-5 border-0 flex justify-center gilroy-bold"
+              >I</label
+            >
+            }
+          </div>
+          <span class="capitalize text-color2"
+            >{{ assistant.document | cap }}</span
+          >
+        </div>
+      </li>
+      }
+    </ul>
+  </div>
+</div>

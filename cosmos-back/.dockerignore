@@ -1,0 +1,43 @@
+# Dependencias (se instalan en el build)
+node_modules
+npm-debug.log*
+
+# Build output (se genera en el build)
+dist
+coverage
+.nyc_output
+
+# Variables de entorno (nunca en imagen)
+.env
+.env.*
+.env.local
+.env_cosmos
+.env_qa
+.env_prod
+
+# Git y control de versiones
+.git
+.gitignore
+
+# Docker (no necesarios en contexto)
+Dockerfile*
+.dockerignore
+
+# Documentación (no necesaria en build)
+README*
+*.md
+
+# Linting/testing (no en build)
+.eslintrc*
+.prettierrc
+jest.config*
+
+# Tests (no en producción)
+test
+**/*.spec.ts
+**/*.test.ts
+
+# IDE y OS
+.idea
+.vscode
+.DS_Store

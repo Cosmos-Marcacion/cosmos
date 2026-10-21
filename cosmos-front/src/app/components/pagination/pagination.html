@@ -1,0 +1,117 @@
+<div
+  class="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6"
+>
+  <div class="flex flex-1 items-center justify-between gap-2 sm:hidden">
+    <button
+      type="button"
+      (click)="go(page() - 1)"
+      [disabled]="isFirst()"
+      class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Anterior
+    </button>
+    <!-- En móvil tampoco se pierde en qué tramo se está. -->
+    <p class="text-sm text-gray-700 text-center tabular-nums">
+      {{ from() }}–{{ to() }} de {{ total() }}
+    </p>
+    <button
+      type="button"
+      (click)="go(page() + 1)"
+      [disabled]="isLast()"
+      class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Siguiente
+    </button>
+  </div>
+  <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+    <div>
+      <!--
+        El rango de la pagina, no la pagina y el limite. Antes se leia
+        "Mostrando 2 a 10 de 57" estando en la pagina 2, que no dice nada.
+      -->
+      <p class="text-sm text-gray-700">
+        Mostrando
+        <span class="font-medium">{{ from() }}</span>
+        a
+        <span class="font-medium">{{ to() }}</span>
+        de
+        <span class="font-medium">{{ total() }}</span>
+        resultados
+      </p>
+    </div>
+    <div>
+      <nav
+        class="isolate inline-flex -space-x-px rounded-md shadow-xs"
+        aria-label="Paginación"
+      >
+        <button
+          type="button"
+          (click)="go(page() - 1)"
+          [disabled]="isFirst()"
+          class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
+        >
+          <span class="sr-only">Anterior</span>
+          <svg
+            class="size-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </button>
+
+        @if (showEllipsisStart()) {
+        <span
+          class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-gray-300 ring-inset"
+        >
+          ...
+        </span>
+        } @for (i of visiblePages(); track i) {
+        <button
+          type="button"
+          (click)="go(i)"
+          [attr.aria-current]="i === page() ? 'page' : null"
+          [class.bg-color2]="i === page()"
+          [class.text-white]="i === page()"
+          [class.text-gray-700]="i !== page()"
+          class="relative z-10 inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 cursor-pointer"
+        >
+          {{ i }}
+        </button>
+        } @if (showEllipsisEnd()) {
+        <span
+          class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-gray-300 ring-inset"
+        >
+          ...
+        </span>
+        }
+
+        <button
+          type="button"
+          (click)="go(page() + 1)"
+          [disabled]="isLast()"
+          class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
+        >
+          <span class="sr-only">Siguiente</span>
+          <svg
+            class="size-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </div>
+</div>

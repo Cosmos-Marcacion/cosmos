@@ -1,0 +1,74 @@
+### Ejemplos de uso para el módulo de huellas digitales
+### Usar con extensiones como REST Client en VS Code
+
+### 1. Verificar estado del escáner
+GET http://localhost:3000/fingerprint/scanner-status
+
+### 2. Capturar huella simple
+POST http://localhost:3000/fingerprint/capture
+Content-Type: application/json
+
+{
+  "timeout": 30000
+}
+
+### 3. Capturar huella con reintentos automáticos
+POST http://localhost:3000/fingerprint/capture-with-retry
+Content-Type: application/json
+
+{
+  "maxRetries": 3,
+  "retryDelay": 2000
+}
+
+### 4. Reconectar escáner
+POST http://localhost:3000/fingerprint/reconnect-scanner
+
+### 5. Registro WebAuthn - Obtener opciones
+POST http://localhost:3000/fingerprint/register-options
+Content-Type: application/json
+
+{
+  "_id": "64f8a1b2c3d4e5f6a7b8c9d0"
+}
+
+### 6. Registro WebAuthn - Verificar
+POST http://localhost:3000/fingerprint/verify-registration
+Content-Type: application/json
+
+{
+  "userId": "64f8a1b2c3d4e5f6a7b8c9d0",
+  "id": "credential_id_here",
+  "rawId": "raw_id_here",
+  "response": {
+    "attestationObject": "attestation_object_here",
+    "clientDataJSON": "client_data_json_here"
+  },
+  "type": "public-key"
+}
+
+### 7. Login WebAuthn - Obtener opciones
+POST http://localhost:3000/fingerprint/login-options
+
+### 8. Login WebAuthn - Verificar
+POST http://localhost:3000/fingerprint/verify-login
+Content-Type: application/json
+
+{
+  "email": "usuario@ejemplo.com",
+  "id": "credential_id_here",
+  "rawId": "raw_id_here",
+  "response": {
+    "authenticatorData": "authenticator_data_here",
+    "clientDataJSON": "client_data_json_here",
+    "signature": "signature_here"
+  },
+  "type": "public-key"
+}
+
+### Notas importantes:
+### - Asegúrate de que el servidor Python (agent_server.py) esté ejecutándose en el puerto 9876
+### - El escáner físico debe estar conectado y funcionando
+### - Reemplaza los IDs de ejemplo con IDs reales de tu base de datos
+### - Los timeouts están en milisegundos
+### - Los reintentos y delays están configurados para ser razonables en producción

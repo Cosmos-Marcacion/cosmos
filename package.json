@@ -1,0 +1,36 @@
+{
+  "name": "cosmos-qa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Orquestacion de los gates de calidad de Cosmos. Ver QA_PLAN.md.",
+  "scripts": {
+    "qa": "npm run qa:back && npm run qa:front && npm run qa:app",
+    "qa:back": "npm --prefix cosmos-back run qa",
+    "qa:front": "npm --prefix cosmos-front run qa",
+    "qa:app": "npm --prefix cosmos-app run qa",
+
+    "test": "npm run test:back && npm run test:front && npm run test:app",
+    "test:back": "npm --prefix cosmos-back run test:cov",
+    "test:front": "npm --prefix cosmos-front test",
+    "test:app": "npm --prefix cosmos-app test",
+    "test:int": "npm --prefix cosmos-back run test:int",
+
+    "e2e": "npm --prefix cosmos-front run e2e",
+    "e2e:a11y": "npm --prefix cosmos-front run e2e:a11y",
+    "e2e:visual": "npm --prefix cosmos-front run e2e:visual",
+
+    "lint": "npm run lint:back && npm run lint:front && npm run lint:app",
+    "lint:back": "node tools/lint-ratchet.mjs cosmos-back",
+    "lint:front": "node tools/lint-ratchet.mjs cosmos-front",
+    "lint:app": "node tools/lint-ratchet.mjs cosmos-app",
+    "lint:baseline": "node tools/lint-ratchet.mjs cosmos-back --update && node tools/lint-ratchet.mjs cosmos-front --update && node tools/lint-ratchet.mjs cosmos-app --update",
+
+    "audit": "node tools/audit-gate.mjs cosmos-back && node tools/audit-gate.mjs cosmos-front && node tools/audit-gate.mjs cosmos-app",
+
+    "perf:smoke": "k6 run perf/smoke.js",
+    "perf:carga": "k6 run perf/carga.js",
+
+    "hooks": "node tools/install-hooks.mjs",
+    "hooks:quitar": "node tools/install-hooks.mjs --desinstalar"
+  }
+}

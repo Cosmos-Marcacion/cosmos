@@ -1,0 +1,27 @@
+<header class="clock__head c-anim-rise-sm">
+  <h1 class="c-title">Marcación</h1>
+  <p class="c-body">Elige cómo quieres registrar el ingreso.</p>
+</header>
+
+<ul class="clock__grid c-stagger">
+  @for (method of methods; track method.id) {
+    <li>
+      <!--
+        Botón real en lugar de un `<div>` con (click): responde a Enter y a
+        espacio, entra en el recorrido del tabulador y el lector de pantalla
+        lo anuncia como acción. Ninguna de las cuatro tarjetas lo era.
+      -->
+      <button type="button" class="method" (click)="go(method.path)">
+        <span class="method__glow" aria-hidden="true"></span>
+        <span class="method__icon">
+          <app-icon [name]="method.icon" [strokeWidth]="1.4" />
+        </span>
+        <span class="method__text">
+          <span class="method__label">{{ method.label }}</span>
+          <span class="method__hint">{{ method.hint }}</span>
+        </span>
+        <app-icon name="chevronRight" class="method__go" />
+      </button>
+    </li>
+  }
+</ul>

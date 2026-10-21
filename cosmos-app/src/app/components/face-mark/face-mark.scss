@@ -1,0 +1,287 @@
+/**
+ * La pantalla de marcación con la cara.
+ *
+ * Manda la imagen de la cámara: ocupa la pantalla entera y todo lo demás va
+ * encima. Es lo que necesita quien se está encuadrando de pie y al sol, frente
+ * a la versión anterior, que metía el vídeo en una tarjeta pequeña rodeada de
+ * cinco indicadores.
+ */
+
+:host {
+  display: block;
+  height: 100dvh;
+  background: #0b1220;
+}
+
+.fm {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  color: #fff;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.fm-video,
+.fm-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+// Las esquinas oscurecidas concentran la vista en el centro y hacen legible el
+// texto de abajo sobre cualquier fondo.
+.fm::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 62% 48% at 50% 44%, transparent 55%, rgb(11 18 32 / 72%) 100%),
+    linear-gradient(to top, rgb(11 18 32 / 85%) 0%, transparent 34%);
+}
+
+// --- el óvalo ------------------------------------------------------------------
+
+.fm-guide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+
+  &__svg {
+    width: min(78vw, 26rem);
+    height: min(62vh, 34rem);
+    overflow: visible;
+  }
+
+  &__oval {
+    fill: none;
+    stroke: rgb(255 255 255 / 55%);
+    stroke-width: 2.5;
+    stroke-dasharray: 10 12;
+    transition: stroke 0.25s ease;
+
+    &--ok {
+      stroke: #4ade80;
+      stroke-dasharray: none;
+      stroke-width: 3.5;
+    }
+  }
+
+  // El aro de progreso vive escondido y solo se dibuja mientras se sujeta.
+  &__progress {
+    fill: none;
+    stroke: #4ade80;
+    stroke-width: 4;
+    stroke-linecap: round;
+    // El perímetro aproximado del óvalo; basta con que sobre.
+    stroke-dasharray: 620;
+    stroke-dashoffset: 620;
+    transform-origin: center;
+    transform: rotate(-90deg);
+    opacity: 0;
+  }
+}
+
+// Mientras hay que quedarse quieto, el aro se cierra en el mismo segundo y
+// medio que espera el componente antes de capturar.
+.fm[data-state="sujetando"] .fm-guide__progress {
+  opacity: 1;
+  animation: fm-progress 1.5s linear forwards;
+}
+
+.fm[data-state="sujetando"] .fm-guide__oval,
+.fm[data-state="capturado"] .fm-guide__oval {
+  stroke: #4ade80;
+  stroke-dasharray: none;
+}
+
+// Al capturar, el óvalo da un pulso corto hacia dentro: se lee como el
+// obturador de una foto.
+.fm[data-state="capturado"] .fm-guide__svg {
+  animation: fm-snap 0.32s ease-out;
+}
+
+// --- el destello ----------------------------------------------------------------
+
+.fm-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.fm[data-state="capturado"] .fm-flash {
+  animation: fm-flash 0.34s ease-out;
+}
+
+// --- textos ----------------------------------------------------------------------
+
+.fm-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 1.25rem 1.25rem 0;
+  text-align: center;
+
+  &__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    opacity: 0.8;
+  }
+}
+
+// Cambiar de cámara: arriba a la derecha, fuera del óvalo y del texto.
+.fm-switch {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 50%;
+  background: rgb(11 18 32 / 55%);
+  color: #fff;
+  backdrop-filter: blur(6px);
+  transition: transform 0.15s ease, opacity 0.2s ease;
+
+  app-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.92);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #4ade80;
+    outline-offset: 2px;
+  }
+}
+
+.fm-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 1.5rem 1.5rem 2.5rem;
+  text-align: center;
+}
+
+.fm-name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #4ade80;
+}
+
+// Una sola frase, grande. Es la única instrucción que hay que leer.
+.fm-message {
+  margin: 0;
+  min-height: 3.25rem;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.fm-hint {
+  margin: 0;
+  max-width: 20rem;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  opacity: 0.7;
+}
+
+// --- arranque -----------------------------------------------------------------------
+
+.fm-boot {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: rgb(11 18 32 / 92%);
+
+  &__ring {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 3px solid rgb(255 255 255 / 20%);
+    border-top-color: #4ade80;
+    border-radius: 50%;
+    animation: fm-spin 0.8s linear infinite;
+  }
+
+  &__alt {
+    color: #fff;
+  }
+
+  &__text {
+    margin: 0;
+    padding: 0 1.5rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    text-align: center;
+  }
+}
+
+@keyframes fm-progress {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fm-snap {
+  0% { transform: scale(1); }
+  45% { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fm-flash {
+  0% { opacity: 0; }
+  18% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+@keyframes fm-spin {
+  to { transform: rotate(360deg); }
+}
+
+// Sin movimiento sigue habiendo estados: el óvalo cambia de color y el texto
+// dice en cuál está. Lo que se quita es lo que gira y lo que destella.
+@media (prefers-reduced-motion: reduce) {
+  .fm-guide__progress,
+  .fm-guide__svg,
+  .fm-flash,
+  .fm-boot__ring {
+    animation: none;
+  }
+
+  .fm[data-state="sujetando"] .fm-guide__progress {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}

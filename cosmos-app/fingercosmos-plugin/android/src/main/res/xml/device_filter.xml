@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ZKTeco SLK20R -->
+    <usb-device vendor-id="6997" product-id="289" />
+    <!-- Algunos firmwares reportan PID 288 -->
+    <usb-device vendor-id="6997" product-id="288" />
+    <!-- Compatibles adicionales (por si el PID varía) -->
+    <usb-device vendor-id="6997" product-id="256" />
+    <usb-device vendor-id="6997" product-id="257" />
+</resources>

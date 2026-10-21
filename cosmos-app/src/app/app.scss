@@ -1,0 +1,51 @@
+/**
+ * Contenedor raiz de la aplicacion.
+ *
+ * Tenia `height: 100vh` con `overflow: hidden`. Eso fija la altura de **toda**
+ * la aplicacion a una pantalla exacta y recorta lo que sobresalga, sin dejar
+ * scroll: cualquier vista mas larga que el viewport quedaba cortada por abajo
+ * y no habia forma de llegar al final. Solo se salvaba en Android, porque mas
+ * abajo habia un `overflow: visible !important` para `.platform-android`; en
+ * navegador y en el WebView antes de que se aplicara esa clase, no.
+ *
+ * Ahora es una altura **minima** y sin recorte, de modo que el documento crece
+ * con su contenido y desplaza el `body`, que es quien debe desplazarse.
+ *
+ * `100dvh` en lugar de `100vh`: en movil `100vh` mide la ventana con la barra
+ * de direcciones retraida, asi que la ultima franja de la pantalla quedaba
+ * siempre por debajo del borde visible.
+ */
+.app-container {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+  background: transparent;
+}
+
+.platform-android .app-container {
+  /* Configuraciones específicas para Android */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Estilos para mejorar la compatibilidad con face detection */
+.platform-android video,
+.platform-android canvas {
+  /* Asegurar que los elementos de video y canvas funcionen correctamente */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* Prevenir problemas de renderizado en Android */
+  will-change: transform;
+  z-index: 1000;
+  position: relative;
+}
+
+/* Prevenir que el contenedor interfiera con elementos nativos */
+.platform-android .app-container {
+  background: transparent !important;
+}

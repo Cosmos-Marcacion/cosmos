@@ -1,0 +1,68 @@
+<!-- El titulo lo pinta la cabecera del panel; aqui se repetia justo debajo. -->
+<div class="px-4 md:px-10 pt-6">
+  <div class="flex flex-col gap-5 p-6 md:p-10 bg-white rounded-xl xl:w-2/3">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <app-employee-picker
+        [employees]="employees()"
+        [value]="selectedEmployeeId()"
+        [required]="true"
+        (valueChange)="selectedEmployeeId.set($event)"
+      />
+
+      <div class="flex flex-col gap-2">
+        <label for="type" class="text-color1">Tipo *</label>
+        <select
+          id="type"
+          class="w-full p-3 rounded-md border border-color2"
+          [ngModel]="selectedType()"
+          (ngModelChange)="selectedType.set($event)"
+        >
+          <option value="">Seleccionar tipo</option>
+          @for (t of typeOptions; track t) {
+          <option [value]="t">
+            {{ t === 'qrcode' ? 'QR Code' : 'Code 128' }}
+          </option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4 flex-wrap">
+      <button
+        class="bg-color2 text-white px-4 py-3 rounded-xl gilroy-bold disabled:opacity-60 disabled:cursor-not-allowed w-full md:w-auto"
+        (click)="generate()"
+        [disabled]="!canGenerate()"
+      >
+        @if (!loading()) { Generar } @else { Generando... }
+      </button>
+    </div>
+
+    @if (imageUrl()) {
+    <div class="flex flex-col gap-4">
+      <div class="w-full md:w-max">
+        <img
+          [src]="imageUrl()"
+          alt="Código generado"
+          class="max-h-96 rounded-lg border border-color3-20 shadow-sm"
+        />
+      </div>
+      <div class="flex gap-3 flex-wrap">
+        <button
+          class="text-white bg-color2 px-4 py-2 rounded-xl gilroy-bold"
+          (click)="copyLink()"
+          title="Copiar enlace"
+        >
+          Copiar enlace
+        </button>
+        <button
+          class="text-white bg-color1 px-4 py-2 rounded-xl gilroy-bold"
+          (click)="downloadImage()"
+          title="Descargar imagen"
+        >
+          Descargar imagen
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+</div>

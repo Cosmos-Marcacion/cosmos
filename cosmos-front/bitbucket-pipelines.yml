@@ -1,0 +1,99 @@
+# Gates de calidad del panel de Cosmos.
+#
+# Ver QA_PLAN.md (en cosmos-back) para la politica de umbrales y el detalle de
+# cada gate.
+#
+# `--legacy-peer-deps` en todas las instalaciones: `@angular/animations` exige
+# una version de `@angular/common` mas nueva que la que fija el resto del arbol.
+# Esta anotado como pendiente de alinear; el dia que se alineen, la bandera
+# sobra.
+
+image: node:22
+
+definitions:
+  caches:
+    npmcache: ~/.npm
+
+  steps:
+    - step: &calidad
+        name: Calidad
+        caches: [npmcache]
+        script:
+          - npm ci --legacy-peer-deps
+          - npm run lint:ci
+          - npm run typecheck
+          # Karma necesita un Chrome; el arranque sin sandbox lo resuelve
+          # `karma.conf.js`, que ya declara ChromeHeadlessNoSandbox.
+          - apt-get update -qq && apt-get install -y chromium
+          - CHROME_BIN=$(which chromium) npm test
+          - npm run audit:ci
+          - npm run build
+        artifacts:
+          - coverage/**
+
+    - step: &e2e
+        name: E2E y accesibilidad
+        # La imagen oficial trae los navegadores y sus dependencias del sistema
+        # ya instalados. La version tiene que coincidir con la de
+        # `@playwright/test` en package.json.
+        image: mcr.microsoft.com/playwright:v1.63.0-noble
+        caches: [npmcache]
+        script:
+          - npm ci --legacy-peer-deps
+          # La regresion visual queda fuera del gate hasta que existan
+          # instantaneas generadas en Linux: las del repositorio se tomaron en
+          # Windows y las fuentes no coinciden. Ver QA_PLAN.md, seccion 7.
+          - CI=true npx playwright test --grep-invert @visual
+        artifacts:
+          - playwright-report/**
+          - test-results/**
+
+    - step: &seguridad
+        name: Analisis estatico
+        image: semgrep/semgrep
+        script:
+          # Se escanea la raiz del repositorio y no `src`: los `paths.include`
+          # de las reglas se resuelven contra el directorio del escaneo, y
+          # apuntar directamente a `src` las desactiva **en silencio**.
+          - >-
+            semgrep scan
+            --config .semgrep.yml
+            --config p/typescript
+            --config p/nodejs
+            --config p/secrets
+            --error
+            --exclude node_modules --exclude dist --exclude .angular
+            --exclude coverage --exclude test-results --exclude playwright-report
+            .
+
+pipelines:
+  pull-requests:
+    '**':
+      - parallel:
+          - step: *calidad
+          - step: *seguridad
+      - step: *e2e
+
+  branches:
+    main:
+      - parallel:
+          - step: *calidad
+          - step: *seguridad
+      - step: *e2e
+
+  custom:
+    # Regresion visual. Requiere instantaneas `-linux.png` en el repositorio;
+    # se generan una vez con:
+    #   npx playwright test --grep @visual --update-snapshots
+    # dentro de esta misma imagen, y se suben.
+    visual:
+      - step:
+          name: Regresion visual
+          image: mcr.microsoft.com/playwright:v1.63.0-noble
+          caches: [npmcache]
+          script:
+            - npm ci --legacy-peer-deps
+            - CI=true npx playwright test --grep @visual
+          artifacts:
+            - playwright-report/**
+            - test-results/**

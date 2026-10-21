@@ -1,0 +1,81 @@
+# Dependencias y build
+/node_modules
+/dist
+/build
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Variables de entorno (nunca versionar credenciales)
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env_cosmos
+.env_qa
+.env_prod
+
+# Claves y certificados
+*.pem
+*.ppk
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests
+/coverage
+/.nyc_output
+
+# IDEs
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Temp
+.temp
+.tmp
+*.tmp
+*.tar
+
+# Runtime
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Node.js reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Fuentes licenciadas de Office: se dejan a mano en el servidor de build
+fonts/*.ttf
+fonts/*.otf
+fonts/*.TTF
+fonts/*.OTF
+
+# Salida accidental de un redirect de Windows (> /dev/null)
+nul
+
+# Salida del inventario de plantillas (se regenera con `npm run format:inspect`)
+/tools/format-inspector/out
+
+# Informes con datos personales (npm run report:registros)
+/reports/

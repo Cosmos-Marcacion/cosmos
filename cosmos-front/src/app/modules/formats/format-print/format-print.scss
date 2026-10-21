@@ -1,0 +1,113 @@
+/*
+ * Pantalla propia, sin el layout de la aplicación: solo la barra (que no se
+ * imprime) y las hojas. El fondo gris es el de la mesa de trabajo.
+ */
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #e5e7eb;
+}
+
+/* La barra es de pantalla: al imprimir no existe, igual que los botones. */
+.fp-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+
+  &__left {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+
+  &__title {
+    font-weight: 700;
+    color: #0f2b3a;
+  }
+
+  &__meta {
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+
+  &__docs {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+}
+
+.fp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #475569;
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  &--on {
+    border-color: #0087b8;
+    background: #e8f4fa;
+    color: #00566f;
+  }
+
+  &__number {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.75;
+  }
+}
+
+.fp-btn {
+  padding: 0.45rem 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+
+  &--primary {
+    background: #0087b8;
+    border-color: #0087b8;
+    color: #fff;
+  }
+
+  &--ghost {
+    background: transparent;
+  }
+}
+
+.fp-note {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #6b7280;
+
+  &--error {
+    color: #b91c1c;
+  }
+}
+
+@media print {
+  :host {
+    min-height: 0;
+    background: none;
+  }
+
+  .fp-bar,
+  .fp-note {
+    display: none;
+  }
+}

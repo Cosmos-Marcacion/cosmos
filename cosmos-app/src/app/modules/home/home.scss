@@ -1,0 +1,304 @@
+// Pantalla de inicio: nombradas del dia agrupadas por turno.
+
+:host {
+  display: block;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+// === Barra de fecha ======================================================
+
+.date-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.date-bar__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.date-bar__nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.875rem;
+  height: 2.875rem;
+  flex: none;
+  border-radius: var(--c-r-md);
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-line-strong);
+  color: var(--c-accent);
+}
+
+.date-bar__nav app-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.date-bar__nav:active {
+  background-color: var(--c-sunken);
+}
+
+.date-bar__current {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.875rem;
+  padding: 0 1rem;
+  border-radius: var(--c-r-md);
+  background-image: linear-gradient(135deg, var(--c-accent) 0%, var(--c-brand) 100%);
+  color: var(--c-ink-onbrand);
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.9375rem;
+  box-shadow: var(--c-shadow-brand);
+}
+
+.date-bar__current app-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.date-bar__picker {
+  margin-top: 0.25rem;
+}
+
+// === Turno ===============================================================
+
+.turn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.turn__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: var(--c-r-md);
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-line);
+  box-shadow: var(--c-shadow-1);
+  color: var(--c-ink);
+}
+
+.turn__title {
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.9375rem;
+}
+
+.turn__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.turn__count {
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.8125rem;
+  color: var(--c-accent);
+}
+
+// El galón gira para indicar si el bloque está abierto o cerrado. Antes la
+// clase `rotate-180` se aplicaba invertida respecto al estado.
+.turn__chevron,
+.named__chevron {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: var(--c-ink-muted);
+  transition: transform var(--c-dur-2) var(--c-ease);
+}
+
+.turn__chevron.is-open,
+.named__chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.turn__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-left: 0.125rem;
+}
+
+// === Nombrada ============================================================
+
+.named {
+  overflow: hidden;
+  border-radius: var(--c-r-lg);
+  background-image: linear-gradient(150deg, var(--c-accent) 0%, var(--c-brand) 100%);
+  box-shadow: var(--c-shadow-2);
+  color: var(--c-ink-onbrand);
+}
+
+.named__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 1rem 1rem 0.5rem;
+  text-align: left;
+  color: inherit;
+}
+
+.named__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.named__id {
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+.named__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.named__count {
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.8125rem;
+}
+
+.named__chevron {
+  color: currentColor;
+  opacity: 0.85;
+}
+
+.named__vessel {
+  font-family: "Gilroy-ExtraBold", sans-serif;
+  font-size: 1.1875rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.named__sub {
+  font-size: 0.8125rem;
+  opacity: 0.82;
+}
+
+.named__actions {
+  padding: 0 1rem 1rem;
+}
+
+.named__format {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--c-r-pill);
+  background-color: rgba(255, 255, 255, 0.18);
+  color: var(--c-ink-onbrand);
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.75rem;
+}
+
+.named__format app-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.named__format:active {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+// === Personal ============================================================
+
+.roster {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  list-style: none;
+  background-color: var(--c-line);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.roster__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  background-color: var(--c-surface);
+  color: var(--c-ink);
+}
+
+/** Recorrido completo: se tiñe la fila en lugar de dejarla igual que el resto. */
+.roster__row.is-complete {
+  background-color: rgba(0, 112, 153, 0.08);
+  box-shadow: inset 3px 0 0 var(--c-success);
+}
+
+.roster__row:active {
+  background-color: var(--c-sunken);
+}
+
+.roster__name {
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.9375rem;
+  color: var(--c-accent);
+}
+
+.roster__role {
+  font-size: 0.8125rem;
+  color: var(--c-ink-muted);
+}
+
+.roster__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.375rem;
+}
+
+.roster__last {
+  font-size: 0.8125rem;
+  color: var(--c-ink-soft);
+}
+
+// === Estados =============================================================
+
+.empty__icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  color: var(--c-accent-soft);
+}
+
+.empty__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  width: 100%;
+  max-width: 20rem;
+  margin-top: 0.5rem;
+}
+
+.skel-turn {
+  height: 3rem;
+  border-radius: var(--c-r-md);
+}
+
+.skel-card {
+  height: 7rem;
+  border-radius: var(--c-r-lg);
+}

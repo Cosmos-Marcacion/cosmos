@@ -1,0 +1,111 @@
+// Seleccion del metodo de marcacion.
+//
+// Antes eran cuatro cuadrados al 45 % de ancho en una rejilla flexible, con el
+// rotulo dentro de un `<h1>` y sin ninguna explicacion. Ahora son filas: en un
+// movil sostenido con una mano se recorren de arriba abajo, cabe el texto que
+// dice para que sirve cada una, y el area tactil ocupa el ancho completo en
+// vez de un cuadrado al que hay que apuntar.
+
+:host {
+  display: block;
+}
+
+.clock__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.clock__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+}
+
+.method {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  min-height: 5.25rem;
+  padding: 1rem 1.125rem;
+  border-radius: var(--c-r-lg);
+  background-image: linear-gradient(135deg, var(--c-accent) 0%, var(--c-brand) 100%);
+  box-shadow: var(--c-shadow-2);
+  color: var(--c-ink-onbrand);
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition:
+    transform var(--c-dur-1) var(--c-ease),
+    box-shadow var(--c-dur-2) var(--c-ease);
+}
+
+.method:active {
+  transform: scale(0.98);
+  box-shadow: var(--c-shadow-1);
+}
+
+/** Brillo diagonal: da volumen sin coste de imagen. */
+.method__glow {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0) 58%
+  );
+  pointer-events: none;
+}
+
+.method__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  flex: none;
+  border-radius: var(--c-r-md);
+  background-color: rgba(255, 255, 255, 0.16);
+}
+
+.method__icon app-icon {
+  width: 1.875rem;
+  height: 1.875rem;
+}
+
+.method__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.method__label {
+  font-family: "Gilroy-ExtraBold", sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.method__hint {
+  font-size: 0.8125rem;
+  opacity: 0.82;
+}
+
+.method__go {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+  opacity: 0.7;
+  transition: transform var(--c-dur-2) var(--c-ease);
+}
+
+.method:active .method__go {
+  transform: translateX(3px);
+}

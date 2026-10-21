@@ -1,0 +1,23 @@
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+input:focus {
+    outline: none;
+    border-color: #0087b8;
+    box-shadow: 0 0 0 2px rgba(0, 135, 184, 0.2);
+}
+
+button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}

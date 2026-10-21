@@ -1,0 +1,376 @@
+// Registro de empleado: buscador de personal y ficha.
+
+:host {
+  display: block;
+}
+
+// === Buscador ============================================================
+
+.finder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.finder__search {
+  position: relative;
+}
+
+.finder__search-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.875rem;
+  transform: translateY(-50%);
+  width: 1.125rem;
+  height: 1.125rem;
+  color: var(--c-ink-muted);
+  pointer-events: none;
+}
+
+.finder__input {
+  width: 100%;
+  min-height: 2.875rem;
+  // Sitio para la lupa a la izquierda y para la equis a la derecha.
+  padding: 0.625rem 2.75rem 0.625rem 2.625rem;
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--c-r-md);
+  // 16 px: por debajo, Safari/iOS hace zoom al enfocar y descuadra la pantalla.
+  font-size: 1rem;
+  color: var(--c-ink);
+}
+
+.finder__input:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px var(--c-line);
+}
+
+// La equis nativa del `type="search"` sobra: hay una propia, con área táctil.
+.finder__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.finder__clear {
+  position: absolute;
+  top: 50%;
+  right: 0.375rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: var(--c-r-sm);
+  color: var(--c-ink-muted);
+}
+
+.finder__clear app-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+// === Filtros =============================================================
+
+.finder__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.finder__chip {
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--c-r-pill);
+  border: 1px solid var(--c-line-strong);
+  background-color: var(--c-surface);
+  color: var(--c-ink-soft);
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.75rem;
+  transition:
+    background-color var(--c-dur-2) var(--c-ease),
+    color var(--c-dur-2) var(--c-ease),
+    border-color var(--c-dur-2) var(--c-ease);
+}
+
+.finder__chip.is-on {
+  background-color: var(--c-accent);
+  border-color: var(--c-accent);
+  color: var(--c-ink-onbrand);
+}
+
+.finder__chip-clear {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--c-accent);
+  text-decoration: underline;
+}
+
+// === Barra de resultados =================================================
+
+.finder__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.finder__sort-select {
+  width: auto;
+  min-height: 2.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8125rem;
+  font-family: "Gilroy-Bold", sans-serif;
+  color: var(--c-accent);
+  border-color: var(--c-line);
+  border-radius: var(--c-r-sm);
+}
+
+// === Resultados ==========================================================
+
+.finder__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  // Techo de altura con desplazamiento propio: con cientos de personas, la
+  // lista empujaba la ficha fuera de la pantalla.
+  max-height: 22rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  padding-right: 0.125rem;
+}
+
+.finder__skeleton {
+  height: 3.75rem;
+  border-radius: var(--c-r-md);
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--c-r-md);
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-line);
+  text-align: left;
+}
+
+.person:active {
+  background-color: var(--c-sunken);
+}
+
+.person__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  border-radius: var(--c-r-pill);
+  background-image: linear-gradient(140deg, var(--c-accent-soft) 0%, var(--c-accent) 100%);
+  color: var(--c-ink-onbrand);
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+}
+
+.person__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.person__name {
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.9375rem;
+  color: var(--c-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.person__doc {
+  font-size: 0.8125rem;
+  color: var(--c-ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.person__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.person__go {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+  color: var(--c-ink-muted);
+}
+
+.finder__more,
+.finder__empty {
+  font-size: 0.8125rem;
+  color: var(--c-ink-muted);
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+// === Ficha ===============================================================
+
+.reg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.reg__photo {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0 1rem;
+}
+
+.reg__photo-drop {
+  position: relative;
+  display: block;
+  width: 8.5rem;
+  height: 8.5rem;
+  cursor: pointer;
+}
+
+.reg__photo-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.reg__photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--c-r-pill);
+  border: 3px solid var(--c-surface);
+  box-shadow: var(--c-shadow-2);
+  background-color: var(--c-sunken);
+}
+
+/** Indica que la foto se puede cambiar; antes no había ninguna pista. */
+.reg__photo-hint {
+  position: absolute;
+  right: 0.25rem;
+  bottom: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--c-r-pill);
+  background-color: var(--c-accent);
+  color: var(--c-ink-onbrand);
+  box-shadow: var(--c-shadow-brand);
+}
+
+.reg__photo-hint app-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+// Origen de la persona: de qué maestros sale y su legajo.
+.reg__origin {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0;
+}
+
+.reg__save {
+  margin-top: 0.5rem;
+}
+
+// === Biometría ===========================================================
+
+.reg__bio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.reg__row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.reg__action {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex: 1;
+  min-height: 3rem;
+  padding: 0 0.875rem;
+  border-radius: var(--c-r-md);
+  border: 1px solid var(--c-line-strong);
+  background-color: var(--c-surface);
+  color: var(--c-accent);
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.9375rem;
+  text-align: left;
+}
+
+.reg__action app-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+}
+
+.reg__action span {
+  flex: 1;
+}
+
+.reg__action.is-done {
+  background-color: rgba(20, 123, 102, 0.1);
+  border-color: var(--c-success);
+  color: var(--c-success);
+  // Ya está hecho: se deja legible y sin cursor de acción, en vez de
+  // atenuarlo como un botón roto.
+  opacity: 1;
+  cursor: default;
+}
+
+.reg__done {
+  color: var(--c-success);
+}
+
+.reg__delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  flex: none;
+  border-radius: var(--c-r-md);
+  border: 1px solid var(--c-line-strong);
+  background-color: var(--c-surface);
+  color: var(--c-danger);
+}
+
+.reg__delete app-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.reg__delete:active {
+  background-color: rgba(198, 40, 40, 0.1);
+}

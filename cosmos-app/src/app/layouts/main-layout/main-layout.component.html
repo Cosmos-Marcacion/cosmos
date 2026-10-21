@@ -1,0 +1,78 @@
+<header class="shell__header">
+  <div class="shell__brand">
+    <img
+      src="/images/cosmos-logotipo.png"
+      alt="Cosmos Global Logistics"
+      width="140"
+      height="22"
+    />
+    <p class="shell__site">PAITA</p>
+  </div>
+
+  <div class="shell__profile">
+    <button
+      type="button"
+      class="shell__avatar-btn c-press"
+      (click)="toggleProfileMenu()"
+      [attr.aria-expanded]="profileMenuVisible()"
+      aria-label="Ver datos de tu cuenta"
+    >
+      <img
+        class="shell__avatar"
+        [src]="user?.image || '/images/avatar.svg'"
+        alt=""
+        width="40"
+        height="40"
+        decoding="async"
+      />
+    </button>
+
+    @if (profileMenuVisible()) {
+      <div class="shell__profile-card c-anim-pop" role="dialog" aria-label="Tu cuenta">
+        <div class="shell__profile-head">
+          <img
+            class="shell__avatar shell__avatar--lg"
+            [src]="user?.image || '/images/avatar.svg'"
+            alt=""
+            width="48"
+            height="48"
+            decoding="async"
+          />
+          <div class="shell__profile-id">
+            <p class="shell__profile-name">{{ user?.name || "Usuario" }}</p>
+            <p class="c-caption">{{ user?.email || "Sin correo" }}</p>
+          </div>
+          <button
+            type="button"
+            class="shell__icon-btn shell__icon-btn--sm c-press"
+            (click)="closeProfileMenu()"
+            aria-label="Cerrar"
+          >
+            <app-icon name="close" />
+          </button>
+        </div>
+
+        <p class="c-chip c-chip-brand">{{ user?.role?.name || "Rol no asignado" }}</p>
+
+        <button
+          type="button"
+          class="c-btn c-btn-ghost c-btn-block shell__logout"
+          (click)="confirmLogout()"
+        >
+          <app-icon name="logout" class="w-5 h-5" />
+          Cerrar sesión
+        </button>
+      </div>
+    }
+  </div>
+</header>
+
+@if (profileMenuVisible()) {
+  <div class="shell__scrim" (click)="closeProfileMenu()"></div>
+}
+
+<main class="shell__main">
+  <router-outlet />
+</main>
+
+<app-tab-bar />

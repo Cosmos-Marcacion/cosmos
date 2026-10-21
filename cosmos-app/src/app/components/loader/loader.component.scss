@@ -1,0 +1,46 @@
+@use "../../../styles/variables" as vars;
+
+// Este loader aparece en cada petición HTTP, así que se mantiene ligero: un
+// velo sobre el contenido y una tarjeta compacta con el isotipo. La pantalla
+// de marca a página completa es la del arranque (index.html) y el splash.
+.cont {
+  background-color: rgba(0, 61, 83, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+.loader-card {
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 10px 30px rgba(0, 61, 83, 0.25);
+}
+
+.isotipo {
+  width: 56px;
+  height: auto;
+  display: block;
+}
+
+.spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 61, 83, 0.2);
+  border-top-color: vars.$brand;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}

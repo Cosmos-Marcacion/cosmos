@@ -1,0 +1,22 @@
+.server-table {
+  border-collapse: collapse;
+
+  // Las cabeceras de dos palabras ("Fecha de trabajo", "Personal Nombrado")
+  // pueden partirse: en una sola línea eran lo que hacía la tabla 25 px más
+  // ancha que su hueco en un portátil de 1280 con el menú abierto.
+  thead th {
+    border-bottom: 1px solid #e5e7eb;
+    text-wrap: balance;
+    vertical-align: bottom;
+  }
+}
+
+.bg-color2,
+.bg-color5,
+.bg-blue-600,
+.bg-red-600 {
+  color: #ffffff !important;
+}
+
+// El paso a tarjetas en contenedores estrechos es la clase global
+// `table-stack` (styles.scss).

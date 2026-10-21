@@ -1,0 +1,23 @@
+.avatar {
+  width: 150px;
+  height: 150px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  // Sobrescribe la utilidad global con el color de marca al 10%.
+  .bg-color1-20 {
+    background-color: rgba(0, 61, 83, 0.1);
+  }
+}
+
+// Estilos para los botones de acción
+.action-buttons {
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

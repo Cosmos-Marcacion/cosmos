@@ -1,0 +1,32 @@
+### Pruebas para el módulo Fingerprint
+
+### 1. Guardar huella dactilar
+POST http://localhost:3000/fingerprint/save
+Content-Type: application/json
+
+{
+  "employeeId": "507f1f77bcf86cd799439011",
+  "template": "base64_template_string_here",
+  "quality": 85,
+  "templateLen": 1024
+}
+
+### 2. Identificar empleado por huella
+POST http://localhost:3000/fingerprint/identity
+Content-Type: application/json
+
+{
+  "template": "base64_template_string_here"
+}
+
+### 3. Actualizar estado de huella en empleado
+PATCH http://localhost:3000/employee/507f1f77bcf86cd799439011
+Content-Type: application/json
+
+{
+  "issetFinger": true
+}
+
+### 4. Obtener empleado para verificar el estado
+GET http://localhost:3000/employee/507f1f77bcf86cd799439011
+

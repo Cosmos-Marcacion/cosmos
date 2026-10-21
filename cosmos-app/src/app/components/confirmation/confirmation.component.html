@@ -1,0 +1,42 @@
+<!--
+  El velo cierra al tocarlo, igual que Escape. `role="dialog"` y `aria-modal`
+  hacen que el lector de pantalla lo trate como lo que es y no como un trozo
+  más de la página.
+-->
+<div class="dialog c-anim-fade" (click)="confirmationService.cancel()">
+  <div
+    class="dialog__box c-anim-sheet"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="confirmationService.message()"
+    (click)="$event.stopPropagation()"
+  >
+    <span class="dialog__icon">
+      <app-icon name="alert" [strokeWidth]="1.8" />
+    </span>
+
+    <p class="dialog__message">{{ confirmationService.message() }}</p>
+
+    <div class="dialog__actions">
+      <!--
+        Cancelar va primero y con más peso visual que confirmar: la acción
+        destructiva no debe caer bajo el pulgar por inercia. Antes eran "Si" en
+        rojo y "No" en negro, sin relación con la paleta de la aplicación.
+      -->
+      <button
+        type="button"
+        class="c-btn c-btn-ghost dialog__btn"
+        (click)="confirmationService.cancel()"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="c-btn c-btn-danger dialog__btn"
+        (click)="confirmationService.confirm()"
+      >
+        Sí, continuar
+      </button>
+    </div>
+  </div>
+</div>

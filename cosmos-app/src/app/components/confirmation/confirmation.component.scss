@@ -1,0 +1,69 @@
+.dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  padding-bottom: calc(1rem + var(--safe-area-bottom));
+  background-color: rgba(0, 39, 54, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+// A partir de tablet se centra; en movil sube desde abajo, que es donde esta
+// el pulgar y de donde el usuario espera que aparezca una decision.
+@media (min-width: 40rem) {
+  .dialog {
+    align-items: center;
+  }
+}
+
+.dialog__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  max-width: 22rem;
+  padding: 1.5rem 1.25rem 1.25rem;
+  text-align: center;
+  background-color: var(--c-surface);
+  border-radius: var(--c-r-xl);
+  box-shadow: var(--c-shadow-3);
+}
+
+.dialog__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--c-r-pill);
+  background-color: rgba(198, 40, 40, 0.1);
+  color: var(--c-danger);
+}
+
+.dialog__icon app-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.dialog__message {
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--c-ink);
+}
+
+.dialog__actions {
+  display: flex;
+  gap: 0.625rem;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.dialog__btn {
+  flex: 1;
+}

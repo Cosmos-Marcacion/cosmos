@@ -1,0 +1,229 @@
+<div class="p-4 md:p-6 xl:p-8 min-h-screen bg-gray-50">
+  <app-dashboard-filters
+    [loading]="loading"
+    (searchEvent)="search($event)"
+  ></app-dashboard-filters>
+
+  @if (error) {
+  <div
+    class="mb-6 rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700"
+  >
+    {{ error }}
+  </div>
+  }
+
+  <div class="flex xl:flex-row flex-col gap-4 mb-8">
+    <div
+      class="flex flex-col gap-3 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden p-5 w-full"
+    >
+      <h2 class="text-color2 text-sm font-bold">Nombradas</h2>
+      <div class="flex flex-col">
+        <div class="flex items-center justify-between">
+          <span class="text-color2 text-sm">Ejecutadas</span>
+          <span class="text-color1 text-xl font-bold"
+            >{{ dashboardResponse.totalAssistancesByNamed }}</span
+          >
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-color2 text-sm">Programadas</span>
+          <span class="text-color1 text-xl font-bold"
+            >{{ dashboardResponse.totalNameds }}</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="flex flex-col gap-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden p-5 w-full"
+    >
+      <h2 class="text-color2 text-sm font-bold">Asistencias de personal</h2>
+      <p class="text-color1 text-2xl font-bold">
+        {{ dashboardResponse.totalAssistances }}
+      </p>
+    </div>
+
+    <div
+      class="flex flex-col gap-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden p-5 w-full"
+    >
+      <h2 class="text-color2 text-sm font-bold">Faltas de personal</h2>
+      <p class="text-color1 text-2xl font-bold">
+        {{ dashboardResponse.totalNoAssistances }}
+      </p>
+    </div>
+
+    <div
+      class="flex flex-col gap-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden p-5 w-full"
+    >
+      <h2 class="text-color2 text-sm font-bold">Capacitaciones</h2>
+      <p class="text-color1 text-2xl font-bold">
+        {{ dashboardResponse.totalTalks }}
+      </p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+    >
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-color2">Asistencias</h3>
+      </div>
+      <div class="p-6 flex items-stretch gap-4">
+        <div class="flex-1">
+          @if (!chartHasData.bar) {
+          <p class="chart-empty text-sm text-color1-60" role="status" data-chart="bar">
+            {{ chartEmptyMessage() }}
+          </p>
+          }
+          <div [hidden]="!chartHasData.bar"><canvas #barChartCanvas height="300"></canvas></div>
+        </div>
+        <div class="w-28 flex flex-col gap-2">
+          <button
+            type="button"
+            class="py-2 px-3 rounded-md border text-sm transition-colors hover:bg-gray-50"
+            [class.bg-blue-50]="selectedPeriod === 'daily'"
+            [class.text-blue-700]="selectedPeriod === 'daily'"
+            [class.border-blue-200]="selectedPeriod === 'daily'"
+            (click)="onChangePeriod('daily')"
+          >
+            Día
+          </button>
+          <button
+            type="button"
+            class="py-2 px-3 rounded-md border text-sm transition-colors hover:bg-gray-50"
+            [class.bg-blue-50]="selectedPeriod === 'weekly'"
+            [class.text-blue-700]="selectedPeriod === 'weekly'"
+            [class.border-blue-200]="selectedPeriod === 'weekly'"
+            (click)="onChangePeriod('weekly')"
+          >
+            Semana
+          </button>
+          <button
+            type="button"
+            class="py-2 px-3 rounded-md border text-sm transition-colors hover:bg-gray-50"
+            [class.bg-blue-50]="selectedPeriod === 'monthly'"
+            [class.text-blue-700]="selectedPeriod === 'monthly'"
+            [class.border-blue-200]="selectedPeriod === 'monthly'"
+            (click)="onChangePeriod('monthly')"
+          >
+            Mes
+          </button>
+          <button
+            type="button"
+            class="py-2 px-3 rounded-md border text-sm transition-colors hover:bg-gray-50"
+            [class.bg-blue-50]="selectedPeriod === 'yearly'"
+            [class.text-blue-700]="selectedPeriod === 'yearly'"
+            [class.border-blue-200]="selectedPeriod === 'yearly'"
+            (click)="onChangePeriod('yearly')"
+          >
+            Año
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+    >
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-color2">Marcaciones</h3>
+      </div>
+      <div class="p-6">
+        @if (!chartHasData.pie) {
+          <p class="chart-empty text-sm text-color1-60" role="status" data-chart="pie">
+            {{ chartEmptyMessage() }}
+          </p>
+          }
+          <div [hidden]="!chartHasData.pie"><canvas #pieChartCanvas height="300"></canvas></div>
+      </div>
+    </div>
+
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+    >
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-color2">Top Posiciones</h3>
+      </div>
+      <div class="p-6">
+        @if (!chartHasData.positions) {
+          <p class="chart-empty text-sm text-color1-60" role="status" data-chart="positions">
+            {{ chartEmptyMessage() }}
+          </p>
+          }
+          <div [hidden]="!chartHasData.positions"><canvas #barChartCanvas2 height="300"></canvas></div>
+      </div>
+    </div>
+
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+    >
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-color2">Turnos</h3>
+      </div>
+      <div class="p-6">
+        @if (!chartHasData.turns) {
+          <p class="chart-empty text-sm text-color1-60" role="status" data-chart="turns">
+            {{ chartEmptyMessage() }}
+          </p>
+          }
+          <div [hidden]="!chartHasData.turns"><canvas #barChartCanvas5 height="300"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div
+      class="px-6 py-4 border-b border-gray-200 flex justify-between items-center"
+    >
+      <h3 class="text-lg font-semibold text-color2">Detalle de Nombradas</h3>
+      <div class="flex items-center gap-4">
+        <app-excel-download
+          [config]="excelConfigNameds"
+          (downloadEvent)="onExcelDownload($event)"
+        ></app-excel-download>
+      </div>
+    </div>
+    <div class="p-6">
+      <app-server-table
+        caption="Detalle de nombradas"
+        [headers]="headersNameds"
+        [data]="namedsData"
+        (pageChangeEvent)="onNamedsPageChange($event)"
+        [limit]="namedsLimit"
+        [page]="namedsPage"
+        [total]="namedsTotal"
+        [loading]="loading"
+        [error]="error"
+        [emptyMessage]="searched ? 'No hay nombradas para los filtros elegidos.' : 'Pulsa Buscar para ver las nombradas.'"
+      ></app-server-table>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 mt-6">
+    <div
+      class="px-6 py-4 border-b border-gray-200 flex justify-between items-center"
+    >
+      <h3 class="text-lg font-semibold text-color2">Asistencias</h3>
+      <div class="flex items-center gap-4">
+        <app-excel-download
+          [config]="excelConfigAssistances"
+          (downloadEvent)="onExcelDownload($event)"
+        ></app-excel-download>
+      </div>
+    </div>
+    <div class="p-6">
+      <app-server-table
+        caption="Asistencias"
+        [headers]="headers"
+        [data]="assistancesData"
+        (pageChangeEvent)="onAssistancesPageChange($event)"
+        [limit]="assistancesLimit"
+        [page]="assistancesPage"
+        [total]="assistancesTotal"
+        [loading]="loading"
+        [error]="error"
+        [emptyMessage]="searched ? 'No hay asistencias para los filtros elegidos.' : 'Pulsa Buscar para ver las asistencias.'"
+      ></app-server-table>
+    </div>
+  </div>
+</div>

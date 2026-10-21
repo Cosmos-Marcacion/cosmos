@@ -1,0 +1,92 @@
+<!--
+  La cámara a pantalla completa y una sola instrucción a la vez.
+
+  Antes era una tarjeta con la imagen pequeña y cinco indicadores alrededor
+  —distancia, precisión, "rostro válido", "verificando identidad", tres viñetas
+  de consejos— compitiendo por la atención de quien está de pie en el muelle
+  intentando encuadrarse. Aquí manda la imagen: el óvalo dice dónde ponerse y
+  debajo hay una frase, la que toque.
+-->
+<div class="fm" [attr.data-state]="captureState()">
+
+  @if (loadingMessage()) {
+    <div class="fm-boot" role="status" aria-live="polite">
+      @if (cameraError(); as error) {
+        <p class="fm-boot__text">{{ error.title }}</p>
+        <p class="fm-boot__text">{{ error.hint }}</p>
+        <button type="button" class="c-btn c-btn-primary" (click)="retryCamera()">Reintentar</button>
+        @if (canSwitchCamera()) {
+          <button type="button" class="c-btn c-btn-ghost fm-boot__alt" (click)="switchCamera()">
+            Usar la cámara {{ facing() === 'environment' ? 'delantera' : 'trasera' }}
+          </button>
+        }
+      } @else {
+        <span class="fm-boot__ring" aria-hidden="true"></span>
+        <p class="fm-boot__text">{{ loadingMessage() }}</p>
+      }
+    </div>
+  }
+
+  <video #videoElement autoplay muted playsinline class="fm-video"></video>
+  <canvas #canvasElement class="fm-canvas"></canvas>
+
+  <!-- El óvalo: verde cuando ya vale, y con el aro que se cierra al sujetar -->
+  <div class="fm-guide" aria-hidden="true">
+    <svg class="fm-guide__svg" viewBox="0 0 200 260" preserveAspectRatio="none">
+      <ellipse class="fm-guide__oval" cx="100" cy="130" rx="82" ry="112"
+        [class.fm-guide__oval--ok]="faceValidationStatus().isValid" />
+      <!--
+        El aro de progreso recorre el óvalo durante el segundo y medio que hay
+        que quedarse quieto. Es lo que convierte esa espera en algo que se ve
+        avanzar en vez de en un momento muerto donde la gente se movía.
+      -->
+      <ellipse class="fm-guide__progress" cx="100" cy="130" rx="82" ry="112" />
+    </svg>
+  </div>
+
+  <!-- El destello de la foto -->
+  <div class="fm-flash" aria-hidden="true"></div>
+
+  <header class="fm-top">
+    <h1 class="fm-top__title">Marcar con la cara</h1>
+    <!--
+      Se abre la trasera; este botón pasa a la delantera y vuelve. Mientras se
+      sujeta o se envía queda desactivado para no cortar la marcación.
+    -->
+    @if (canSwitchCamera()) {
+      <button
+        type="button"
+        class="fm-switch"
+        [disabled]="captureState() !== 'buscando'"
+        [attr.aria-label]="facing() === 'environment' ? 'Cambiar a la cámara delantera' : 'Cambiar a la cámara trasera'"
+        (click)="switchCamera()"
+      >
+        <app-icon name="cameraSwitch" [strokeWidth]="1.8" />
+      </button>
+    }
+  </header>
+
+  <footer class="fm-bottom">
+    @if (recognizedUserName()) {
+      <p class="fm-name">{{ recognizedUserName() }}</p>
+    }
+
+    <p class="fm-message" role="status" aria-live="polite">
+      @switch (captureState()) {
+        @case ('sujetando') { No te muevas… }
+        @case ('capturado') { ¡Listo! }
+        @case ('enviando') { Te estoy reconociendo… }
+        @default { {{ feedbackMessage() }} }
+      }
+    </p>
+
+    <!--
+      La ayuda solo aparece mientras se busca. Cuando ya hay cara válida sobra,
+      y dejarla puesta era pedirle a alguien que lea tres consejos justo en el
+      momento en que tiene que estarse quieto.
+    -->
+    @if (captureState() === 'buscando') {
+      <p class="fm-hint">Céntrate en el óvalo, con luz de frente. Se marca solo.</p>
+    }
+  </footer>
+</div>

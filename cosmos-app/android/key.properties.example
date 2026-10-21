@@ -1,0 +1,13 @@
+# Firma de release. Copia este fichero como `key.properties` y rellénalo.
+#
+# `key.properties` y los almacenes (*.jks) están en .gitignore: la clave con la
+# que se firma la app no puede viajar en el repositorio. Si se pierde, no se
+# pueden publicar actualizaciones de la app instalada, así que guárdala fuera
+# del proyecto y con copia.
+#
+# La ruta admite absoluta o relativa a android/app.
+storeFile=C:/ruta/a/my-release-key.jks
+storePassword=
+keyAlias=
+# Si la clave usa la misma contraseña que el almacén, puede quedarse vacío.
+keyPassword=

@@ -1,0 +1,116 @@
+# Gates de calidad del backend de Cosmos.
+#
+# Ver QA_PLAN.md para la politica de umbrales (trinquete: se fijan en el valor
+# medido y solo suben) y para el detalle de cada gate.
+#
+# Orden deliberado dentro del paso: primero lo que falla en segundos (lint,
+# tipos) y despues lo que falla en minutos (unitarias, integracion). Un cambio
+# con un error de tipos se entera en el primer minuto, no en el decimo.
+
+image: node:22
+
+definitions:
+  caches:
+    # `npm ci` borra node_modules igualmente; lo que ahorra tiempo de verdad es
+    # cachear la descarga, no el arbol instalado.
+    npmcache: ~/.npm
+
+  services:
+    mongo:
+      image: mongo:7
+      variables:
+        MONGO_INITDB_DATABASE: cosmos-perf
+
+  steps:
+    - step: &calidad
+        name: Calidad
+        caches: [npmcache]
+        script:
+          - npm ci
+          - npm run lint:ci
+          - npm run typecheck
+          - npm run test:cov
+          - npm run test:int
+          - npm run audit:ci
+          - npm run build
+        artifacts:
+          - coverage/**
+
+    - step: &seguridad
+        name: Analisis estatico
+        image: semgrep/semgrep
+        script:
+          # Se escanea la raiz del repositorio y no `src`: los `paths.include`
+          # de las reglas se resuelven contra el directorio del escaneo, y
+          # apuntar directamente a `src` las desactiva **en silencio**.
+          #
+          # `--error` hace que un hallazgo devuelva codigo distinto de cero.
+          - >-
+            semgrep scan
+            --config .semgrep.yml
+            --config p/typescript
+            --config p/nodejs
+            --config p/secrets
+            --error
+            --exclude node_modules --exclude dist --exclude coverage
+            .
+
+pipelines:
+  pull-requests:
+    '**':
+      - parallel:
+          - step: *calidad
+          - step: *seguridad
+
+  branches:
+    main:
+      - parallel:
+          - step: *calidad
+          - step: *seguridad
+      # El despliegue vive en `bitbucket-pipelines.yml.backup`, que quedo fuera
+      # de servicio antes de este trabajo. Cuando se reactive va aqui, detras de
+      # los gates: desplegar sin que hayan pasado es justo lo que este fichero
+      # existe para impedir.
+
+  custom:
+    # Se lanza a mano desde Bitbucket o con un scheduler. No entra en el gate de
+    # cada cambio: tarda minutos y necesita un entorno preparado.
+    nocturno:
+      - step:
+          name: Rendimiento
+          caches: [npmcache]
+          services: [mongo]
+          script:
+            - npm ci
+            - npm run build
+            - npm run start:prod &
+            # Espera activa en vez de un `sleep` fijo: con `sleep` o se espera
+            # de mas en cada corrida o se mide un servidor que aun no arranco.
+            - |
+              for i in $(seq 1 60); do
+                if curl -sf http://localhost:3000/health > /dev/null; then
+                  echo "Backend listo tras ${i}s."
+                  break
+                fi
+                if [ "$i" = "60" ]; then
+                  echo "El backend no respondio en 60 s."
+                  exit 1
+                fi
+                sleep 1
+              done
+            - |
+              apt-get update -qq
+              apt-get install -y gnupg2 curl
+              gpg -k
+              gpg --no-default-keyring \
+                --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+                --keyserver hkp://keyserver.ubuntu.com:80 \
+                --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+              echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+                > /etc/apt/sources.list.d/k6.list
+              apt-get update -qq
+              apt-get install -y k6
+            - k6 run perf/smoke.js
+            - k6 run perf/carga.js
+          artifacts:
+            - perf/resultados/**

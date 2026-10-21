@@ -1,0 +1,154 @@
+// Sistema de movimiento.
+//
+// La regla es una sola: el movimiento explica de donde viene algo o confirma
+// que ha pasado. Nada se mueve por decoracion. Por eso las entradas son cortas
+// y desde muy cerca (8-12 px), y las salidas casi no existen: retrasar lo que
+// el usuario quiere cerrar se siente lento.
+//
+// Todas las duraciones salen de los tokens, asi que `prefers-reduced-motion`
+// las neutraliza de golpe sin tener que repetir la media query aqui.
+
+// --- Fotogramas ----------------------------------------------------------
+
+@keyframes c-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes c-rise {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes c-rise-sm {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes c-pop {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes c-slide-from-left {
+  from { transform: translate3d(-100%, 0, 0); }
+  to { transform: none; }
+}
+
+@keyframes c-sheet-up {
+  from { opacity: 0; transform: translate3d(0, 24px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes c-shimmer {
+  from { background-position: -180% 0; }
+  to { background-position: 180% 0; }
+}
+
+@keyframes c-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes c-pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  70% { transform: scale(1.35); opacity: 0; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+// --- Utilidades de entrada ----------------------------------------------
+
+.c-anim-fade { animation: c-fade-in var(--c-dur-2) var(--c-ease) both; }
+.c-anim-rise { animation: c-rise var(--c-dur-3) var(--c-ease-spring) both; }
+.c-anim-rise-sm { animation: c-rise-sm var(--c-dur-2) var(--c-ease) both; }
+.c-anim-pop { animation: c-pop var(--c-dur-2) var(--c-ease-spring) both; }
+.c-anim-sheet { animation: c-sheet-up var(--c-dur-3) var(--c-ease-spring) both; }
+
+/**
+ * Entrada escalonada de una lista.
+ *
+ * Se aplica al contenedor y cada hijo directo entra 40 ms despues del
+ * anterior. Se corta en el octavo: mas alla el retraso acumulado ya se percibe
+ * como lentitud, y en una lista larga solo se ven los primeros de todos modos.
+ */
+.c-stagger > * {
+  animation: c-rise-sm var(--c-dur-2) var(--c-ease) both;
+}
+
+@for $i from 1 through 8 {
+  .c-stagger > *:nth-child(#{$i}) {
+    animation-delay: #{($i - 1) * 40}ms;
+  }
+}
+
+.c-stagger > *:nth-child(n + 9) {
+  animation-delay: 320ms;
+}
+
+// --- Realimentacion tactil ----------------------------------------------
+
+/**
+ * Respuesta al pulsar.
+ *
+ * En movil no hay hover, asi que el unico momento en que la interfaz puede
+ * confirmar que ha recibido el toque es mientras el dedo esta encima. Sin
+ * esto, entre el toque y la navegacion no pasa nada y el usuario vuelve a
+ * pulsar.
+ */
+.c-press {
+  transition:
+    transform var(--c-dur-1) var(--c-ease),
+    box-shadow var(--c-dur-2) var(--c-ease),
+    background-color var(--c-dur-2) var(--c-ease);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.c-press:active {
+  transform: scale(0.97);
+}
+
+.c-press-sm:active {
+  transform: scale(0.985);
+}
+
+// --- Carga ---------------------------------------------------------------
+
+/**
+ * Hueco de carga.
+ *
+ * Se prefiere a un spinner centrado porque conserva la forma de lo que va a
+ * llegar: la pantalla no da un salto de maquetacion cuando llegan los datos.
+ */
+.c-skeleton {
+  background-color: var(--c-sunken);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.75) 50%,
+    transparent 100%
+  );
+  background-size: 180% 100%;
+  background-repeat: no-repeat;
+  border-radius: var(--c-r-sm);
+  animation: c-shimmer 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c-skeleton {
+    animation: none;
+    background-image: none;
+  }
+}
+
+.c-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: c-spin 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c-spinner { animation-duration: 2.4s; }
+}

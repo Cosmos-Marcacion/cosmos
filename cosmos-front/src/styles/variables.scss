@@ -1,0 +1,56 @@
+// Paleta corporativa Cosmos Global Logistics.
+//
+// Derivada del color del isotipo y el logotipo (#003d53, matiz 196deg).
+// Los tonos se eligieron comprobando el contraste segun WCAG: todos los
+// colores sobre los que se escribe texto blanco superan 4.5:1.
+//
+// Panel administrativo (web).
+// Generado por tools/apply-brand-palette.py
+
+$brand: #003d53;
+
+$color1: #003d53; // Marca. Titulares, texto principal y superficies oscuras.
+$color2: #007099; // Accion primaria: botones, enlaces y bordes de enfasis.
+$color3: #0087b8; // Bordes y separadores suaves (se usa sobre todo al 20%).
+$color4: #147b66; // Exito.
+$color5: #b26206; // Aviso.
+$color6: #c62828; // Error.
+$color7: #f3f8f9; // Fondo general de la aplicacion.
+
+$color1-80: rgba(0, 61, 83, 0.8);
+$color2-80: rgba(0, 112, 153, 0.8);
+$color3-80: rgba(0, 135, 184, 0.8);
+$color4-80: rgba(20, 123, 102, 0.8);
+$color5-80: rgba(178, 98, 6, 0.8);
+$color6-80: rgba(198, 40, 40, 0.8);
+$color7-80: rgba(243, 248, 249, 0.8);
+
+$color1-60: rgba(0, 61, 83, 0.6);
+$color2-60: rgba(0, 112, 153, 0.6);
+$color3-60: rgba(0, 135, 184, 0.6);
+$color4-60: rgba(20, 123, 102, 0.6);
+$color5-60: rgba(178, 98, 6, 0.6);
+$color6-60: rgba(198, 40, 40, 0.6);
+$color7-60: rgba(243, 248, 249, 0.6);
+
+$color1-40: rgba(0, 61, 83, 0.4);
+$color2-40: rgba(0, 112, 153, 0.4);
+$color3-40: rgba(0, 135, 184, 0.4);
+$color4-40: rgba(20, 123, 102, 0.4);
+$color5-40: rgba(178, 98, 6, 0.4);
+$color6-40: rgba(198, 40, 40, 0.4);
+$color7-40: rgba(243, 248, 249, 0.4);
+
+$color1-20: rgba(0, 61, 83, 0.2);
+$color2-20: rgba(0, 112, 153, 0.2);
+$color3-20: rgba(0, 135, 184, 0.2);
+$color4-20: rgba(20, 123, 102, 0.2);
+$color5-20: rgba(178, 98, 6, 0.2);
+$color6-20: rgba(198, 40, 40, 0.2);
+$color7-20: rgba(243, 248, 249, 0.2);
+
+// Texto secundario con contraste AA (CKI10): la marca al 60 % y al 40 % no
+// llega a 4.5:1 sobre blanco. Para texto se usan estos tonos solidos de la
+// misma rampa; fondos y bordes siguen con la transparencia.
+$text-muted: #406e7e;
+$text-subtle: #4d7787;

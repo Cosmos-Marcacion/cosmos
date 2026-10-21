@@ -1,0 +1,306 @@
+<div class="flex w-full justify-between items-center px-5 py-5 xl:px-8">
+  <button
+    class="bg-color1 text-white px-4 py-2 rounded-xl gilroy-bold flex items-center gap-2"
+    (click)="onCancel()"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="size-6"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+      />
+    </svg>
+    Regresar
+  </button>
+  <h1 class="gilroy-bold text-xl">
+    {{ talkId ? "Editar capacitación" : "Agregar capacitación" }}
+  </h1>
+</div>
+
+<div class="px-5 xl:px-8">
+  <form
+    [formGroup]="talkForm"
+    (ngSubmit)="onSubmit()"
+    class="flex flex-col gap-5 p-5 bg-white rounded-xl xl:w-1/2"
+  >
+    <div class="flex flex-col gap-2">
+      <label class="text-color1-40 text-sm font-bold">Fecha de Trabajo *</label>
+      <input
+        (change)="getNameds()"
+        type="date"
+        formControlName="workerDate"
+        class="w-full p-2 rounded-md border border-color2"
+        [class.border-red-500]="
+          talkForm.get('workerDate')?.invalid &&
+          talkForm.get('workerDate')?.touched
+        "
+      />
+      @if (talkForm.get('workerDate')?.invalid &&
+      talkForm.get('workerDate')?.touched) {
+      <span class="text-red-500 text-sm">La fecha es requerida</span>
+      }
+    </div>
+
+    @if(nameds.length > 0) {
+
+    <div class="flex flex-col gap-2">
+      <label class="text-color1-40 text-sm font-bold">Turno *</label>
+      <select
+        (change)="onChangeTurn()"
+        formControlName="turn"
+        class="w-full p-2 rounded-md border border-color2"
+        [class.border-red-500]="
+          talkForm.get('turn')?.invalid && talkForm.get('turn')?.touched
+        "
+      >
+        @for (turn of turns; track turn) { @if(turn){
+        <option [value]="turn">{{ turn }}</option>
+
+        } }
+      </select>
+      @if (talkForm.get('turn')?.invalid && talkForm.get('turn')?.touched) {
+      <span class="text-red-500 text-sm">El turno es requerido</span>
+      }
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="flex flex-col gap-2">
+        <label class="text-color1-40 text-sm font-bold">Tipo *</label>
+        <select
+          formControlName="type"
+          class="w-full p-2 rounded-md border border-color2"
+          [class.border-red-500]="
+            talkForm.get('type')?.invalid && talkForm.get('type')?.touched
+          "
+        >
+          <option value="">Seleccionar tipo</option>
+          @for (type of types; track type.value) {
+          <option [value]="type.value">{{ type.label }}</option>
+          }
+        </select>
+        @if (talkForm.get('type')?.invalid && talkForm.get('type')?.touched) {
+        <span class="text-red-500 text-sm">El tipo es requerido</span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-color1-40 text-sm font-bold">Tema *</label>
+        <input
+          type="text"
+          formControlName="topic"
+          class="w-full p-2 rounded-md border border-color2"
+          [class.border-red-500]="
+            talkForm.get('topic')?.invalid && talkForm.get('topic')?.touched
+          "
+          placeholder="Ingrese el tema"
+        />
+        @if (talkForm.get('topic')?.invalid && talkForm.get('topic')?.touched) {
+        <span class="text-red-500 text-sm">El tema es requerido</span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-color1-40 text-sm font-bold">Área *</label>
+        <input
+          type="text"
+          formControlName="area"
+          class="w-full p-2 rounded-md border border-color2"
+          [class.border-red-500]="
+            talkForm.get('area')?.invalid && talkForm.get('area')?.touched
+          "
+          placeholder="Ingrese el área"
+        />
+        @if (talkForm.get('area')?.invalid && talkForm.get('area')?.touched) {
+        <span class="text-red-500 text-sm">El área es requerida</span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-color1-40 text-sm font-bold">Lugar *</label>
+        <select
+          formControlName="place"
+          class="w-full p-2 rounded-md border border-color2"
+          [class.border-red-500]="
+            talkForm.get('place')?.invalid && talkForm.get('place')?.touched
+          "
+        >
+          <option value="">Seleccionar lugar</option>
+          @for (place of places; track place.value) {
+          <option [value]="place.value">{{ place.label }}</option>
+          }
+        </select>
+        @if (talkForm.get('place')?.invalid && talkForm.get('place')?.touched) {
+        <span class="text-red-500 text-sm">El lugar es requerido</span>
+        } @if(talkForm.get('place')?.value === 'Otros'){
+        <input
+          type="text"
+          formControlName="otherPlace"
+          class="w-full p-2 rounded-md border border-color2"
+          placeholder="Ingrese el lugar"
+        />
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-color1-40 text-sm font-bold">Sucursal *</label>
+        <input
+          type="text"
+          formControlName="branch"
+          class="w-full p-2 rounded-md border border-color2"
+          [class.border-red-500]="
+            talkForm.get('branch')?.invalid && talkForm.get('branch')?.touched
+          "
+          placeholder="Ingrese la sucursal"
+        />
+        @if (talkForm.get('branch')?.invalid && talkForm.get('branch')?.touched)
+        {
+        <span class="text-red-500 text-sm">La sucursal es requerida</span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-color1-40 text-sm font-bold">Hora Inicio *</label>
+        <input
+          type="time"
+          formControlName="startTime"
+          class="w-full p-2 rounded-md border border-color2"
+          [class.border-red-500]="
+            talkForm.get('startTime')?.invalid &&
+            talkForm.get('startTime')?.touched
+          "
+          (change)="calculateHours()"
+        />
+        @if (talkForm.get('startTime')?.invalid &&
+        talkForm.get('startTime')?.touched) {
+        <span class="text-red-500 text-sm">La hora de inicio es requerida</span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-color1-40 text-sm font-bold">Hora Fin *</label>
+        <input
+          type="time"
+          formControlName="endTime"
+          class="w-full p-2 rounded-md border border-color2"
+          [class.border-red-500]="
+            talkForm.get('endTime')?.invalid && talkForm.get('endTime')?.touched
+          "
+          (change)="calculateHours()"
+        />
+        @if (talkForm.get('endTime')?.invalid &&
+        talkForm.get('endTime')?.touched) {
+        <span class="text-red-500 text-sm">La hora de fin es requerida</span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-color1-40 text-sm font-bold">Horas *</label>
+        <input
+          type="number"
+          formControlName="hours"
+          class="w-full p-2 rounded-md border border-color2"
+          [class.border-red-500]="
+            talkForm.get('hours')?.invalid && talkForm.get('hours')?.touched
+          "
+          step="0.01"
+          min="0"
+        />
+        @if (talkForm.get('hours')?.invalid && talkForm.get('hours')?.touched) {
+        <span class="text-red-500 text-sm">Las horas son requeridas</span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-color1-40 text-sm font-bold"
+          >Número de Registro *</label
+        >
+        <input
+          type="text"
+          formControlName="registerNumber"
+          class="w-full p-2 rounded-md border border-color2"
+          [class.border-red-500]="
+            talkForm.get('registerNumber')?.invalid &&
+            talkForm.get('registerNumber')?.touched
+          "
+        />
+        @if (talkForm.get('registerNumber')?.invalid &&
+        talkForm.get('registerNumber')?.touched) {
+        <span class="text-red-500 text-sm"
+          >El número de registro es requerido</span
+        >
+        }
+      </div>
+
+      <!--
+        Entrenador y registrador son personal de la empresa, no de la nombrada:
+        salen del mismo maestro que el resto de responsables, con busqueda por
+        nombre o documento.
+      -->
+      <app-person-picker
+        label="Entrenador *"
+        placeholder="Buscar por nombre o documento"
+        [value]="trainer"
+        (valueChange)="onSelectTrainer($event)" />
+      @if (talkForm.get('trainerId')?.invalid) {
+      <span class="text-red-500 text-sm">El entrenador es requerido</span>
+      }
+
+      <app-person-picker
+        label="Registrador *"
+        placeholder="Buscar por nombre o documento"
+        [value]="register"
+        (valueChange)="onSelectRegister($event)" />
+      @if (talkForm.get('registerId')?.invalid) {
+      <span class="text-red-500 text-sm">El registrador es requerido</span>
+      }
+
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-color1-40 text-sm font-bold"
+        >Resumen del tema expuesto *</label
+      >
+      <textarea
+        formControlName="summary"
+        rows="4"
+        class="w-full p-2 rounded-md border border-color2"
+        [class.border-red-500]="
+          talkForm.get('summary')?.invalid && talkForm.get('summary')?.touched
+        "
+        placeholder="Ingrese el resumen de la capacitación"
+      ></textarea>
+      @if (talkForm.get('summary')?.invalid && talkForm.get('summary')?.touched)
+      {
+      <span class="text-red-500 text-sm">El resumen es requerido</span>
+      }
+    </div>
+
+    <div class="flex items-center gap-2">
+      <input
+        type="checkbox"
+        formControlName="isAnnual"
+        id="isAnnual"
+        class="w-4 h-4"
+      />
+      <label for="isAnnual" class="text-color1-40 text-sm font-bold"
+        >¿Pertenece a Programa Anual de Capacitación?</label
+      >
+    </div>
+
+    <button
+      class="mt-5 bg-color2 text-white px-4 py-3 rounded-xl gilroy-bold disabled:opacity-60 disabled:cursor-not-allowed w-1/2"
+      type="submit"
+      [disabled]="talkForm.invalid"
+    >
+      {{ talkId ? "Actualizar" : "Guardar" }}
+    </button>
+    }
+  </form>
+</div>

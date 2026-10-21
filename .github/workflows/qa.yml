@@ -1,0 +1,265 @@
+name: QA
+
+# Gates de calidad de Cosmos.
+#
+# Orden deliberado: primero lo que falla en segundos (lint, tipos), despues lo
+# que falla en minutos (unitarias, integracion), y solo al final lo caro
+# (compilacion y extremo a extremo). Un cambio con un error de tipos se entera
+# en el primer minuto, no en el decimo.
+#
+# Los tres proyectos corren en paralelo entre si: un fallo del panel no impide
+# saber si el backend esta bien.
+
+on:
+  # En main y develop los gates los lanza deploy.yml antes de desplegar; si
+  # tambien corrieran aqui, cada push pagaria dos veces la misma validacion.
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+# Un push nuevo sobre la misma rama cancela la corrida anterior: no tiene
+# sentido pagar por validar un commit que ya nadie va a mirar.
+concurrency:
+  group: qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  # ---------------------------------------------------------------- backend
+  backend:
+    name: Backend (NestJS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: cosmos-back
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: cosmos-back/package-lock.json
+
+      - name: Instalar dependencias
+        # `npm ci` y no `npm install`: reproduce exactamente el arbol del lock.
+        # Si el lock esta desincronizado, es mejor enterarse aqui que descubrir
+        # en produccion que se desplego otra version de una dependencia.
+        run: npm ci
+
+      - name: Lint (trinquete)
+        run: npm run lint:ci
+
+      - name: Tipos
+        run: npm run typecheck
+
+      - name: Unitarias con cobertura
+        run: npm run test:cov
+
+      - name: Integracion (Mongo en memoria)
+        run: npm run test:int
+
+      - name: Vulnerabilidades de dependencias
+        run: node ../tools/audit-gate.mjs .
+
+      - name: Compilar
+        run: npm run build
+
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-backend
+          path: cosmos-back/coverage/
+          retention-days: 14
+
+  # ----------------------------------------------------------------- panel
+  frontend:
+    name: Panel (Angular)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: cosmos-front
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: cosmos-front/package-lock.json
+
+      - name: Instalar dependencias
+        # `--legacy-peer-deps` mientras `@angular/animations` pida una version de
+        # `@angular/common` mas nueva que la que fija el resto del arbol. Esta
+        # anotado en QA_PLAN.md como pendiente de alinear; en cuanto se alineen,
+        # la bandera sobra.
+        run: npm ci --legacy-peer-deps
+
+      - name: Lint (trinquete)
+        run: npm run lint:ci
+
+      - name: Tipos
+        run: npm run typecheck
+
+      - name: Unitarias con cobertura
+        run: npm test
+
+      - name: Vulnerabilidades de dependencias
+        run: node ../tools/audit-gate.mjs .
+
+      - name: Compilar
+        run: npm run build
+
+      - name: Guardar cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-panel
+          path: cosmos-front/coverage/
+          retention-days: 14
+
+  # ------------------------------------------------------------------- app
+  app:
+    name: App movil (Ionic)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: cosmos-app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: cosmos-app/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci --legacy-peer-deps
+
+      - name: Lint (trinquete)
+        run: npm run lint:ci
+
+      - name: Tipos
+        run: npm run typecheck
+
+      - name: Unitarias con cobertura
+        run: npm test
+
+      - name: Vulnerabilidades de dependencias
+        run: node ../tools/audit-gate.mjs .
+
+      - name: Compilar
+        run: npm run build
+
+  # ------------------------------------------------------- extremo a extremo
+  e2e:
+    name: E2E y accesibilidad
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Solo tiene sentido si el panel compila; si no, se sabe que va a fallar.
+    needs: frontend
+    defaults:
+      run:
+        working-directory: cosmos-front
+    # La imagen oficial trae los navegadores y sus dependencias del sistema ya
+    # instalados: sin ella, cada corrida se pasa dos minutos instalandolos.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --user 1001
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: cosmos-front/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci --legacy-peer-deps
+
+      - name: Flujos y accesibilidad
+        # La regresion visual queda fuera del gate hasta que existan
+        # instantaneas generadas en Linux: las que hay en el repositorio se
+        # tomaron en Windows y las fuentes no coinciden. Ver QA_PLAN.md.
+        run: npx playwright test --grep-invert @visual
+        env:
+          CI: 'true'
+
+      - name: Guardar informe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-e2e
+          path: |
+            cosmos-front/playwright-report/
+            cosmos-front/test-results/
+          retention-days: 14
+
+  # --------------------------------------------------------------- seguridad
+  seguridad:
+    name: Analisis estatico de seguridad
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reglas propias y catalogos publicos
+        # Las reglas de `.semgrep.yml` salieron de defectos reales de esta base
+        # de codigo; los catalogos aportan el resto.
+        run: |
+          semgrep scan \
+            --config .semgrep.yml \
+            --config p/typescript \
+            --config p/nodejs \
+            --config p/secrets \
+            --error \
+            --sarif --output semgrep.sarif \
+            --exclude node_modules --exclude dist --exclude .angular \
+            --exclude coverage --exclude android
+        env:
+          SEMGREP_SEND_METRICS: 'off'
+
+      - name: Guardar informe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-semgrep
+          path: semgrep.sarif
+          retention-days: 14
+
+  # -------------------------------------------------------------------- gate
+  gate:
+    name: Gate de calidad
+    runs-on: ubuntu-latest
+    # Este es el unico check que hay que exigir en la proteccion de rama: si se
+    # anade un job nuevo, entra aqui y la regla de la rama no se toca.
+    needs: [backend, frontend, app, e2e, seguridad]
+    if: always()
+    steps:
+      - name: Comprobar que todo paso
+        run: |
+          resultados='${{ join(needs.*.result, ' ') }}'
+          echo "Resultados: $resultados"
+          for r in $resultados; do
+            if [ "$r" != "success" ]; then
+              echo "Hay gates que no pasaron."
+              exit 1
+            fi
+          done
+          echo "Todos los gates en verde."

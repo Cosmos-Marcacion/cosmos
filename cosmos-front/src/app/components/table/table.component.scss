@@ -1,0 +1,25 @@
+tr.dragging {
+  opacity: 0.5;
+  background-color: #f0f0f0;
+}
+
+tr.drag-over {
+  border-top: 2px solid #007099;
+}
+
+tr {
+  cursor: move;
+}
+
+.bg-blue-600,
+.bg-red-600 {
+  color: #ffffff !important;
+}
+
+// Los topes de ancho por punto de corte (600/500/400/300 px) compensaban que
+// la columna de contenido del layout no encogía. Arreglado allí, sobran: la
+// tabla ocupa su hueco y desplaza dentro de él si hace falta.
+.table-container {
+  width: 100%;
+  max-width: 100%;
+}

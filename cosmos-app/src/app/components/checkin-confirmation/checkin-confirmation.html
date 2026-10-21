@@ -1,0 +1,36 @@
+@if (visible()) {
+<div class="cc" [class.cc--error]="type() === 'error'" role="alert" aria-live="assertive">
+  <div class="cc__content">
+
+    @if (type() === 'success') {
+      <!--
+        El tic se dibuja solo, no aparece hecho. El trazo tarda lo que tarda
+        mirar la pantalla, y es lo que hace que se lea como "acaba de pasar"
+        en vez de como una imagen que ya estaba ahí.
+      -->
+      <div class="cc__mark">
+        <svg viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="cc__circle" cx="26" cy="26" r="24" />
+          <path class="cc__check" d="M14 27l8 8 16-17" />
+        </svg>
+      </div>
+    } @else {
+      <!--
+        La cruz entra con una sacudida corta. Antes esta pantalla usaba el
+        mismo icono de tic que la de acierto: en rojo, pero un tic, y quien
+        no llegaba a leer el texto se iba creyendo que había marcado.
+      -->
+      <div class="cc__mark cc__mark--shake">
+        <svg viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="cc__circle" cx="26" cy="26" r="24" />
+          <path class="cc__cross" d="M17 17l18 18" />
+          <path class="cc__cross cc__cross--second" d="M35 17L17 35" />
+        </svg>
+      </div>
+    }
+
+    <h1 class="cc__title">{{ title() }}</h1>
+    <p class="cc__detail">{{ detail() }}</p>
+  </div>
+</div>
+}

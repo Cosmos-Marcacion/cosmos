@@ -1,0 +1,815 @@
+/**
+ * El constructor de formatos.
+ *
+ * Tres columnas: los datos que se pueden poner, el documento, y lo que se puede
+ * cambiar de lo que está seleccionado. Es la disposición de PandaDoc o Gutenberg,
+ * y se elige porque el documento manda: ocupa el centro y todo lo demás cabe a
+ * los lados sin taparlo.
+ *
+ * Estilos nativos, sin PrimeNG. Una pantalla que edita una hoja que se imprime
+ * no puede heredar los márgenes de una librería de componentes.
+ */
+
+$ink: #0f172a;
+// Texto secundario. Era #64748b, 4.5:1 justo sobre el gris de los paneles y a
+// 10-11 px; se oscurece para que las ayudas se lean (CKI10).
+$muted: #5b6b7f;
+$line: #e2e8f0;
+$rule: #94a3b8;
+$panel: #f8fafc;
+$accent: #4f46e5;
+$accent-soft: #eef2ff;
+$data: #0369a1;
+$data-soft: #e0f2fe;
+$danger: #b91c1c;
+
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+  color: $ink;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+/**
+ * Tres columnas, y solo la del medio se desplaza.
+ *
+ * El documento es largo —el permiso de trabajo pasa de cien filas— y al bajar
+ * hasta el final se perdian de vista los datos de la izquierda y el panel de la
+ * derecha, que es justo lo que hace falta para editar la fila que se esta
+ * mirando. Ahora el scroll esta **dentro** de la vista del documento: los dos
+ * lados no se mueven, y la barra de la aplicacion y la del maestro tampoco.
+ *
+ * La rejilla mide lo que le da el maestro y no crece: es lo que convierte el
+ * desbordamiento en scroll interno en vez de alargar la pagina. El
+ * `min-height` es un suelo por si algun dia se envuelve la pantalla en algo que
+ * no propague el alto: se veria corta, pero nunca vacia.
+ */
+.fb {
+  display: grid;
+  // Los anchos viven en variables para que el componente solo tenga que decir
+  // que esta plegado, con una clase, y el ajuste por ancho de ventana siga
+  // decidiendose aqui.
+  --fb-izquierda: 220px;
+  --fb-derecha: 260px;
+  grid-template-columns: var(--fb-izquierda) minmax(0, 1fr) var(--fb-derecha);
+  gap: 0;
+  height: 100%;
+  min-height: 420px;
+  overflow: hidden;
+  border-top: 1px solid $line;
+  background: #fff;
+}
+
+
+// --- cabecera de los paneles laterales ----------------------------------------
+
+/**
+ * Los dos paneles se pliegan a un carril con su boton.
+ *
+ * La rejilla era fija y entre los dos se llevaban 480 px: en un portatil de
+ * 1366 el documento se quedaba con poco mas de la mitad de la pantalla. Con los
+ * dos cerrados pasa a algo mas del 90%.
+ */
+.fb-panelhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 6px;
+
+  &__toggle {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid $line;
+    border-radius: 5px;
+    background: #fff;
+    color: inherit;
+    cursor: pointer;
+
+    svg { width: 15px; height: 15px; }
+    &:hover { background: $accent-soft; }
+  }
+}
+
+// Plegados: solo el carril del boton, sin recortar nada a medias. Con doble
+// clase: `.fb-palette` va despues en el fichero y su relleno de 12 px pisaba
+// este, y el boton se salia del carril.
+.fb-palette.fb-palette--cerrado,
+.fb-inspector.fb-inspector--cerrado {
+  // Sin relleno lateral: el carril mide 40 px y con 6 + 6 el botón de 26 se
+  // salía por el borde.
+  padding: 12px 0;
+  overflow: hidden;
+
+  .fb-panelhead {
+    justify-content: center;
+    margin-bottom: 0;
+  }
+}
+
+// --- paleta -------------------------------------------------------------------
+
+.fb-palette {
+  display: flex;
+  flex-direction: column;
+  // El titulo y el buscador se quedan arriba; lo que se desplaza es la lista.
+  min-height: 0;
+  padding: 12px;
+  background: $panel;
+  border-right: 1px solid $line;
+
+  &__title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  &__hint {
+    margin: 2px 0 8px;
+    font-size: 11px;
+    color: $muted;
+  }
+
+  // Lo que evita la barra aqui no es prohibirla, es que quepa: los datos van
+  // en grupos y solo hay uno abierto, y el mayor tiene nueve. `auto` solo
+  // aparece si alguna vez no cabe —buscando, con muchas coincidencias—, y
+  // entonces es preferible a que las fichas se salgan por encima del documento.
+  &__list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  &__group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    width: 100%;
+    margin: 6px 0 3px;
+    padding: 4px 6px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $muted;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: #eef2f7;
+      color: $ink;
+    }
+
+    &--on {
+      background: $accent-soft;
+      color: $accent;
+    }
+  }
+
+  &__count {
+    padding: 0 4px;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 9px;
+    letter-spacing: 0;
+  }
+}
+
+.fb-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  border: 1px solid $line;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12px;
+}
+
+.fb-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  margin-bottom: 3px;
+  border: 1px solid $line;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 12px;
+  cursor: grab;
+  user-select: none;
+
+  &:hover {
+    border-color: $accent;
+    background: $accent-soft;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &__grip {
+    // $rule es color de linea (2.6:1): como texto no se veia.
+    color: $muted;
+    font-size: 11px;
+  }
+
+  &__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// --- lienzo -------------------------------------------------------------------
+
+.fb-canvas {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+
+  // Deshacer y el zoom se usan mirando la fila que se acaba de tocar, asi que
+  // se quedan fuera de la parte que se desplaza.
+  &__bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-bottom: 1px solid $line;
+    background: #fff;
+    // El que cede sitio es el control del zoom, no los botones: un boton a
+    // medias no se pulsa, una barra mas corta se sigue arrastrando. Si ni asi
+    // caben (1024 px con el menu abierto), la barra baja a una segunda linea en
+    // vez de sacar "Ajustar al ancho" por el borde.
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  &__spacer {
+    flex: 1;
+  }
+}
+
+.fb-tool {
+  padding: 5px 10px;
+  border: 1px solid $line;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  // Sin esto, al entrar "Ajustar al ancho" en la barra los botones partian su
+  // texto en dos lineas y la barra crecia al doble de alto.
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    border-color: $accent;
+    color: $accent;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.fb-zoom {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: $muted;
+
+  // El deslizador trae ~130 px de ancho propio y no encogia con la etiqueta.
+  input {
+    min-width: 0;
+    width: 7rem;
+    flex: 1 1 auto;
+  }
+}
+
+/**
+ * El hueco donde vive la hoja, y el unico que se desplaza.
+ *
+ * Se desplaza en los dos sentidos: un permiso en apaisado mide mas que la
+ * columna, y recortarlo dejaria fuera las ultimas casillas de cada fila.
+ */
+.fb-page-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+  background: #eef2f7;
+}
+
+/**
+ * La hoja.
+ *
+ * Ancho de A4 menos márgenes, el mismo que usa la vista de impresión, para que
+ * lo que se ve al editar reparta el espacio igual que lo que sale por la
+ * impresora. Solo el ancho: el alto lo pone el contenido, porque aquí se edita
+ * y no se pagina.
+ */
+.fb-page {
+  box-sizing: border-box;
+  width: 194mm;
+  margin: 0 auto;
+  padding: 8mm;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 6px rgb(15 23 42 / 14%);
+
+  &--landscape {
+    width: 281mm;
+  }
+}
+
+// --- secciones ----------------------------------------------------------------
+
+.fb-section {
+  margin-bottom: 4px;
+  border: 1px dashed transparent;
+  border-radius: 6px;
+
+  &:hover {
+    border-color: $line;
+  }
+
+  &--off {
+    opacity: 0.45;
+  }
+
+  &__bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+  }
+
+  &__title {
+    flex: 1;
+    min-width: 0;
+    padding: 3px 6px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+
+    &:hover {
+      border-color: $line;
+    }
+
+    &:focus,
+    &--on {
+      outline: none;
+      border-color: $accent;
+      background: $accent-soft;
+    }
+  }
+
+  &__tools {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.12s;
+
+    button {
+      padding: 2px 6px;
+      border: 1px solid $line;
+      border-radius: 6px;
+      background: #fff;
+      font: inherit;
+      font-size: 10px;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+    }
+  }
+}
+
+.fb-section:hover .fb-section__tools {
+  opacity: 1;
+}
+
+.fb-fixed {
+  margin: 0;
+  padding: 8px;
+  border: 1px dashed $rule;
+  border-radius: 6px;
+  font-size: 11px;
+  color: $muted;
+}
+
+// --- filas y columnas ---------------------------------------------------------
+
+/**
+ * El botón de insertar.
+ *
+ * Vive en el hueco entre dos filas y solo aparece al pasar por encima: es el
+ * gesto de Notion y de Gutenberg. Ocupa un hueco fijo aunque esté invisible,
+ * porque si el documento se moviera al pasar el ratón nadie acertaría a pulsar.
+ */
+.fb-insert {
+  display: block;
+  width: 100%;
+  height: 14px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: $accent;
+  font: inherit;
+  font-size: 10px;
+  line-height: 14px;
+  opacity: 0;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+    background: $accent-soft;
+  }
+
+  &--section {
+    height: 16px;
+    line-height: 16px;
+    font-weight: 700;
+  }
+}
+
+.fb-section:hover .fb-insert,
+.fb-page:hover > .fb-insert {
+  opacity: 0.55;
+}
+
+.fb-rowwrap {
+  position: relative;
+
+  &:hover .fb-rowtools {
+    opacity: 1;
+  }
+}
+
+.fb-rowtools {
+  position: absolute;
+  top: 0;
+  left: -30px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  opacity: 0;
+  transition: opacity 0.12s;
+
+  button {
+    width: 20px;
+    height: 16px;
+    padding: 0;
+    border: 1px solid $line;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 9px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+  }
+}
+
+.fb-row {
+  display: grid;
+}
+
+.fb-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 6mm;
+  padding: 0.6mm 1mm;
+  font-size: 8px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+
+  &--boxed {
+    border: 0.25mm solid $rule;
+  }
+
+  &--bold {
+    font-weight: 700;
+  }
+
+  &--fill {
+    background: #e8eef4;
+  }
+
+  &:hover {
+    outline: 1px solid $accent;
+    outline-offset: -1px;
+  }
+
+  &--on {
+    outline: 2px solid $accent;
+    outline-offset: -1px;
+    background: $accent-soft;
+  }
+
+  &--drop {
+    outline: 2px dashed $accent;
+    outline-offset: -1px;
+    background: $accent-soft;
+  }
+
+  &:hover > .fb-split,
+  &--on > .fb-split {
+    opacity: 1;
+  }
+}
+
+/** Parte la casilla en dos. Aparece pegado a su borde derecho. */
+.fb-split {
+  position: absolute;
+  top: 50%;
+  right: -7px;
+  z-index: 2;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  transform: translateY(-50%);
+  border: 1px solid $accent;
+  border-radius: 50%;
+  background: #fff;
+  color: $accent;
+  font-size: 10px;
+  line-height: 1;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.fb-data {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: $data-soft;
+  color: $data;
+  font-size: 8px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-check {
+  display: inline-block;
+  width: 3.5mm;
+  height: 3.5mm;
+  border: 0.25mm solid $ink;
+}
+
+// La que se marca sola lleva el color de los datos, igual que `.fb-data`: en el
+// lienzo se distingue de un vistazo cuál depende de la jornada.
+.fb-check--auto {
+  border-color: $data;
+  background: $data-soft;
+}
+
+// Marcada a mano desde el maestro: la X que saldrá impresa.
+.fb-check--on {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 3mm;
+  line-height: 1;
+}
+
+.fb-marked {
+  font-weight: 700;
+}
+
+.fb-imgs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+
+  img {
+    max-height: 10mm;
+    object-fit: contain;
+  }
+}
+
+.fb-caption {
+  font-size: 6px;
+  line-height: 1.05;
+}
+
+.fb-blank {
+  color: #cbd5e1;
+}
+
+// --- panel de la selección ----------------------------------------------------
+
+.fb-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  // Mismo criterio que la paleta: cabe, y la barra solo saldria en una ventana
+  // muy baja, donde recortar el panel seria peor.
+  overflow-y: auto;
+  padding: 12px;
+  background: $panel;
+  border-left: 1px solid $line;
+  font-size: 12px;
+
+  &__head {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  &__empty {
+    color: $muted;
+    font-size: 11px;
+
+    ul {
+      margin: 6px 0 0;
+      padding-left: 16px;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    kbd {
+      padding: 0 3px;
+      border: 1px solid $line;
+      border-radius: 3px;
+      background: #fff;
+      font-size: 10px;
+    }
+  }
+}
+
+.fb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  > span {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $muted;
+  }
+}
+
+.fb-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 7px;
+  border: 1px solid $line;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  resize: vertical;
+
+  &:disabled {
+    background: #f1f5f9;
+    color: $muted;
+  }
+}
+
+.fb-bound {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid $data-soft;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.fb-x {
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: $muted;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    color: $danger;
+  }
+}
+
+.fb-group {
+  display: flex;
+  gap: 4px;
+}
+
+.fb-toggle {
+  flex: 1;
+  padding: 5px 4px;
+  border: 1px solid $line;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $accent;
+  }
+
+  &--on {
+    border-color: $accent;
+    background: $accent-soft;
+    color: $accent;
+    font-weight: 600;
+  }
+}
+
+.fb-danger {
+  padding: 5px 8px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fff;
+  color: $danger;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+
+  &:hover {
+    background: #fef2f2;
+  }
+}
+
+.fb-danger-link {
+  color: $danger;
+}
+
+.fb-hint {
+  margin: 0;
+  font-size: 10px;
+  color: $muted;
+}
+
+.fb-muted {
+  color: $muted;
+  font-size: 11px;
+}
+
+.fb-plus {
+  padding: 0 3px;
+  border-radius: 3px;
+  background: $accent-soft;
+  color: $accent;
+  font-weight: 600;
+}
+
+@media (width <= 1200px) {
+  .fb {
+    --fb-izquierda: 180px;
+    --fb-derecha: 230px;
+  }
+}
+
+// Ventana estrecha: el componente pliega los paneles al entrar en este ancho
+// (ver `revisarAncho`); si se vuelven a abrir, ocupan menos.
+@media (width < 1024px) {
+  .fb {
+    --fb-izquierda: 170px;
+    --fb-derecha: 200px;
+  }
+}
+
+// Despues del corte por ancho a proposito: con la misma especificidad gana la
+// ultima, y un panel plegado mide lo mismo quepa lo que quepa.
+.fb--datos-cerrado { --fb-izquierda: 40px; }
+.fb--detalles-cerrado { --fb-derecha: 40px; }

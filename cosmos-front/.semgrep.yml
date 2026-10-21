@@ -1,0 +1,83 @@
+# Reglas de analisis estatico del panel de Cosmos.
+#
+# Semgrep trae catalogos generales muy buenos (`p/typescript`, `p/nodejs`) y el
+# pipeline los ejecuta. Este fichero anade lo que ningun catalogo generico puede
+# saber: los defectos concretos que ya aparecieron en esta base de codigo. Cada
+# regla nacio de un fallo real, no de una buena practica abstracta.
+#
+#   semgrep --config .semgrep.yml --config p/typescript --config p/nodejs
+#
+# Los patrones van entre comillas a proposito: sin ellas, YAML interpreta
+# `{ ... }` como un mapa y Semgrep rechaza el fichero.
+rules:
+  - id: cosmos-complete-para-apagar-cargando
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      `complete` no se ejecuta cuando el observable termina en error, asi que el
+      indicador de carga se queda encendido y el boton deshabilitado para
+      siempre: hay que recargar la pagina para reintentar. Este fallo aparecio
+      tres veces en el panel y en la app. Usa `.pipe(finalize(() => ...))`.
+    patterns:
+      - pattern-either:
+          - pattern: "{ ..., complete: () => $LOADING.set(false), ... }"
+          - pattern: "{ ..., complete: () => { $LOADING.set(false); }, ... }"
+          - pattern: "{ ..., complete: () => { this.$LOADING = false; }, ... }"
+          - pattern: "{ ..., complete: () => { this.$LOADING.set(false); }, ... }"
+    paths:
+      include:
+        - "src/**"
+      exclude:
+        - "*.spec.ts"
+
+  - id: cosmos-query-string-con-ampersand
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      La cadena de consulta se abre con `?`, no con `&`. Con `&` el parametro se
+      pega al ultimo segmento de la ruta, el backend no lo ve, y el filtro deja
+      de funcionar sin que nada falle: la lista sale entera. Ya ocurrio en el
+      buscador de puntos.
+    # El patron exige que **no** haya un `?` antes dentro de la misma plantilla:
+    # `?page=${p}&limit=${l}` es correcto y no debe marcarse. Sin esa condicion
+    # la regla producia un falso positivo en `talks.service.ts`, y una regla que
+    # se equivoca es una regla que se acaba desactivando.
+    pattern-regex: '`[^`?]*\}&[a-zA-Z]+='
+    paths:
+      include:
+        - "src/**"
+
+  - id: cosmos-parametro-de-url-sin-codificar
+    languages: [typescript]
+    severity: WARNING
+    message: >-
+      Texto de usuario concatenado en una URL sin `encodeURIComponent`. Un `&` o
+      un `#` escritos en el buscador parten la URL y el servidor recibe medio
+      termino.
+    pattern-regex: '\?search=\$\{(?!encodeURIComponent)[A-Za-z0-9_.]+\}'
+    paths:
+      include:
+        - "src/**"
+
+  - id: cosmos-secreto-en-el-codigo
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: >-
+      Parece un secreto escrito en el codigo. Los secretos van en el entorno; en
+      el repositorio quedan para siempre en el historial aunque despues se
+      borren del fichero.
+    patterns:
+      - pattern-either:
+          - pattern: const $NAME = "$VALUE"
+          - pattern: $NAME = "$VALUE"
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*(secret|passwd|password|apikey|api_key|accesskey|private_key).*
+      - metavariable-regex:
+          metavariable: $VALUE
+          regex: ^(?!test|fake|dummy|example|changeme|placeholder).{12,}$
+    paths:
+      exclude:
+        - "*.spec.ts"
+        - "testing/**"
+        - "e2e/**"

@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- El plugin no debe declarar Activities propias -->
+    <!-- Exponemos solo la capacidad de USB Host para que el sistema lo considere -->
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
+</manifest>

@@ -1,0 +1,103 @@
+// Tokens del sistema de diseno de Cosmos CheckIn.
+//
+// Un unico sitio donde viven las decisiones visuales. Antes cada pantalla
+// elegia su propio radio, su propia sombra y su propia duracion de animacion,
+// asi que dos tarjetas contiguas no se parecian. Aqui se declaran una vez y se
+// consumen como variables CSS, de modo que un cambio de marca no obliga a
+// tocar treinta plantillas.
+//
+// Se exponen como custom properties (no solo variables SCSS) para que tambien
+// esten disponibles desde los estilos de componente y desde clases generadas
+// en tiempo de ejecucion.
+
+@use "./variables" as vars;
+
+:root {
+  // --- Marca -------------------------------------------------------------
+  --c-brand: #{vars.$color1};
+  --c-brand-strong: #002736;
+  --c-accent: #{vars.$color2};
+  --c-accent-soft: #{vars.$color3};
+  --c-success: #{vars.$color4};
+  --c-warning: #{vars.$color5};
+  --c-danger: #{vars.$color6};
+
+  // --- Superficies -------------------------------------------------------
+  // `app` es el lienzo, `surface` las tarjetas, `sunken` los huecos dentro de
+  // una tarjeta (listas, campos). Tres niveles bastan y evitan el gris sopa.
+  --c-app: #{vars.$color7};
+  --c-surface: #ffffff;
+  --c-sunken: #eef4f7;
+  --c-line: #{vars.$color3-20};
+  --c-line-strong: #{vars.$color3-40};
+
+  // --- Texto -------------------------------------------------------------
+  --c-ink: #{vars.$color1};
+  --c-ink-soft: #{vars.$color1-80};
+  --c-ink-muted: #{vars.$color1-60};
+  --c-ink-onbrand: #ffffff;
+
+  // --- Radios ------------------------------------------------------------
+  --c-r-sm: 0.5rem;
+  --c-r-md: 0.875rem;
+  --c-r-lg: 1.25rem;
+  --c-r-xl: 1.75rem;
+  --c-r-pill: 999px;
+
+  // --- Elevacion ---------------------------------------------------------
+  // Tintadas con el azul de marca en vez de negro puro: una sombra neutra
+  // sobre un fondo frio se ve sucia.
+  --c-shadow-1: 0 1px 2px rgba(0, 61, 83, 0.06), 0 1px 3px rgba(0, 61, 83, 0.08);
+  --c-shadow-2: 0 2px 4px rgba(0, 61, 83, 0.06), 0 6px 16px rgba(0, 61, 83, 0.1);
+  --c-shadow-3: 0 8px 24px rgba(0, 61, 83, 0.14), 0 2px 6px rgba(0, 61, 83, 0.08);
+  --c-shadow-brand: 0 6px 20px rgba(0, 112, 153, 0.32);
+
+  // --- Movimiento --------------------------------------------------------
+  // Tres duraciones y dos curvas. `standard` para casi todo, `spring` para lo
+  // que aparece (da el rebote corto que hace que algo se sienta fisico).
+  --c-dur-1: 120ms;
+  --c-dur-2: 220ms;
+  --c-dur-3: 380ms;
+  --c-ease: cubic-bezier(0.2, 0, 0, 1);
+  --c-ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
+
+  /**
+   * Hueco que hay que dejar libre al final de cada vista.
+   *
+   * La barra inferior flota por encima del contenido, asi que sin esta reserva
+   * las ultimas filas quedan debajo. Es un token y no un numero repetido para
+   * que cambiar el alto de la barra no obligue a repasar las pantallas una por
+   * una: alto de la barra (3.5rem) + su relleno (0.75rem) + su separacion del
+   * borde (0.75rem) + un respiro.
+   */
+  --c-tabbar-space: 6.5rem;
+
+  // --- Areas seguras -----------------------------------------------------
+  //
+  // Salen de `env()`, que es quien conoce la muesca y la barra de gestos. El
+  // `index.html` ya declara `viewport-fit=cover`, que es lo que hace que
+  // `env()` devuelva algo distinto de cero.
+  //
+  // Nadie las rellenaba: la hoja anterior las leia con `var(--safe-area-x, 0px)`
+  // y siempre tomaba el 0 del fallback, asi que la cabecera se separaba con un
+  // `pt-12` fijo de 48 px. Con `overlaysWebView: false` en capacitor.config.ts
+  // el WebView de Android ya empieza por debajo de la barra de estado, de modo
+  // que esos 48 px eran hueco vacio. En iOS con muesca, `env()` si aporta el
+  // valor correcto.
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+// Quien prefiere menos movimiento recibe la interfaz igual, sin desplazamientos
+// ni rebotes. No se desactivan del todo: un cambio instantaneo se lee como un
+// fallo, asi que se dejan transiciones muy cortas.
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --c-dur-1: 1ms;
+    --c-dur-2: 1ms;
+    --c-dur-3: 1ms;
+    --c-ease-spring: var(--c-ease);
+  }
+}

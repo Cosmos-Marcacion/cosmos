@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cosmos Check-In</string>
+    <string name="title_activity_main">Cosmos Check-In</string>
+    <string name="package_name">com.cosmos.checkin</string>
+    
+    <!-- Permisos de cámara -->
+    <string name="camera_permission_rationale">Esta aplicación necesita acceso a la cámara para funcionar correctamente. La cámara se utiliza para capturar imágenes y escanear códigos QR.</string>
+    <string name="camera_permission_title">Permiso de Cámara</string>
+    <string name="camera_permission_message">Cosmos Check-In necesita acceso a la cámara para funcionar correctamente.</string>
+</resources>

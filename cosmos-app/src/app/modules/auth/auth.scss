@@ -1,0 +1,163 @@
+// Pantalla de acceso.
+//
+// Pasa de 415 lineas a esto. La mayor parte de lo que habia eran variantes de
+// campo, boton y tarjeta escritas solo para esta pantalla, con sus propios
+// radios (12 px, 16 px, 20 px), sus propias sombras y su propia tipografia:
+// justo lo que ahora aporta el sistema de diseno. Aqui queda unicamente lo que
+// es propio del login, que es la composicion del fondo.
+
+.auth {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 1.5rem;
+  padding-top: calc(1.5rem + var(--safe-area-top));
+  padding-bottom: calc(1.5rem + var(--safe-area-bottom));
+  overflow: hidden;
+}
+
+.auth__bg {
+  position: absolute;
+  inset: 0;
+  background-image: url("/images/background-login.jpg");
+  background-size: cover;
+  background-position: center;
+  // Un acercamiento muy lento da sensacion de profundidad sin distraer. Se
+  // apaga solo con `prefers-reduced-motion`, porque un movimiento continuo de
+  // fondo es de los que peor sientan a quien lo tiene activado.
+  animation: auth-drift 24s var(--c-ease) infinite alternate;
+}
+
+@keyframes auth-drift {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth__bg { animation: none; }
+}
+
+/**
+ * Velo.
+ *
+ * Se abre en el centro para que la foto se lea y la composicion recupere
+ * profundidad; los extremos se mantienen oscuros para que la tarjeta destaque.
+ */
+.auth__veil {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(
+      ellipse at center,
+      rgba(0, 39, 54, 0.28) 0%,
+      rgba(0, 39, 54, 0.72) 72%,
+      rgba(0, 39, 54, 0.9) 100%
+    );
+}
+
+.auth__content {
+  position: relative;
+  width: 100%;
+  max-width: 26rem;
+}
+
+.auth__card {
+  padding: 2.25rem 1.75rem;
+  border-radius: var(--c-r-xl);
+  background-color: rgba(243, 248, 249, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 25px 50px rgba(0, 61, 83, 0.3);
+}
+
+.auth__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+  text-align: center;
+}
+
+.auth__head img {
+  width: 220px;
+  height: auto;
+}
+
+.auth__tagline {
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  color: var(--c-ink-muted);
+}
+
+.auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.auth__label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.auth__label app-icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--c-accent);
+}
+
+.auth__password {
+  position: relative;
+}
+
+.auth__password .c-input {
+  // Deja sitio al botón del ojo, que antes se superponía al texto en contraseñas
+  // largas.
+  padding-right: 3rem;
+}
+
+.auth__reveal {
+  position: absolute;
+  top: 50%;
+  right: 0.375rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--c-r-sm);
+  color: var(--c-ink-muted);
+}
+
+.auth__reveal app-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.auth__reveal:active {
+  color: var(--c-accent);
+}
+
+.auth__error {
+  margin-top: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--c-danger);
+}
+
+.auth__submit {
+  margin-top: 0.25rem;
+}
+
+.auth__mark {
+  width: 44px;
+  height: auto;
+  margin: 0.75rem auto 0;
+  opacity: 0.7;
+}

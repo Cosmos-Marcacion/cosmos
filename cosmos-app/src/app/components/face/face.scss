@@ -1,0 +1,49 @@
+:host {
+  --primary-color: #007099; /* color2 corporativo */
+  --secondary-color: #1f2937; /* gray-800 */
+}
+.mode-button {
+  @apply px-4 py-2 font-semibold text-gray-300 rounded-md transition-all duration-300;
+  border: 2px solid transparent;
+}
+.active-mode {
+  @apply text-blue-300;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 10px rgba(0, 112, 153, 0.5);
+}
+
+// Cambiar de cámara: abajo a la derecha del vídeo, lejos de los indicadores.
+.face-switch {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 50%;
+  background: rgb(0 0 0 / 60%);
+  color: #fff;
+  transition: transform 0.15s ease, opacity 0.2s ease;
+
+  app-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.92);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+}

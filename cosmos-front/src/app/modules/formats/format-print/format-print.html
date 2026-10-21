@@ -1,0 +1,42 @@
+<div class="fp-bar">
+  <div class="fp-bar__left">
+    <a class="fp-btn fp-btn--ghost"
+      [routerLink]="['/marcaciones/nombrada', staffTransmissionId]"
+      [queryParams]="backDate ? { date: backDate } : {}">Volver</a>
+    @if (format(); as data) {
+      <span class="fp-bar__title">{{ data.label }}</span>
+      <span class="fp-bar__meta">definición v{{ data.version }}</span>
+    }
+  </div>
+
+  @if (format(); as data) {
+    <div class="fp-bar__docs">
+      @for (document of data.documents; track document.id) {
+        <button type="button" class="fp-chip" [class.fp-chip--on]="isVisible(document.id)"
+          (click)="toggle(document.id)">
+          {{ document.name }}
+          @if (document.number) {
+            <span class="fp-chip__number">{{ document.number }}</span>
+          }
+        </button>
+      }
+    </div>
+    <button type="button" class="fp-btn fp-btn--primary" (click)="print()">Imprimir</button>
+  }
+</div>
+
+<!--
+  El alias `as` solo funciona en un `@if`, no en un `@else if`, asi que el
+  documento se comprueba en su propio bloque.
+-->
+@if (loading()) {
+  <p class="fp-note">Componiendo el formato…</p>
+} @else if (error()) {
+  <p class="fp-note fp-note--error">{{ error() }}</p>
+} @else {
+  @if (format(); as data) {
+    <app-format-document [format]="data" [only]="selected()" />
+  } @else {
+    <p class="fp-note">Esta nombrada no tiene formato que mostrar.</p>
+  }
+}

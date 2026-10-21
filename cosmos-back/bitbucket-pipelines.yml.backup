@@ -1,0 +1,39 @@
+image: node:20-alpine # Usamos una imagen ligera de Node para la pipeline
+
+pipelines:
+  branches:
+    main: # Esta pipeline se ejecuta al hacer push o merge a la rama 'main'
+      - step:
+          name: Desplegar en servidor Ubuntu
+          deployment: production
+          script:
+            # 1. Instalar rsync y openssh-client en el contenedor de Bitbucket
+            - apk add --no-cache rsync openssh-client
+            
+            # 2. Sincronizar los archivos al servidor (omitiendo git y dependencias locales)
+            - pipe: atlassian/rsync-deploy:0.12.0
+              variables:
+                USER: $SERVER_USER
+                SERVER: $SERVER_IP
+                REMOTE_PATH: $PROJECT_PATH  # <-- CORREGIDO: antes decía REMOTE
+                LOCAL_PATH: './'            # <-- CORREGIDO: antes decía LOCAL
+                # ¡NUEVO!: Agregamos --exclude=.env para proteger el archivo del servidor
+                EXTRA_ARGS: '--exclude=.git --exclude=node_modules --exclude=dist --exclude=.env'
+            
+            # 3. Conectarse por SSH para reiniciar Docker en el servidor
+            - pipe: atlassian/ssh-run:0.8.0
+              variables:
+                SSH_USER: $SERVER_USER
+                SERVER: $SERVER_IP
+                COMMAND: |
+                  # Activar modo estricto
+                  set -e
+                  
+                  # Usa la ruta REAL aquí, no la variable
+                  cd /var/www/nestjs-app
+                  
+                  # Levantar el contenedor reconstruyendo la imagen
+                  docker compose up -d --build
+                  
+                  # Limpiar imágenes
+                  docker image prune -f

@@ -1,0 +1,377 @@
+/**
+ * La hoja impresa.
+ *
+ * Las medidas están en milímetros, igual que en el modelo, y son las mismas que
+ * aplica el renderizador de Excel (`a4-grid.ts` en el backend). Esto es lo que
+ * hace que las tres salidas compartan retícula y no solo datos.
+ *
+ * Sin variables de tema ni tipografías de pantalla: una hoja que se firma y se
+ * audita se imprime en negro sobre blanco, y tiene que salir igual desde
+ * cualquier navegador.
+ */
+
+$page-width: 210mm;
+$page-height: 297mm;
+$margin: 8mm;
+$ink: #111;
+$rule: #6b7280;
+$header-fill: #e8eef4;
+
+:host {
+  display: block;
+  // El gris solo se ve en pantalla; al imprimir la página es blanca.
+  background: #e5e7eb;
+  padding: 6mm 0;
+}
+
+.fd-sheet {
+  box-sizing: border-box;
+  width: $page-width;
+  min-height: $page-height;
+  margin: 0 auto 6mm;
+  padding: $margin;
+  background: #fff;
+  color: $ink;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 9pt;
+  line-height: 1.25;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 18%);
+
+  &--landscape {
+    width: $page-height;
+    min-height: $page-width;
+  }
+}
+
+// --- cabecera ----------------------------------------------------------------
+
+.fd-header {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid $rule;
+  margin-bottom: 2mm;
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+    flex: 1;
+    padding: 2mm 3mm;
+    background: $header-fill;
+  }
+
+  &__logo {
+    max-height: 12mm;
+    max-width: 30mm;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 12pt;
+    font-weight: 700;
+    text-align: center;
+    flex: 1;
+  }
+
+  &__meta {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-content: center;
+    gap: 0 2mm;
+    margin: 0;
+    padding: 2mm 3mm;
+    min-width: 45mm;
+    border-left: 1px solid $rule;
+    font-size: 7.5pt;
+
+    div {
+      display: contents;
+    }
+
+    dt {
+      font-weight: 700;
+
+      &::after {
+        content: ':';
+      }
+    }
+
+    dd {
+      margin: 0;
+    }
+  }
+
+  &__number {
+    font-weight: 700;
+    // El correlativo es lo que identifica el registro; conviene que se lea.
+    letter-spacing: 0.02em;
+  }
+}
+
+// --- secciones ---------------------------------------------------------------
+
+.fd-section-title {
+  margin: 2mm 0 0;
+  padding: 1mm 2mm;
+  background: $header-fill;
+  border: 1px solid $rule;
+  border-bottom: none;
+  font-size: 9pt;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.fd-fields {
+  display: grid;
+  border: 1px solid $rule;
+  border-right: none;
+  border-bottom: none;
+
+  &__label,
+  &__value {
+    padding: 1mm 2mm;
+    border-right: 1px solid $rule;
+    border-bottom: 1px solid $rule;
+    min-height: 6mm;
+    display: flex;
+    align-items: center;
+    // Los resúmenes de la charla son párrafos enteros.
+    overflow-wrap: anywhere;
+  }
+
+  &__label {
+    background: $header-fill;
+    font-weight: 700;
+  }
+}
+
+.fd-checklist {
+  display: grid;
+  border: 1px solid $rule;
+  border-right: none;
+  border-bottom: none;
+
+  &__box {
+    width: 6mm;
+    min-height: 6mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid $rule;
+    border-bottom: 1px solid $rule;
+    font-weight: 700;
+  }
+
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+    padding: 1mm 2mm;
+    border-right: 1px solid $rule;
+    border-bottom: 1px solid $rule;
+  }
+
+  &__image {
+    // Los pictogramas del permiso de trabajo son contenido normativo, no
+    // decoración: si no salen, el formato omite información.
+    max-height: 10mm;
+  }
+}
+
+.fd-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  th,
+  td {
+    border: 1px solid $rule;
+    padding: 0.8mm 1.5mm;
+    height: 5.5mm;
+    overflow-wrap: anywhere;
+  }
+
+  th {
+    background: $header-fill;
+    font-size: 8pt;
+    text-align: center;
+  }
+
+  td {
+    font-size: 8.5pt;
+  }
+}
+
+/**
+ * Un bloque: una lista de filas, cada una repartida en columnas.
+ *
+ * No hay retícula previa. Cada fila declara su propio reparto en porcentajes,
+ * así que partir una fila o añadir otra no obliga a recolocar nada.
+ */
+.fd-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.fd-row {
+  display: grid;
+  break-inside: avoid;
+}
+
+.fd-cell {
+  padding: 0.4mm 0.8mm;
+  font-size: 7pt;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+
+  &--bold { font-weight: 700; }
+  &--fill { background: $header-fill; }
+
+  // El recuadro es el que trae la celda en la hoja: en el ATS y el permiso es
+  // lo que separa la pregunta de la casilla donde se responde.
+  &--boxed { border: 0.25mm solid $rule; }
+}
+
+.fd-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4mm;
+  height: 4mm;
+  border: 0.25mm solid $ink;
+  font-weight: 700;
+  font-size: 6.5pt;
+}
+
+.fd-imgs {
+  display: flex;
+  align-items: center;
+  gap: 0.5mm;
+  flex-wrap: wrap;
+
+  img {
+    object-fit: contain;
+    max-height: 12mm;
+  }
+}
+
+// La firma se ajusta al alto de su casilla y conserva su proporción: una firma
+// estirada, en un documento que se audita, se lee como manipulada.
+.fd-signature {
+  display: block;
+  max-width: 100%;
+  max-height: 9mm;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+// Dentro de la lista de personal el alto de fila es menor.
+.fd-table .fd-signature {
+  max-height: 6mm;
+}
+
+.fd-caption {
+  font-size: 5.5pt;
+  line-height: 1.05;
+}
+
+.fd-signatures {
+  display: grid;
+  gap: 4mm 6mm;
+  margin-top: 6mm;
+
+  &__space {
+    height: 14mm;
+    border-bottom: 1px solid $ink;
+  }
+
+  &__name {
+    padding-top: 1mm;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  &__label {
+    font-size: 8pt;
+    text-align: center;
+  }
+}
+
+// --- impresión ---------------------------------------------------------------
+
+// Todas las hojas en A4. La asistencia va apaisada: una página con nombre le
+// da su propia orientación sin cambiar la del resto del libro. El margen es el
+// de la página y no un relleno de la hoja, para que las hojas de un documento
+// de dos páginas (ATS, permiso) lo lleven también arriba de la segunda.
+@page {
+  size: A4 portrait;
+  margin: $margin;
+}
+
+@page fd-portrait {
+  size: A4 portrait;
+  margin: $margin;
+}
+
+@page fd-landscape {
+  size: A4 landscape;
+  margin: $margin;
+}
+
+@media print {
+  :host {
+    background: none;
+    padding: 0;
+  }
+
+  .fd-sheet {
+    // Ancho útil de A4 fijo: con `auto` la hoja tomaba el del papel que
+    // eligiera el diálogo (Carta en muchos equipos) y la retícula cambiaba.
+    width: $page-width - 2 * $margin;
+    min-height: auto;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    page: fd-portrait;
+    // Cada documento del libro empieza en su propia hoja.
+    break-after: page;
+
+    &--landscape {
+      width: $page-height - 2 * $margin;
+      page: fd-landscape;
+    }
+
+    // Reducido para caber en las hojas de la plantilla; ver fitToPages().
+    .fd-sheet__content {
+      zoom: var(--fd-print-zoom, 1);
+    }
+
+    &:last-child {
+      break-after: auto;
+    }
+  }
+
+  // La cabecera de la tabla se reimprime al cortar la página. Es lo que la
+  // plantilla conseguía intercalando cabeceras entre las filas de personal.
+  .fd-table thead {
+    display: table-header-group;
+  }
+
+  .fd-table tr {
+    break-inside: avoid;
+  }
+
+  // Los fondos de cabecera son parte del documento, no decoración: sin esto,
+  // el navegador los quita al imprimir y las tablas pierden su estructura.
+  .fd-header__brand,
+  .fd-fields__label,
+  .fd-section-title,
+  .fd-table th {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

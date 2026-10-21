@@ -1,0 +1,12 @@
+<div class="signature-container">
+  <canvas
+    #signatureCanvas
+    width="500"
+    height="200"
+    class="signature-canvas"
+  ></canvas>
+  <div class="signature-controls">
+    <button (click)="clearCanvas()">Limpiar</button>
+    <button (click)="saveSignature()" [disabled]="saving()">Guardar Firma</button>
+  </div>
+</div>

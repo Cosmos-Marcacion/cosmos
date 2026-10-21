@@ -1,0 +1,331 @@
+/**
+ * El envoltorio del constructor: barra superior y avisos.
+ *
+ * Todo lo que se usa a diario cabe en la barra (tipo, documento, guardar,
+ * publicar). Lo demás vive detrás de "Ajustes", para que no compita con el
+ * documento, que es lo que se viene a mirar.
+ */
+
+$accent: #0087b8;
+
+/**
+ * La pantalla ocupa el alto que le da la aplicacion y no crece mas.
+ *
+ * Lo que se desplaza es la vista del documento, no la pagina: la barra de
+ * arriba y los dos paneles del constructor tienen que seguir ahi cuando se
+ * baja al final de un permiso de cien filas. Para eso el alto tiene que llegar
+ * entero desde el contenedor que desplaza la aplicacion hasta el hueco de la
+ * hoja, sin que ningun eslabon lo deje indefinido.
+ */
+:host {
+  display: block;
+  height: 100%;
+}
+
+.fm {
+  padding: 0.75rem 1rem 1rem;
+  background: #f8fafc;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  // Sin esto un hijo con scroll propio no puede encogerse por debajo de su
+  // contenido, y el alto se desborda en vez de repartirse.
+  min-height: 0;
+}
+
+// El constructor se queda con lo que sobra despues de la barra y los avisos.
+app-format-builder {
+  flex: 1;
+  min-height: 0;
+}
+
+.fm-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+}
+
+.fm-tabs {
+  display: flex;
+  gap: 0.2rem;
+  background: #e2e8f0;
+  border-radius: 0.4rem;
+  padding: 0.15rem;
+}
+
+.fm-tab {
+  border: none;
+  background: none;
+  border-radius: 0.3rem;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+
+  &--on {
+    background: #fff;
+    color: #0f2b3a;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+  }
+}
+
+.fm-select,
+.fm-input {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.3rem;
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  font-size: 0.82rem;
+  background: #fff;
+
+  &--small {
+    font-size: 0.78rem;
+    padding: 0.25rem 0.4rem;
+    width: 100%;
+  }
+}
+
+.fm-btn {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.3rem;
+  background: #fff;
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    background: $accent;
+    border-color: $accent;
+    color: #fff;
+  }
+
+  &--ghost {
+    background: transparent;
+  }
+}
+
+.fm-dirty {
+  font-size: 0.72rem;
+  color: #b45309;
+  background: #fef3c7;
+  border-radius: 0.3rem;
+  padding: 0.15rem 0.4rem;
+}
+
+/* El desplegable de ajustes. Nativo con `details` para no depender de nada. */
+.fm-more {
+  position: relative;
+
+  summary {
+    list-style: none;
+    display: inline-block;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+
+  &__panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.3rem);
+    z-index: 20;
+    width: 17rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.4rem;
+    box-shadow: 0 4px 14px rgb(0 0 0 / 12%);
+    padding: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+
+    hr {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 0.3rem 0;
+    }
+
+    > button {
+      border: 1px solid #cbd5e1;
+      border-radius: 0.25rem;
+      background: #fff;
+      padding: 0.3rem;
+      font-size: 0.78rem;
+      cursor: pointer;
+      text-align: left;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    // Era #94a3b8, 2.6:1 sobre blanco (CKI10).
+    color: #5b6b7f;
+  }
+
+  &__row {
+    display: flex;
+    gap: 0.3rem;
+
+    button {
+      border: 1px solid #cbd5e1;
+      border-radius: 0.25rem;
+      background: #fff;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+  }
+
+  &__sample {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #334155;
+  }
+
+  /* Lo que no se pudo cargar aquí dentro: se puede seguir sin ello. */
+  &__warn {
+    margin: 0;
+    font-size: 0.73rem;
+    color: #92400e;
+    background: #fef3c7;
+    border-radius: 0.3rem;
+    padding: 0.35rem 0.45rem;
+  }
+
+  &__danger {
+    border: 1px solid #fecaca !important;
+    color: #b91c1c;
+  }
+}
+
+/* Cuantas publicaciones hay, junto al boton de historial. */
+.fm-count {
+  display: inline-block;
+  margin-left: 0.35rem;
+  background: #e2e8f0;
+  color: #475569;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.05rem 0.35rem;
+}
+
+.fm-note {
+  margin: 0;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.35rem;
+  font-size: 0.82rem;
+
+  &--ok {
+    background: #ecfdf5;
+    color: #047857;
+  }
+
+  &--error {
+    background: #fef2f2;
+    color: #b91c1c;
+  }
+}
+
+.fm-issues {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  color: #7c2d12;
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  ul {
+    margin: 0.35rem 0 0;
+    padding-left: 1rem;
+  }
+}
+
+/* Cada cosa que impide publicar, con el sitio donde está. */
+.fm-issue {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 0.1rem 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover &__what,
+  &:focus-visible &__what {
+    text-decoration: underline;
+  }
+
+  &__where {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #9a3412;
+  }
+
+  &__what {
+    display: block;
+  }
+}
+
+// Un borrador que se quedo por detras de lo publicado. En ambar y no en rojo:
+// no es un error, es una decision pendiente.
+.fm-stale {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  border: 1px solid #fde68a;
+  border-radius: 0.5rem;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.8125rem;
+
+  &__text { max-width: 52rem; }
+
+  &__actions {
+    display: flex;
+    gap: 0.4rem;
+    flex: none;
+  }
+}

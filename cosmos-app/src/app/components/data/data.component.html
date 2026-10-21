@@ -1,0 +1,9 @@
+<app-list-table
+  [headers]="headers"
+  [data]="data"
+  (optionsEvent)="clickOptions($event.option, $event._id)"
+  [total]="total"
+  [page]="page"
+  [limit]="limit"
+  (pageChangeEvent)="pageChange($event)"
+></app-list-table>

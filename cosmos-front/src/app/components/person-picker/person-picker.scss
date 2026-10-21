@@ -1,0 +1,239 @@
+@use "../../../styles/variables" as vars;
+
+.person-picker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.person-picker__label {
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.9375rem;
+  color: vars.$color1-60;
+  letter-spacing: 0.01em;
+}
+
+.person-picker__required {
+  color: vars.$color6;
+  margin-left: 0.125rem;
+}
+
+// --- campo de busqueda -------------------------------------------------------
+
+.person-picker__field {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    width: 100%;
+    padding: 0.75rem 0.875rem 0.75rem 2.5rem;
+    border: 1px solid vars.$color3-40;
+    border-radius: 0.5rem;
+    background: #fff;
+    color: vars.$color1;
+    font-size: 1.0625rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &::placeholder {
+      color: vars.$color1-40;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: vars.$color2;
+      box-shadow: 0 0 0 3px vars.$color2-20;
+    }
+
+    &:disabled {
+      background: vars.$color7;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.person-picker__search-icon {
+  position: absolute;
+  left: 0.875rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  color: vars.$color1-40;
+  pointer-events: none;
+}
+
+.person-picker__spinner {
+  position: absolute;
+  right: 0.75rem;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid vars.$color3-20;
+  border-top-color: vars.$color2;
+  border-radius: 50%;
+  animation: person-picker-spin 0.6s linear infinite;
+}
+
+@keyframes person-picker-spin {
+  to { transform: rotate(360deg); }
+}
+
+// --- persona ya elegida ------------------------------------------------------
+
+.person-picker__selected {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.625rem 0.625rem 0.75rem;
+  border: 1px solid vars.$color3-40;
+  border-radius: 0.5rem;
+  background: #fff;
+
+  &.is-disabled {
+    background: vars.$color7;
+  }
+}
+
+.person-picker__avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: vars.$color2;
+  color: #fff;
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 1rem;
+}
+
+.person-picker__selected-body,
+.person-picker__option-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.person-picker__selected-name,
+.person-picker__option-name {
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 1rem;
+  color: vars.$color1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.person-picker__selected-meta,
+.person-picker__option-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  color: vars.$color1-60;
+}
+
+.person-picker__doc {
+  font-variant-numeric: tabular-nums;
+}
+
+.person-picker__action {
+  flex: none;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid vars.$color2-40;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: vars.$color2;
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  &:hover { background: vars.$color2-20; }
+  &:focus-visible { outline: 2px solid vars.$color2; outline-offset: 1px; }
+}
+
+.person-picker__clear {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: vars.$color1-40;
+  cursor: pointer;
+
+  svg { width: 1.125rem; height: 1.125rem; }
+  &:hover { background: vars.$color6-20; color: vars.$color6; }
+  &:focus-visible { outline: 2px solid vars.$color2; outline-offset: 1px; }
+}
+
+// --- lista de resultados -----------------------------------------------------
+
+// El panel vive en la capa superior del navegador (`popover`), asi que se
+// posiciona contra la ventana y no contra el campo: las coordenadas las pone
+// `place()` en el componente. Aqui solo hay que deshacer lo que el navegador
+// aplica por su cuenta a todo `[popover]` (`inset: 0`, `margin: auto`, borde y
+// relleno propios) para que no se vaya al centro de la pantalla.
+.person-picker__panel {
+  position: fixed;
+  inset: auto;
+  z-index: 60;
+  margin: 0;
+  padding: 0;
+  width: max-content;
+  // El tope va aqui y no en la lista: lo que no puede salirse de la pantalla es
+  // el panel entero, bordes y mensajes incluidos. `place()` lo fija con el
+  // hueco libre que haya; el valor de reserva es el alto de siempre.
+  display: flex;
+  flex-direction: column;
+  max-height: var(--person-picker-alto, 19rem);
+  background: #fff;
+  border: 1px solid vars.$color3-40;
+  border-radius: 0.5rem;
+  box-shadow: 0 12px 28px vars.$color1-20;
+  overflow: hidden;
+
+  // Abierto hacia arriba la sombra tiene que caer hacia arriba, o el panel
+  // parece despegado del campo que lo abrio.
+  &[data-direccion="arriba"] {
+    box-shadow: 0 -12px 28px vars.$color1-20;
+  }
+}
+
+.person-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem;
+  // El que se desplaza dentro del panel. `min-height: 0` es lo que permite que
+  // un hijo de un flex encoja por debajo de su contenido y saque su scroll.
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.person-picker__option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+
+  &.is-active {
+    background: vars.$color2-20;
+  }
+}
+
+.person-picker__empty {
+  padding: 0.75rem;
+  font-size: 0.9375rem;
+  color: vars.$color1-60;
+  text-align: center;
+}
+
+.person-picker__hint {
+  font-size: 0.875rem;
+  color: vars.$color1-40;
+}

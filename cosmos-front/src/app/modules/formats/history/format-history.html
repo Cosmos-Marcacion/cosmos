@@ -1,0 +1,157 @@
+<!--
+  Panel lateral. Se abre sobre el maestro y no lo sustituye: mirar el historial
+  es una consulta que se hace con el documento delante, no un sitio al que se
+  va.
+-->
+<div class="fh-backdrop" (click)="close.emit()"></div>
+
+<aside class="fh" role="dialog" aria-label="Historial del formato">
+  <header class="fh-head">
+    <div>
+      <h2 class="fh-title">Historial</h2>
+      <p class="fh-sub">Cada publicación, con lo que cambió respecto a la anterior.</p>
+    </div>
+    <button type="button" class="fh-close" (click)="close.emit()" aria-label="Cerrar historial">
+      ✕
+    </button>
+  </header>
+
+  <div class="fh-tools">
+    <input
+      class="fh-input"
+      type="search"
+      placeholder="Buscar en los cambios"
+      aria-label="Buscar en los cambios"
+      [ngModel]="search()"
+      name="search"
+      (ngModelChange)="search.set($event)"
+    />
+
+    <!--
+      Comparar contra una versión concreta responde a "qué ha cambiado desde la
+      que firmé en marzo" sin abrir las publicaciones una por una.
+    -->
+    <label class="fh-against">
+      <span>Comparar con</span>
+      <select
+        class="fh-select"
+        [ngModel]="against() ?? ''"
+        name="against"
+        (ngModelChange)="onAgainst($event)"
+      >
+        <option value="" [selected]="against() === null">la publicación anterior</option>
+        @for (version of comparable(); track version) {
+          <option [value]="version" [selected]="version === against()">v{{ version }}</option>
+        }
+      </select>
+    </label>
+  </div>
+
+  <ol class="fh-list">
+    @for (entry of view(); track entry.key) {
+      <li class="fh-entry" [class.fh-entry--draft]="entry.draft">
+        <button type="button" class="fh-entry__head" (click)="toggle(entry)"
+          [attr.aria-expanded]="entry.open">
+          <span class="fh-entry__mark" aria-hidden="true">{{ entry.open ? "▾" : "▸" }}</span>
+
+          <span class="fh-entry__main">
+            <span class="fh-entry__top">
+              @if (entry.draft) {
+                <span class="fh-badge fh-badge--draft">Sin publicar</span>
+              } @else {
+                <span class="fh-badge">v{{ entry.version }}</span>
+              }
+              <span class="fh-entry__label">{{ entry.label }}</span>
+            </span>
+
+            <span class="fh-entry__meta">
+              @if (entry.publishedAt) {
+                {{ entry.publishedAt | date: "dd/MM/yyyy HH:mm" }}
+              } @else {
+                Pendiente de publicar
+              }
+              @if (entry.publishedBy) {
+                · {{ entry.publishedBy }}
+              }
+              @if (entry.summary) {
+                · {{ entry.summary }}
+              }
+            </span>
+          </span>
+        </button>
+
+        <!--
+          Fuera del `<button>` de cabecera: un `<button>` dentro de otro es HTML
+          inválido y el navegador lo saca del padre al parsear, así que ni la
+          maquetación ni el comportamiento serían los que dice el marcado.
+        -->
+        @if (!entry.draft) {
+          <button type="button" class="fh-entry__load" (click)="revert.emit(entry.version!)"
+            title="Carga esta versión en el borrador para revisarla antes de publicar">
+            Cargar
+          </button>
+        }
+
+        @if (entry.open) {
+          <div class="fh-changes">
+            @if (!entry.state || entry.state.loading) {
+              <p class="fh-muted">Comparando…</p>
+            } @else if (entry.state.error) {
+              <p class="fh-error">No se pudieron cargar los cambios.</p>
+            } @else if (entry.origin) {
+              <p class="fh-muted">
+                Es la primera publicación: no hay nada anterior con que compararla.
+              </p>
+            } @else if (entry.changes.length === 0) {
+              <p class="fh-muted">
+                @if (search()) {
+                  Ningún cambio coincide con la búsqueda.
+                } @else {
+                  Sin diferencias con la versión anterior.
+                }
+              </p>
+            } @else {
+              <ul class="fh-diff">
+                @for (change of entry.changes; track $index) {
+                  <li class="fh-change" [class]="'fh-change fh-change--' + change.kind">
+                    <span class="fh-change__kind">{{ kindLabel(change.kind) }}</span>
+                    <span class="fh-change__body">
+                      @if (change.document) {
+                        <span class="fh-change__where">
+                          {{ change.document }}@if (change.section) { › {{ change.section }} }
+                        </span>
+                      }
+                      <span class="fh-change__target">{{ change.target }}</span>
+                      @if (change.detail) {
+                        <span class="fh-change__detail">{{ change.detail }}</span>
+                      }
+                    </span>
+                  </li>
+                }
+              </ul>
+
+              @if (entry.truncated) {
+                <p class="fh-muted">
+                  La lista se ha cortado: esta publicación rehízo el formato entero.
+                </p>
+              }
+            }
+          </div>
+        }
+      </li>
+    } @empty {
+      <!--
+        Que no haya entradas y que no se hayan podido traer no es lo mismo:
+        decir "nunca se ha publicado" cuando la petición falló es mentir sobre
+        un documento que se audita.
+      -->
+      @if (loadError()) {
+        <li class="fh-muted fh-empty fh-error">
+          No se pudo cargar el historial. Ciérralo y vuelve a abrirlo.
+        </li>
+      } @else {
+        <li class="fh-muted fh-empty">Este formato todavía no se ha publicado nunca.</li>
+      }
+    }
+  </ol>
+</aside>

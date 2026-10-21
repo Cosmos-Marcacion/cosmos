@@ -1,0 +1,55 @@
+# Reglas de analisis estatico del backend de Cosmos.
+#
+# Semgrep trae catalogos generales muy buenos (`p/typescript`, `p/nodejs`,
+# `p/owasp-top-ten`) y el pipeline los ejecuta. Este fichero anade lo que ningun
+# catalogo generico puede saber: los defectos concretos que ya aparecieron en
+# esta base de codigo. Cada regla nacio de un fallo real, no de una buena
+# practica abstracta.
+#
+#   semgrep --config .semgrep.yml --config p/typescript --config p/nodejs
+#
+# Los patrones van entre comillas a proposito: sin ellas, YAML interpreta
+# `{ ... }` como un mapa y Semgrep rechaza el fichero.
+rules:
+  - id: cosmos-regex-desde-entrada-de-usuario
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: >-
+      Texto de usuario dentro de un `$regex` de Mongo. Un parentesis suelto
+      tumba la peticion con un 500, `.*` devuelve la coleccion entera saltandose
+      el filtro, y un patron anidado deja al servidor ocupado el tiempo que
+      quiera quien lo envie (ReDoS). Usa `buildSearchFilter()` de
+      `src/common/mongo/search.ts`, que escapa los metacaracteres.
+    patterns:
+      - pattern: "{ $regex: $VAR, ... }"
+      - pattern-not: "{ $regex: \"...\", ... }"
+      - pattern-not: "{ $regex: pattern, ... }"
+    paths:
+      include:
+        - "src/**"
+      exclude:
+        - "*.spec.ts"
+        - "search.ts"
+
+  - id: cosmos-secreto-en-el-codigo
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: >-
+      Parece un secreto escrito en el codigo. Los secretos van en el entorno; en
+      el repositorio quedan para siempre en el historial aunque despues se
+      borren del fichero.
+    patterns:
+      - pattern-either:
+          - pattern: const $NAME = "$VALUE"
+          - pattern: $NAME = "$VALUE"
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*(secret|passwd|password|apikey|api_key|accesskey|private_key).*
+      - metavariable-regex:
+          metavariable: $VALUE
+          regex: ^(?!test|fake|dummy|example|changeme|placeholder).{12,}$
+    paths:
+      exclude:
+        - "*.spec.ts"
+        - "*.int-spec.ts"
+        - "testing/**"

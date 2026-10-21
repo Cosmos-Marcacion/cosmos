@@ -1,0 +1,166 @@
+<div class="flex w-full justify-between items-center px-10 py-5">
+  <button
+    class="bg-color1 text-white px-4 py-2 rounded-xl gilroy-bold flex items-center gap-2"
+    (click)="goBack()"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="size-6"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+      />
+    </svg>
+    Regresar
+  </button>
+</div>
+
+<div class="px-10">
+  <form
+    [formGroup]="form"
+    (ngSubmit)="save()"
+    class="flex flex-col gap-5 p-10 bg-white rounded-xl xl:w-1/2"
+  >
+    <div class="flex items-start gap-4">
+      <div
+        class="shrink-0 w-20 h-20 rounded-xl overflow-hidden border border-color1-40 bg-gray-50 flex items-center justify-center"
+      >
+        @if (previewUrl()) {
+        <img
+          [src]="previewUrl()"
+          alt="preview"
+          class="w-full h-full object-cover"
+        />
+        } @else {
+        <div class="text-color1-60 text-xs text-center px-2">Sin imagen</div>
+        }
+      </div>
+      <div class="flex-1">
+        <label for="image" class="text-color1 block">Imagen de usuario</label>
+        <input
+          id="image"
+          type="file"
+          accept="image/jpeg,image/png,image/gif"
+          (change)="onFileSelected($event)"
+          class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-color1 file:text-white hover:file:bg-color1-80 cursor-pointer"
+        />
+        <p class="text-xs text-gray-500 mt-1">
+          Formatos soportados: JPG, PNG, GIF. Máx 5MB.
+        </p>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="name" class="text-color1">Nombre</label>
+      <input
+        type="text"
+        id="name"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="name"
+        placeholder="Ingrese el nombre completo"
+        maxlength="80"
+        aria-describedby="name-error"
+        [attr.aria-invalid]="name?.invalid && name?.touched"
+      />
+      @if (name?.errors && name?.touched) {
+      <p id="name-error" class="text-red-500">
+        @if (name?.errors?.['required']) { El nombre es requerido. }
+        @else if (name?.errors?.['minlength']) { El nombre debe tener al menos 3 caracteres. }
+        @else if (name?.errors?.['maxlength']) { El nombre no puede pasar de 80 caracteres. }
+        @else if (name?.errors?.['personName']) { Solo letras, espacios, apóstrofo, guion y punto; debe empezar por una letra. }
+      </p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="email" class="text-color1">Correo electrónico</label>
+      <input
+        type="email"
+        id="email"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="email"
+        placeholder="Ingrese el correo electrónico"
+        aria-describedby="email-error"
+        [attr.aria-invalid]="email?.invalid && email?.touched"
+      />
+      @if (email?.errors && email?.touched) {
+      <p id="email-error" class="text-red-500">
+        {{ email?.errors?.['required'] ? 'El correo es requerido' : '' }} {{
+        email?.errors?.['email'] ? 'El formato del correo no es válido' : '' }}
+      </p>
+      }
+    </div>
+
+    @if (!id) {
+    <div class="flex flex-col gap-2">
+      <label for="password" class="text-color1">Contraseña</label>
+      <input
+        type="password"
+        id="password"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="password"
+        placeholder="Ingrese la contraseña"
+        autocomplete="new-password"
+        maxlength="72"
+        aria-describedby="password-hint"
+        [attr.aria-invalid]="password?.invalid && password?.touched"
+      />
+      <p
+        id="password-hint"
+        class="text-sm"
+        [class.text-red-500]="password?.errors && password?.touched"
+        [class.text-gray-600]="!(password?.errors && password?.touched)"
+      >
+        @if (password?.errors?.['required'] && password?.touched) { La contraseña es requerida. }
+        {{ passwordHint }}
+      </p>
+    </div>
+    }
+
+    <div class="flex flex-col gap-2">
+      <label for="roleId" class="text-color1">Rol</label>
+      <select
+        id="roleId"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="roleId"
+        [attr.aria-busy]="rolesState() === 'loading'"
+      >
+        <option value="">
+          {{ rolesState() === 'loading' ? 'Cargando roles...' : 'Seleccione un rol' }}
+        </option>
+        @for (role of roles(); track role._id) {
+        <option [value]="role._id">{{ role.name }}</option>
+        }
+      </select>
+      @if (rolesState() === 'error') {
+      <p class="text-red-500 flex items-center gap-2" role="alert">
+        No se pudieron cargar los roles.
+        <button type="button" class="underline gilroy-bold" (click)="getRoles()">Reintentar</button>
+      </p>
+      } @else if (rolesState() === 'ready' && roles().length === 0) {
+      <p class="text-red-500" role="alert">
+        No hay roles que puedas asignar. Crea uno en Perfiles o pide acceso a un administrador.
+      </p>
+      }
+      @if (roleId?.errors && roleId?.touched) {
+      <p class="text-red-500">
+        {{ roleId?.errors?.['required'] ? 'El rol es requerido' : '' }}
+      </p>
+      }
+    </div>
+
+    <button
+      class="mt-5 bg-color2 text-white px-4 py-3 rounded-xl gilroy-bold disabled:opacity-60 disabled:cursor-not-allowed w-1/2"
+      type="submit"
+      [disabled]="form.invalid || saving()"
+    >
+      {{ saving() ? 'GUARDANDO...' : id ? 'ACTUALIZAR' : 'GUARDAR' }}
+    </button>
+  </form>
+</div>

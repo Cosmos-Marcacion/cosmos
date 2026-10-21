@@ -1,0 +1,609 @@
+@if (loading()) {
+  <div class="nd-state">
+    <span class="nd-state__spinner" aria-hidden="true"></span>
+    <p>Cargando la nombrada…</p>
+  </div>
+} @else if (notFound()) {
+  <div class="nd-state">
+    <h1 class="nd-state__title">No encontramos esta nombrada</h1>
+    <p>Puede que la fecha no sea la correcta o que ya no exista en el sistema de origen.</p>
+    <a routerLink="/marcaciones" class="nd-btn nd-btn--primary">Volver a marcaciones</a>
+  </div>
+} @else {
+@if (detail(); as data) {
+
+  <!-- Cabecera fija: identifica la nombrada y concentra las dos acciones -->
+  <header class="nd-header">
+    <div class="nd-header__bar">
+      <button type="button" class="nd-back" (click)="backToBoard()" aria-label="Volver a marcaciones">
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M12.7 15.7a1 1 0 0 1-1.4 0l-5-5a1 1 0 0 1 0-1.4l5-5a1 1 0 1 1 1.4 1.4L8.4 10l4.3 4.3a1 1 0 0 1 0 1.4Z" clip-rule="evenodd" />
+        </svg>
+      </button>
+
+      <div class="nd-header__identity">
+        <div class="nd-header__title-row">
+          <h1 class="nd-header__title">{{ data.named.vesselDescription }}</h1>
+          @if (ready()) {
+            <span class="nd-badge nd-badge--success">Lista para emitir</span>
+          } @else {
+            <span class="nd-badge nd-badge--warning">Falta configurar</span>
+          }
+          @if (dirty()) {
+            <span class="nd-badge nd-badge--info">Cambios sin guardar</span>
+          }
+        </div>
+        <dl class="nd-header__facts">
+          <div><dt>Nombrada</dt><dd>{{ data.named.staffVesselId }}</dd></div>
+          <!-- Correlativo propio del permiso, distinto del N.º de ATS -->
+          <div>
+            <dt>Permiso de trabajo</dt>
+            @if (workPermitLabel(); as permit) {
+              <dd>{{ permit }}</dd>
+            } @else {
+              <dd class="nd-header__fact--pending" title="Se asigna al emitir el formato">Sin emitir</dd>
+            }
+          </div>
+          <div>
+            <dt>Tipo de nave</dt>
+            <dd [class.nd-header__fact--pending]="!formatType()"
+              [title]="formatType() ? 'Formato ' + formatLabel(formatType()) : 'Este tipo de nave no tiene formato'">
+              {{ vesselTypeLabel() }}
+            </dd>
+          </div>
+          <div><dt>Fecha</dt><dd>{{ data.named.workerDate }}</dd></div>
+          <div><dt>Turno</dt><dd>{{ data.named.shiftDescription }}</dd></div>
+          <div><dt>Muelle</dt><dd>{{ data.named.pierDescription || '—' }}</dd></div>
+          <div><dt>Amarradero</dt><dd>{{ data.named.berthDescription || '—' }}</dd></div>
+          <div><dt>Viaje</dt><dd>{{ data.named.voyageNumber || '—' }}</dd></div>
+          <div><dt>Terminal</dt><dd>{{ data.named.locationId || '—' }}</dd></div>
+        </dl>
+      </div>
+
+      <div class="nd-header__actions">
+        <button type="button" class="nd-btn nd-btn--ghost" (click)="goToEntries()">
+          Ver listado por trabajador
+        </button>
+        <button type="button" class="nd-btn nd-btn--outline" (click)="save()"
+          [disabled]="saving() || !dirty()">
+          {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+
+        <!--
+          El PDF sale del mismo libro que el Excel: el servidor lo convierte, no
+          lo vuelve a componer. Solo se ofrece si el servidor tiene convertidor;
+          ver `pdfEnabled` en el componente.
+        -->
+        @if (pdfEnabled()) {
+          <button type="button" class="nd-btn nd-btn--outline" (click)="downloadPdf()"
+            [disabled]="downloading() || !formatType()">
+            {{ busy() === 'pdf' ? 'Generando…' : 'Descargar PDF' }}
+          </button>
+        }
+        <!--
+          Ver el formato en pantalla sin generar ningun fichero. Sale del mismo
+          modelo que el Excel y el PDF, asi que lleva los mismos datos, los
+          mismos cortes de pagina y los mismos correlativos.
+        -->
+        <a class="nd-btn nd-btn--outline"
+          [routerLink]="['/formatos/imprimir', data.named.staffTransmissionId]"
+          [queryParams]="{ workerDate: data.named.workerDate }"
+          [class.nd-btn--disabled]="!formatType()"
+          [attr.aria-disabled]="!formatType() || null"
+          [attr.tabindex]="formatType() ? null : -1"
+          title="Vista de impresión limpia, en A4">Imprimir</a>
+        <button type="button" class="nd-btn nd-btn--primary" (click)="download()"
+          [disabled]="downloading() || !formatType()">
+          {{ busy() === 'xlsx' ? 'Generando…' : 'Descargar Excel' }}
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!--
+    Indicadores y avisos, fuera de la cabecera fija.
+
+    Estaban dentro, y entre el titulo, los ocho datos, la fila de acciones y
+    seis tarjetas de cifras grandes lo fijo se llevaba unos 260 px antes de
+    que empezara la lista de personal, que es lo que se viene a consultar. Se
+    quedan arriba, pero se desplazan con el contenido.
+  -->
+  <section class="nd-summary" aria-label="Resumen de la jornada">
+    <div class="nd-kpis">
+      <div class="nd-kpi">
+        <span class="nd-kpi__value">{{ data.summary.staffCount }}</span>
+        <span class="nd-kpi__label">Personal nombrado</span>
+      </div>
+      <div class="nd-kpi nd-kpi--accent">
+        <span class="nd-kpi__value">{{ data.summary.presentCount }}</span>
+        <span class="nd-kpi__label">Con marcación</span>
+        <div class="nd-kpi__bar" [attr.aria-label]="attendanceRate() + '% de asistencia'">
+          <span [style.width.%]="attendanceRate()"></span>
+        </div>
+      </div>
+      <div class="nd-kpi">
+        <span class="nd-kpi__value">{{ data.summary.completedCount }}</span>
+        <span class="nd-kpi__label">Recorrido completo</span>
+      </div>
+      <div class="nd-kpi">
+        <span class="nd-kpi__value">{{ data.summary.pendingCount }}</span>
+        <span class="nd-kpi__label">Sin marcar</span>
+      </div>
+      <div class="nd-kpi">
+        <span class="nd-kpi__value">{{ data.summary.unregisteredCount }}</span>
+        <span class="nd-kpi__label">Sin registrar</span>
+      </div>
+      <!--
+        Los temas, no el número de charlas del módulo antiguo: la capacitación
+        del turno es ahora la de esta ficha, y ese contador saldría a cero al
+        lado de una charla perfectamente registrada.
+      -->
+      <div class="nd-kpi">
+        <span class="nd-kpi__value">{{ data.summary.talkTopicsCount }}</span>
+        <span class="nd-kpi__label">Temas de charla</span>
+      </div>
+    </div>
+
+    @if (missing().length > 0) {
+      <p class="nd-alert nd-alert--warning">
+        Para emitir el formato completo falta: {{ missing().join(', ') }}.
+      </p>
+    }
+    @if (estimatedPages() > 1) {
+      <p class="nd-alert nd-alert--info">
+        Con {{ requiredRows() }} personas, el permiso de trabajo y el ATS se emitirán en
+        {{ estimatedPages() }} páginas. Todo el personal entra: no se omite a nadie.
+      </p>
+    }
+  </section>
+
+  <!--
+    Lo que hay que rellenar antes de emitir, en una tira de tarjetas.
+
+    Cada una dice lo que lleva puesto y si le falta algo; se abre en una
+    ventana. Antes eran seis formularios repartidos por la pagina que empujaban
+    hacia abajo la tabla de personal, que es lo que se viene a consultar.
+  -->
+  <section class="nd-setup" aria-label="Configuración de la jornada">
+    <h2 class="nd-setup__title">Configuración de la jornada</h2>
+    <div class="nd-setup__cards">
+      @for (card of setupCards(); track card.id) {
+        <button type="button" class="nd-setupcard"
+          [class.nd-setupcard--pending]="card.pending"
+          (click)="openPanel(card.id)">
+          <span class="nd-setupcard__head">
+            <span class="nd-setupcard__title">{{ card.title }}</span>
+            @if (card.pending) {
+              <span class="nd-setupcard__state nd-setupcard__state--pending">
+                {{ card.required ? 'Falta' : 'Pendiente' }}
+              </span>
+            } @else {
+              <span class="nd-setupcard__state">Listo</span>
+            }
+          </span>
+          <span class="nd-setupcard__summary">{{ card.summary }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  <div class="nd-layout">
+
+    <!-- ======================= Columna principal ======================= -->
+    <main class="nd-main">
+
+      <!-- Personal y asistencia -->
+      <section class="nd-card">
+        <div class="nd-card__head">
+          <div>
+            <h2 class="nd-card__title">Personal y asistencia</h2>
+            <p class="nd-card__sub">
+              Recorrido de marcaciones de cada trabajador, punto por punto.
+            </p>
+          </div>
+          <div class="nd-toolbar">
+            <div class="nd-search">
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.4 9.8l3.4 3.4a1 1 0 0 0 1.4-1.4l-3.4-3.4A5.5 5.5 0 0 0 9 3.5ZM5.5 9a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0Z" clip-rule="evenodd" />
+              </svg>
+              <input type="search" placeholder="Nombre, documento o cargo"
+                [value]="search()" (input)="search.set($any($event.target).value)"
+                aria-label="Buscar trabajador" />
+            </div>
+          </div>
+        </div>
+
+        <div class="nd-chips" role="tablist" aria-label="Filtrar personal">
+          @for (option of filters; track option.id) {
+            <button type="button" role="tab" class="nd-chip"
+              [class.is-active]="filter() === option.id"
+              [attr.aria-selected]="filter() === option.id"
+              (click)="filter.set(option.id)">
+              {{ option.label }}
+            </button>
+          }
+          <span class="nd-chips__count">
+            {{ visibleStaff().length }} de {{ data.summary.staffCount }}
+          </span>
+        </div>
+
+        @if (visibleStaff().length === 0) {
+          <p class="nd-empty">Ningún trabajador coincide con el filtro.</p>
+        } @else {
+          <div class="nd-table-wrap">
+            <table class="nd-table">
+              <thead>
+                <tr>
+                  <th scope="col" class="nd-table__num">#</th>
+                  <th scope="col">Trabajador</th>
+                  <th scope="col">Cargo</th>
+                  <th scope="col">Recorrido</th>
+                  <th scope="col">Ingreso</th>
+                  <th scope="col">Salida</th>
+                  <th scope="col">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (person of visibleStaff(); track person.staffId) {
+                  <tr [class.is-unregistered]="!person.registered">
+                    <td class="nd-table__num">{{ person.orderNumber }}</td>
+
+                    <td>
+                      <button type="button" class="nd-person" (click)="goToWorker(person)"
+                        [disabled]="!person.registered"
+                        [attr.title]="person.registered ? 'Ver marcaciones de ' + person.fullName : 'Sin ficha de empleado'">
+                        <span class="nd-person__name">{{ person.fullName }}</span>
+                        <span class="nd-person__meta">
+                          <span>DNI {{ person.document }}</span>
+                          @if (person.teamNumber) { <span>· Cuadrilla {{ person.teamNumber }}</span> }
+                          @if (person.remate) { <span class="nd-tag">Remate</span> }
+                        </span>
+                      </button>
+                    </td>
+
+                    <td class="nd-table__role">{{ person.roleDescription }}</td>
+
+                    <!--
+                      Un hito por punto del recorrido: relleno si hay marcación,
+                      hueco si todavía no. Es más rápido de leer que un contador.
+                    -->
+                    <td>
+                      <div class="nd-trail"
+                        [attr.aria-label]="person.markCount + ' de ' + data.points.length + ' puntos marcados'">
+                        @for (step of person.trail; track step.pointId) {
+                          <span class="nd-trail__step"
+                            [class.is-done]="step.done"
+                            [class.is-absence]="step.absence"
+                            [attr.title]="step.title"></span>
+                        }
+                        <span class="nd-trail__count">{{ person.markCount }}/{{ data.points.length }}</span>
+                      </div>
+                    </td>
+
+                    <td class="nd-table__time">{{ person.firstMark ? (person.firstMark | date: 'HH:mm') : '—' }}</td>
+                    <td class="nd-table__time">{{ person.lastMark ? (person.lastMark | date: 'HH:mm') : '—' }}</td>
+
+                    <td>
+                      <span class="nd-status" [class]="'nd-status--' + person.status.tone">
+                        {{ person.status.label }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+
+      <!-- Formatos emitidos -->
+      <section class="nd-card">
+        <div class="nd-card__head">
+          <div>
+            <h2 class="nd-card__title">Formatos emitidos</h2>
+            <p class="nd-card__sub">
+              Cada descarga queda registrada con quién la generó y cuánto personal incluyó.
+            </p>
+          </div>
+        </div>
+
+        @if (data.record?.generatedFormats?.length) {
+          <div class="nd-table-wrap">
+            <table class="nd-table nd-table--compact">
+              <thead>
+                <tr>
+                  <th scope="col">Archivo</th>
+                  <th scope="col">Entrega</th>
+                  <th scope="col">Plantilla</th>
+                  <th scope="col">Generado</th>
+                  <th scope="col">Por</th>
+                  <th scope="col">Permiso</th>
+                  <th scope="col">Personal</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (format of data.record!.generatedFormats.slice().reverse(); track format.generatedAt) {
+                  <tr>
+                    <td class="nd-table__file">{{ format.fileName }}</td>
+                    <td>{{ format.output === 'pdf' ? 'PDF' : 'Excel' }}</td>
+                    <td>{{ formatLabel(format.formatType) }}</td>
+                    <td>{{ format.generatedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    <td>{{ format.generatedBy || '—' }}</td>
+                    <td>{{ permitLabel(format.workPermitNumber) || '—' }}</td>
+                    <td>
+                      {{ format.staffCount }}
+                      @if (format.pages > 1) { <span class="nd-tag">{{ format.pages }} págs.</span> }
+                      @if (format.truncated) { <span class="nd-tag nd-tag--warning">truncado</span> }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="nd-empty">Esta nombrada todavía no tiene formatos emitidos.</p>
+        }
+      </section>
+    </main>
+
+  </div>
+
+
+  <!--
+    Los bloques de configuracion, cada uno en su ventana.
+
+    Lo que se escribe dentro va al mismo borrador que el resto de la pantalla,
+    asi que cerrar no descarta nada: se guarda con la barra de siempre. Por eso
+    la ventana no tiene "Cancelar" ni pregunta al salir.
+  -->
+  @if (panel(); as abierto) {
+    <div class="nd-modal" (click)="closePanel()">
+      <div class="nd-modal__panel" role="dialog" aria-modal="true"
+        [attr.aria-label]="panelTitle()" (click)="$event.stopPropagation()">
+        <header class="nd-modal__head">
+          <h2 class="nd-modal__title">{{ panelTitle() }}</h2>
+          <button type="button" class="nd-modal__close" (click)="closePanel()"
+            aria-label="Cerrar">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M6.3 5A1 1 0 0 0 5 6.3L8.6 10 5 13.7A1 1 0 1 0 6.3 15L10 11.4l3.7 3.6a1 1 0 0 0 1.3-1.3L11.4 10 15 6.3A1 1 0 0 0 13.7 5L10 8.6Z" />
+            </svg>
+          </button>
+        </header>
+
+        <div class="nd-modal__body">
+          @switch (abierto) {
+            @case ('formato') {
+              <div class="nd-field">
+              <!--
+              Ya no se elige: el tipo de nave llega de Cosmos (code_type_vessel) y
+              decide el formato. Solo ET, GR, ME, CO y BB tienen formato.
+              -->
+              <span class="nd-field__label">Tipo de nave</span>
+              <p class="nd-vessel-type" data-testid="nd-vessel-type">
+              <strong>{{ vesselTypeLabel() }}</strong>
+              @if (formatType()) {
+              <span class="nd-vessel-type__format">Formato {{ formatLabel(formatType()) }}</span>
+              } @else {
+              <span class="nd-vessel-type__rejected">Sin formato</span>
+              }
+              </p>
+              <p class="nd-field__hint">
+              @if (!formatType()) {
+              Solo tienen formato los tipos ET (Etanol), GR (Granel), ME (Mercadería), CO (Container) y BB (Big bags).
+              Esta nombrada no puede emitir formatos.
+              } @else if (vesselType()?.source === 'record') {
+              Cosmos aún no envió el tipo de nave de esta nombrada; se usa el formato elegido antes.
+              } @else {
+              Lo envía Cosmos con la nombrada y determina la plantilla del formato.
+              }
+              @if (capacity() > 0) {
+              Su hoja de asistencia lista {{ capacity() }} personas por página.
+              }
+              </p>
+              </div>
+              <p class="nd-field__hint">
+              El N.º de ATS del formato es el número de la nombrada:
+              <strong>{{ data.named.staffVesselId }}</strong>
+              </p>
+            }
+            @case ('responsables') {
+              <p class="nd-card__sub">
+              Todos salen del maestro de personal. Busca por nombre o por documento.
+              </p>
+
+              <div class="nd-people">
+              <!--
+              Sin filtro por cargo, igual que el resto: "jefe de cubierta" es el rol
+              de esta jornada, no el puesto que la persona tenga en el maestro. La
+              misma persona lo es un turno y no el siguiente.
+              -->
+              <app-person-picker
+              label="Jefe de cubierta"
+              hint="Encabeza la hoja de asistencia y firma el permiso de trabajo, el ATS y la inspección de nave."
+              [required]="true"
+              [value]="draft().jefeCubierta"
+              (valueChange)="setPerson('jefeCubierta', $event)" />
+
+              <app-person-picker
+              label="Supervisor de operaciones"
+              [required]="true"
+              [value]="draft().supervisorOperaciones"
+              (valueChange)="setPerson('supervisorOperaciones', $event)" />
+
+              <app-person-picker
+              label="Supervisor SSOMA"
+              [required]="true"
+              [value]="draft().supervisorSsoma"
+              (valueChange)="setPerson('supervisorSsoma', $event)" />
+              </div>
+            }
+            @case ('capacitacion') {
+              <div class="nd-talk">
+              <div class="nd-field">
+              <label for="nd-talk-type" class="nd-field__label">Tipo de capacitación</label>
+              <select id="nd-talk-type" class="nd-select"
+              (change)="setTalkType($any($event.target).value)">
+              <option value="" [selected]="!draft().talkType">Selecciona el tipo</option>
+              @for (type of talkTypes; track type.id) {
+              <option [value]="type.id" [selected]="type.id === draft().talkType">{{ type.label }}</option>
+              }
+              </select>
+              </div>
+
+              <div class="nd-field">
+              <label for="nd-talk-place" class="nd-field__label">Lugar</label>
+              <select id="nd-talk-place" class="nd-select"
+              (change)="setTalkPlace($any($event.target).value)">
+              <option value="" [selected]="!draft().talkPlace">Sin especificar</option>
+              @for (place of talkPlaces; track place.id) {
+              <option [value]="place.id" [selected]="place.id === draft().talkPlace">{{ place.label }}</option>
+              }
+              </select>
+              </div>
+
+              <div class="nd-field">
+              <label for="nd-talk-start" class="nd-field__label">Hora de inicio</label>
+              <input id="nd-talk-start" type="time" class="nd-select"
+              [value]="draft().talkStartTime"
+              (change)="setTalkTime('talkStartTime', $any($event.target).value)" />
+              </div>
+
+              <div class="nd-field">
+              <label for="nd-talk-end" class="nd-field__label">Hora de término</label>
+              <input id="nd-talk-end" type="time" class="nd-select"
+              [value]="draft().talkEndTime"
+              (change)="setTalkTime('talkEndTime', $any($event.target).value)" />
+              </div>
+
+              <div class="nd-field">
+              <label for="nd-talk-hours" class="nd-field__label">N.º de horas</label>
+              <input id="nd-talk-hours" type="number" class="nd-select" min="0" max="24" step="0.01"
+              [value]="draft().talkHours"
+              (input)="setTalkHours($any($event.target).value)" />
+              <p class="nd-field__hint">Se calcula con el horario; puedes corregirlo.</p>
+              </div>
+
+              <label class="nd-check">
+              <input type="checkbox"
+              [checked]="draft().talkIsAnnual"
+              (change)="setTalkAnnual($any($event.target).checked)" />
+              <span>Pertenece al Programa Anual de Capacitación</span>
+              </label>
+              </div>
+
+              <div class="nd-topics">
+              @for (topic of draft().talkTopics; track $index) {
+              <div class="nd-topic">
+              <span class="nd-topic__index">{{ $index + 1 }}</span>
+              <div class="nd-topic__fields">
+              <input type="text" placeholder="Tema de la charla"
+              [value]="topic.topic"
+              (input)="setTopic($index, 'topic', $any($event.target).value)"
+              [attr.aria-label]="'Tema ' + ($index + 1)" />
+              <textarea rows="2" placeholder="Resumen de lo expuesto"
+              [value]="topic.summary"
+              (input)="setTopic($index, 'summary', $any($event.target).value)"
+              [attr.aria-label]="'Resumen del tema ' + ($index + 1)"></textarea>
+              </div>
+              </div>
+              }
+              </div>
+
+              <!--
+              Charlas del módulo antiguo y de la app móvil. Ya no se crean desde
+              aquí, pero las que existen siguen contando para la nombrada, así que
+              se muestran; cuando no hay ninguna no se dice nada, porque lo normal
+              es que la capacitación sea la de arriba.
+              -->
+              @if (data.talks.length > 0) {
+              <h3 class="nd-subtitle">Otras charlas registradas</h3>
+              <div class="nd-table-wrap">
+              <table class="nd-table nd-table--compact">
+              <thead>
+              <tr>
+              <th scope="col">Tema</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Horario</th>
+              <th scope="col">Entrenador</th>
+              <th scope="col">Responsable del registro</th>
+              </tr>
+              </thead>
+              <tbody>
+              @for (talk of data.talks; track talk.id) {
+              <tr>
+              <td>{{ talk.topic }}</td>
+              <td>{{ talk.type }}</td>
+              <td class="nd-table__time">{{ talk.startTime }} – {{ talk.endTime }}</td>
+              <td>{{ talk.trainer || '—' }}</td>
+              <td>{{ talk.register || '—' }}</td>
+              </tr>
+              }
+              </tbody>
+              </table>
+              </div>
+              }
+
+              <h3 class="nd-subtitle">Quién imparte y quién registra</h3>
+              <div class="nd-people">
+              <app-person-picker
+              label="Entrenador"
+              hint="Figura como capacitador en la hoja de charla."
+              [value]="draft().trainer"
+              (valueChange)="setPerson('trainer', $event)" />
+
+              <app-person-picker
+              label="Responsable del registro"
+              [value]="draft().registerResponsible"
+              (valueChange)="setPerson('registerResponsible', $event)" />
+              </div>
+            }
+            @case ('vsi') {
+              <p class="nd-card__sub">
+              Firman la hoja VSI. Suelen coincidir con los responsables de la jornada, pero
+              se registran aparte porque aprueban un documento distinto.
+              </p>
+              <div class="nd-people">
+              <app-person-picker
+              label="Aprobador · Jefe de cubierta"
+              [value]="draft().jefeCubiertaVsi"
+              (valueChange)="setPerson('jefeCubiertaVsi', $event)" />
+
+              <app-person-picker
+              label="Aprobador · SSOMA"
+              [value]="draft().ssomaVsi"
+              (valueChange)="setPerson('ssomaVsi', $event)" />
+              </div>
+            }
+            @case ('notas') {
+              <textarea class="nd-textarea" rows="4"
+              placeholder="Observaciones de la jornada que no van en el formato"
+              [value]="draft().notes"
+              (input)="setNotes($any($event.target).value)"
+              aria-label="Notas internas de la nombrada"></textarea>
+            }
+          }
+        </div>
+
+        <footer class="nd-modal__foot">
+          <button type="button" class="nd-btn nd-btn--primary" (click)="closePanel()">
+            Hecho
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  <!-- Barra de guardado: aparece solo cuando hay algo que guardar -->
+  @if (dirty()) {
+    <div class="nd-savebar" role="status">
+      <span>Tienes cambios sin guardar en esta nombrada.</span>
+      <div class="nd-savebar__actions">
+        <button type="button" class="nd-btn nd-btn--ghost" (click)="load()">Descartar</button>
+        <button type="button" class="nd-btn nd-btn--primary" (click)="save()" [disabled]="saving()">
+          {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </div>
+  }
+}
+}

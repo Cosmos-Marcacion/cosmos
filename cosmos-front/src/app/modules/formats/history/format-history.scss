@@ -1,0 +1,282 @@
+/**
+ * El panel de historial. Mismo lenguaje visual que el maestro (`fm-*`): sus
+ * colores, sus radios y su escala tipográfica, para que no parezca otra
+ * aplicación abierta encima.
+ */
+
+$accent: #0087b8;
+
+.fh-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(15 23 42 / 35%);
+  z-index: 40;
+}
+
+.fh {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 41;
+  width: min(34rem, 100vw);
+  background: #fff;
+  border-left: 1px solid #e2e8f0;
+  box-shadow: -6px 0 24px rgb(0 0 0 / 12%);
+  display: flex;
+  flex-direction: column;
+  // El panel no crece: lo que se desplaza es la lista.
+  min-height: 0;
+}
+
+.fh-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem 0.7rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.fh-title {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f2b3a;
+}
+
+.fh-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.76rem;
+  color: #64748b;
+}
+
+.fh-close {
+  border: none;
+  background: none;
+  font-size: 1rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+  line-height: 1;
+}
+
+.fh-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+}
+
+.fh-input,
+.fh-select {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.3rem;
+  padding: 0.3rem 0.5rem;
+  font: inherit;
+  font-size: 0.78rem;
+  background: #fff;
+}
+
+.fh-input {
+  flex: 1;
+  min-width: 9rem;
+}
+
+.fh-against {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.fh-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.fh-entry {
+  border-bottom: 1px solid #f1f5f9;
+  position: relative;
+
+  &--draft {
+    background: #fffbeb;
+  }
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    width: 100%;
+    border: none;
+    background: none;
+    text-align: left;
+    padding: 0.6rem 5rem 0.6rem 0.8rem;
+    cursor: pointer;
+    font: inherit;
+
+    &:hover {
+      background: rgb(0 135 184 / 5%);
+    }
+  }
+
+  &__mark {
+    color: #5b6b7f; // era #94a3b8, 2.6:1 (CKI10)
+    font-size: 0.7rem;
+    line-height: 1.4;
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__label {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #0f2b3a;
+  }
+
+  &__meta {
+    font-size: 0.72rem;
+    color: #64748b;
+  }
+
+  /* Fuera del `<button>` de cabecera: un botón dentro de otro es HTML inválido
+     y el navegador lo saca del padre al parsear. */
+  &__load {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.8rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.25rem;
+    background: #fff;
+    font-size: 0.72rem;
+    padding: 0.2rem 0.5rem;
+    cursor: pointer;
+    color: #334155;
+
+    &:hover {
+      border-color: $accent;
+      color: $accent;
+    }
+  }
+}
+
+.fh-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.35rem;
+  background: #e2e8f0;
+  color: #334155;
+
+  &--draft {
+    background: #fef3c7;
+    color: #b45309;
+  }
+}
+
+.fh-changes {
+  padding: 0 0.8rem 0.7rem 1.9rem;
+}
+
+.fh-diff {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fh-change {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  font-size: 0.76rem;
+  border-left: 2px solid #e2e8f0;
+  padding: 0.15rem 0 0.15rem 0.5rem;
+
+  &__kind {
+    flex: 0 0 auto;
+    font-size: 0.64rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #64748b;
+    min-width: 5.2rem;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__where {
+    font-size: 0.68rem;
+    color: #5b6b7f; // era #94a3b8, 2.6:1 (CKI10)
+  }
+
+  &__target {
+    color: #0f2b3a;
+    font-weight: 600;
+  }
+
+  &__detail {
+    color: #475569;
+    // Un valor largo no puede ensanchar el panel.
+    overflow-wrap: anywhere;
+  }
+
+  &--added {
+    border-left-color: #34d399;
+    .fh-change__kind { color: #047857; }
+  }
+
+  &--removed {
+    border-left-color: #f87171;
+    .fh-change__kind { color: #b91c1c; }
+  }
+
+  &--changed {
+    border-left-color: #60a5fa;
+    .fh-change__kind { color: #1d4ed8; }
+  }
+
+  &--moved {
+    border-left-color: #fbbf24;
+    .fh-change__kind { color: #b45309; }
+  }
+}
+
+.fh-muted {
+  margin: 0.2rem 0;
+  font-size: 0.76rem;
+  color: #5b6b7f; // era #94a3b8, 2.6:1 (CKI10)
+}
+
+.fh-empty {
+  padding: 1rem;
+}
+
+.fh-error {
+  margin: 0.2rem 0;
+  font-size: 0.76rem;
+  color: #b91c1c;
+}

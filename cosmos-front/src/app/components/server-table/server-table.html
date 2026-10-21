@@ -1,0 +1,106 @@
+<!--
+  La tabla se convierte en tarjetas cuando su contenedor es estrecho (clase
+  global `table-stack`). Antes tenía un mínimo de 50rem y se
+  desplazaba en horizontal en móvil, en tableta y, con el menú lateral abierto,
+  hasta en un portátil de 1280 px.
+-->
+<div class="table-container table-stack">
+  <table class="server-table w-full bg-white">
+    @if (caption) {
+    <caption class="sr-only">{{ caption }}</caption>
+    }
+    <thead class="text-color2">
+      <tr>
+        @for (header of headers; track header) {
+        <th scope="col" class="px-4 2xl:px-6 py-3 text-left font-semibold">{{ header.header }}</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of data; track $index) {
+      <tr class="border-t border-color3-20 hover:bg-color1-10">
+        @for (header of headers; track header) {
+        @if (header.value === 'markings') {
+        <td class="px-4 2xl:px-6 py-3" [attr.data-label]="header.header">
+          <!-- Un solo hijo: en tarjeta, la celda es una rejilla etiqueta | valor. -->
+          <span class="inline-flex items-center">
+          @if (item[header.value]) {
+          @let m = markings(item[header.value]);
+          @if (item.isAbsence) {
+          <span class="px-3 py-1 rounded-full text-sm font-medium w-fit text-nowrap bg-red-600">Falta</span>
+          } @else {
+          <button
+            type="button"
+            class="px-3 py-1 rounded-full text-sm font-medium w-fit text-nowrap cursor-pointer"
+            [class.bg-blue-600]="m.complete"
+            [class.bg-blue-100]="!m.complete"
+            [class.text-blue-800]="!m.complete"
+            [attr.aria-label]="'Ver marcaciones: ' + m.done + ' de ' + m.total"
+            (click)="viewEntries(item.employeeId, item.workerDate, item.namedId)"
+          >
+            {{ m.done }}/{{ m.total }}
+          </button>
+          }
+          @if (m.exit) {
+          <span
+            title="Salida"
+            class="bg-color4 rounded-full text-white font-bold px-2 py-1 ml-5 text-xs"
+          >
+            {{ m.exit }}
+          </span>
+          }
+          } @else {
+          <span class="text-gray-500">-</span>
+          }
+          </span>
+        </td>
+        } @else if (header.header === 'Remate') {
+        <td class="px-4 2xl:px-6 py-3 font-bold text-color2" [attr.data-label]="header.header">
+          {{ item[header.value || ""] ? "Si" : "No" }}
+        </td>
+        } @else if (header.header !== 'header') {
+        <td class="px-4 2xl:px-6 py-3" [attr.data-label]="header.header">
+          {{ item[header.value || ""] | shortText : 30 }}
+        </td>
+        }
+        }
+      </tr>
+      } @empty {
+      <tr>
+        <td class="server-table__empty" [attr.colspan]="headers.length || 1">
+          <app-empty-state
+            [loading]="loading"
+            [error]="error"
+            [searchTerm]="searchTerm"
+            [emptyMessage]="emptyMessage"
+            [noMatchMessage]="noMatchMessage"
+          ></app-empty-state>
+        </td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<div class="server-table__footer flex flex-wrap items-center justify-between gap-3">
+  <label class="flex items-center gap-2 text-sm text-gray-700 px-4 sm:px-6">
+    Filas por página
+    <select
+      class="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm"
+      (change)="onLimitChange($any($event.target).value)"
+    >
+      @for (option of limitOptions; track option) {
+      <option [value]="option" [selected]="option === limit">{{ option }}</option>
+      }
+    </select>
+  </label>
+  <!-- En móvil la paginación baja a su propia línea: al lado del selector no cabía. -->
+  <div class="w-full sm:w-auto sm:flex-1 min-w-0">
+    <app-pagination
+      [total]="total"
+      [page]="page"
+      [limit]="limit"
+      (pageChange)="onPageChange($event)"
+    ></app-pagination>
+  </div>
+</div>

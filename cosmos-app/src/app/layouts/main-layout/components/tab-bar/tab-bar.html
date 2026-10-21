@@ -1,0 +1,33 @@
+<nav class="tabs" aria-label="Navegación principal">
+  <div class="tabs__bar">
+    <!--
+      El indicador es un único elemento que se desplaza, no uno por pestaña:
+      así el movimiento cuenta de dónde a dónde ha ido la selección, en vez de
+      apagarse en un sitio y encenderse en otro.
+    -->
+    @if (activeIndex() !== null) {
+      <span
+        class="tabs__pill"
+        aria-hidden="true"
+        [style.transform]="'translateX(' + activeIndex()! * 100 + '%)'"
+      ></span>
+    }
+
+    @for (tab of tabs; track tab.path) {
+      <button
+        type="button"
+        class="tabs__item"
+        [class.is-active]="activePath() === tab.path"
+        [attr.aria-current]="activePath() === tab.path ? 'page' : null"
+        (click)="go(tab.path)"
+      >
+        <app-icon
+          class="tabs__icon"
+          [name]="activePath() === tab.path ? tab.iconActive : tab.icon"
+          [strokeWidth]="1.7"
+        />
+        <span class="tabs__label">{{ tab.label }}</span>
+      </button>
+    }
+  </div>
+</nav>

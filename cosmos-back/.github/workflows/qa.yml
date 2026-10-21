@@ -1,0 +1,84 @@
+name: QA
+
+# Gates de calidad de el backend de Cosmos.
+#
+# **Este workflow no esta activo hoy**: el remoto del repositorio es Bitbucket y
+# quien ejecuta los gates es `bitbucket-pipelines.yml`. Se mantiene aqui, al dia
+# y equivalente, para el dia que los repositorios se muevan a GitHub.
+#
+# Orden deliberado: primero lo que falla en segundos (lint, tipos) y despues lo
+# que falla en minutos. Un error de tipos se sabe en el primer minuto, no en el
+# decimo.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: qa-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  calidad:
+    name: Calidad
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Lint (trinquete)
+        run: npm run lint:ci
+      - name: Tipos
+        run: npm run typecheck
+      - name: Unitarias con cobertura
+        run: npm run test:cov
+      - name: Integracion (Mongo en memoria)
+        run: npm run test:int
+      - name: Vulnerabilidades de dependencias
+        run: npm run audit:ci
+      - name: Compilar
+        run: npm run build
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura
+          path: coverage/
+          retention-days: 14
+
+  seguridad:
+    name: Analisis estatico
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reglas propias y catalogos publicos
+        # Se escanea la raiz y no `src`: los `paths.include` de las reglas se
+        # resuelven contra el directorio del escaneo, y apuntar a `src` las
+        # desactiva en silencio.
+        run: |
+          semgrep scan             --config .semgrep.yml             --config p/typescript             --config p/nodejs             --config p/secrets             --error             --exclude node_modules --exclude dist --exclude coverage             .
+        env:
+          SEMGREP_SEND_METRICS: 'off'
+
+  gate:
+    name: Gate de calidad
+    runs-on: ubuntu-latest
+    needs: [calidad, seguridad]
+    if: always()
+    steps:
+      - run: |
+          for r in ${{ join(needs.*.result, ' ') }}; do
+            [ "$r" = "success" ] || { echo "Hay gates que no pasaron."; exit 1; }
+          done
+          echo "Todos los gates en verde."

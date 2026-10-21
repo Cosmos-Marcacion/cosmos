@@ -1,0 +1,305 @@
+<!-- ===================== Buscador de personal ===================== -->
+<section class="finder c-card c-card-pad">
+  <div class="finder__search">
+    <app-icon name="search" class="finder__search-icon" />
+    <input
+      class="finder__input"
+      type="search"
+      inputmode="search"
+      autocomplete="off"
+      autocapitalize="none"
+      spellcheck="false"
+      placeholder="Nombre, apellido o documento"
+      aria-label="Buscar empleado por nombre, apellido o documento"
+      [value]="query()"
+      (input)="onQuery($any($event.target).value)"
+      (focus)="toggleList()"
+    />
+    @if (query()) {
+      <button type="button" class="finder__clear c-press" (click)="clearQuery()" aria-label="Limpiar búsqueda">
+        <app-icon name="close" [strokeWidth]="2" />
+      </button>
+    }
+  </div>
+
+  <!--
+    Filtros como chips que se combinan entre sí. Salen de datos que el listado
+    ya trae (`issetFinger`, `signature`, `status`), así que activarlos no
+    cuesta ninguna petición.
+  -->
+  <div class="finder__chips">
+    @for (filter of filters; track filter.id) {
+      <button
+        type="button"
+        class="finder__chip c-press"
+        [class.is-on]="activeFilters().has(filter.id)"
+        [attr.aria-pressed]="activeFilters().has(filter.id)"
+        (click)="toggleFilter(filter.id)"
+      >
+        {{ filter.label }}
+      </button>
+    }
+    @if (hasFilters()) {
+      <button type="button" class="finder__chip-clear" (click)="clearFilters()">
+        Quitar filtros
+      </button>
+    }
+  </div>
+
+  <div class="finder__bar">
+    <p class="c-caption">
+      @if (loadingList()) {
+        Cargando personal…
+      } @else {
+        {{ totalMatches() }}
+        {{ totalMatches() === 1 ? "resultado" : "resultados" }}
+        @if (loadingRemote()) {
+          · buscando en Visma…
+        } @else if (fromVisma() > 0) {
+          · {{ fromVisma() }} de Visma
+        }
+      }
+    </p>
+
+    <label class="finder__sort">
+      <span class="c-sr-only">Ordenar por</span>
+      <select class="finder__sort-select" (change)="setSort($any($event.target).value)">
+        @for (option of sorts; track option.id) {
+          <option [value]="option.id" [selected]="option.id === sort()">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+  </div>
+
+  @if (loadingList()) {
+    <div class="finder__list">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="c-skeleton finder__skeleton"></div>
+      }
+    </div>
+  } @else if (listOpen()) {
+    @if (results().length > 0) {
+      <ul class="finder__list c-stagger">
+        @for (person of results(); track person.key) {
+          <li>
+            <button type="button" class="person c-press-sm" (click)="selectEmployee(person)">
+              <!--
+                Iniciales en lugar de foto: el listado viaja sin `image` a
+                propósito (el descriptor facial y la foto son el 85 % del peso
+                de cada registro), y cargar cientos de fotos por red celular
+                sería peor que no tenerlas.
+              -->
+              <span class="person__avatar" aria-hidden="true">
+                {{ person.lastName.charAt(0) }}{{ person.firstName.charAt(0) }}
+              </span>
+
+              <span class="person__body">
+                <span class="person__name">
+                  {{ person.lastName | cap }} {{ person.firstName | cap }}
+                </span>
+                <span class="person__doc">{{ person.document || "Sin documento" }}</span>
+
+                <span class="person__tags">
+                  @if (person.issetFinger) {
+                    <span class="c-chip c-chip-success">Huella</span>
+                  }
+                  @if (person.signature) {
+                    <span class="c-chip c-chip-success">Firma</span>
+                  }
+                  @if (!person.issetFinger && !person.signature) {
+                    <span class="c-chip c-chip-neutral">Sin registros</span>
+                  }
+                  <!--
+                    De qué maestro sale la persona. Importa al registrar: quien
+                    viene solo de Visma todavía no tiene ficha en la plataforma.
+                  -->
+                  @if (!person.sources.includes("cosmos")) {
+                    <span class="c-chip c-chip-brand">Visma</span>
+                  }
+                  @if (person.status !== "active") {
+                    <span class="c-chip c-chip-warning">Inactivo</span>
+                  }
+                </span>
+              </span>
+
+              <app-icon name="chevronRight" class="person__go" />
+            </button>
+          </li>
+        }
+      </ul>
+
+      @if (hiddenCount() > 0) {
+        <p class="finder__more">
+          Se muestran {{ results().length }} de {{ totalMatches() }}. Afina la búsqueda para ver el resto.
+        </p>
+      }
+    } @else {
+      <p class="finder__empty">
+        @if (loadingRemote()) {
+          Buscando en Visma…
+        } @else if (query() && !canAskVisma()) {
+          Nadie coincide en el maestro local. Escribe al menos
+          {{ minLength() }} caracteres para buscar también en Visma.
+        } @else {
+          Nadie coincide. Prueba con el apellido o el número de documento.
+        }
+      </p>
+    }
+
+    @if (!vismaAvailable()) {
+      <p class="finder__empty">
+        Visma no responde: se está buscando solo en el maestro de la plataforma.
+      </p>
+    }
+  }
+</section>
+
+<!-- ===================== Ficha del empleado ===================== -->
+@if (selected()) {
+  <form [formGroup]="form" class="reg c-anim-rise-sm">
+    <div class="reg__photo">
+      <label class="reg__photo-drop">
+        <span class="c-sr-only">Cambiar foto del empleado</span>
+        <input
+          class="reg__photo-input"
+          accept="image/*"
+          multiple="false"
+          type="file"
+          (change)="onUploadImage($event)"
+        />
+        <img [src]="image || '/images/user.png'" alt="" class="reg__photo-img" />
+        <span class="reg__photo-hint">
+          <app-icon name="plus" />
+        </span>
+      </label>
+    </div>
+
+    <div class="c-field">
+      <label class="c-label" for="firstName">Nombre</label>
+      <input class="c-input capitalize" id="firstName" type="text" formControlName="firstName" />
+    </div>
+
+    <div class="c-field">
+      <label class="c-label" for="lastName">Apellido</label>
+      <input class="c-input capitalize" id="lastName" type="text" formControlName="lastName" />
+    </div>
+
+    <div class="c-field">
+      <label class="c-label" for="document">Documento</label>
+      <input class="c-input" id="document" type="text" formControlName="document" />
+    </div>
+
+    <!--
+      De dónde sale la persona y su legajo. Es lo que distingue a quien ya
+      estaba en la plataforma de quien se acaba de traer del maestro de Visma.
+    -->
+    <p class="reg__origin">
+      @for (source of selected()!.sources; track source) {
+        <span class="c-chip" [class.c-chip-brand]="source === 'visma'" [class.c-chip-neutral]="source !== 'visma'">
+          {{ source === "visma" ? "Visma" : "Cosmos" }}
+        </span>
+      }
+      @if (selected()!.fileNumber) {
+        <span class="c-chip c-chip-neutral">Legajo {{ selected()!.fileNumber }}</span>
+      }
+      @if (!employeeId()) {
+        <span class="c-chip c-chip-warning">Sin registrar</span>
+      }
+    </p>
+
+    <button type="button" class="c-btn c-btn-primary c-btn-block reg__save" [disabled]="saving()" (click)="save()">
+      Guardar
+    </button>
+
+    @if (employeeId()) {
+      <section class="reg__bio">
+        <p class="c-eyebrow">Registros biométricos</p>
+
+        <!--
+          Cada fila es un `<button>` de acción con, si procede, un botón de
+          borrar **al lado**. Antes el de borrar iba anidado dentro del otro:
+          un `<button>` dentro de otro `<button>` es HTML inválido y el
+          navegador lo saca fuera al parsear, así que ni la maquetación ni el
+          comportamiento eran los que decía el marcado.
+        -->
+        <div class="reg__row">
+          <button
+            type="button"
+            class="reg__action c-press"
+            [class.is-done]="issetFingerprint()"
+            [disabled]="issetFingerprint()"
+            (click)="captureFingerprint()"
+          >
+            <app-icon name="fingerprint" />
+            <span>Registro de huella</span>
+            @if (issetFingerprint()) {
+              <app-icon name="check" class="reg__done" />
+            }
+          </button>
+          @if (issetFingerprint()) {
+            <button
+              type="button"
+              class="reg__delete c-press"
+              (click)="deleteFingerprint()"
+              aria-label="Eliminar registro de huella"
+            >
+              <app-icon name="trash" />
+            </button>
+          }
+        </div>
+
+        <div class="reg__row">
+          <button
+            type="button"
+            class="reg__action c-press"
+            [class.is-done]="issetFaceDescriptor()"
+            [disabled]="issetFaceDescriptor()"
+            (click)="redirectToFace()"
+          >
+            <app-icon name="face" />
+            <span>Registro facial</span>
+            @if (issetFaceDescriptor()) {
+              <app-icon name="check" class="reg__done" />
+            }
+          </button>
+          @if (issetFaceDescriptor()) {
+            <button
+              type="button"
+              class="reg__delete c-press"
+              (click)="deleteFaceDescriptor()"
+              aria-label="Eliminar registro facial"
+            >
+              <app-icon name="trash" />
+            </button>
+          }
+        </div>
+
+        <div class="reg__row">
+          <button
+            type="button"
+            class="reg__action c-press"
+            [class.is-done]="issetSignature()"
+            [disabled]="issetSignature()"
+            (click)="redirectToSignature()"
+          >
+            <app-icon name="signature" />
+            <span>Registro de firma</span>
+            @if (issetSignature()) {
+              <app-icon name="check" class="reg__done" />
+            }
+          </button>
+          @if (issetSignature()) {
+            <button
+              type="button"
+              class="reg__delete c-press"
+              (click)="deleteSignature()"
+              aria-label="Eliminar firma"
+            >
+              <app-icon name="trash" />
+            </button>
+          }
+        </div>
+      </section>
+    }
+  </form>
+}

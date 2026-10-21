@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cosmos CheckIn</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#003d53" />
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/png" sizes="512x512" href="favicon.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
+    <!-- face-api.js NO se carga por CDN: `FaceService` importa el paquete de npm
+         y queda dentro del bundle. El <script> remoto que habia aqui obligaba a
+         tener internet para arrancar el APK, descargaba ~700 kB que no usaba
+         nadie y metia codigo de terceros sin fijar integridad. -->
+
+    <style>
+      /* Pantalla de carga previa al arranque de Angular.
+         Usa el mismo fondo de marca y el mismo logotipo que el splash nativo
+         de Android, de modo que el paso del splash a la aplicación no produce
+         ningún destello. El contenido de <app-root> se reemplaza al montar. */
+      html,
+      body {
+        background: #003d53;
+      }
+
+      #app-loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2.5rem;
+        background: #003d53;
+        z-index: 99999;
+      }
+
+      #app-loading img {
+        width: min(300px, 66vw);
+        height: auto;
+      }
+
+      #app-loading .spinner {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 3px solid rgba(255, 255, 255, 0.25);
+        border-top-color: #ffffff;
+        animation: app-loading-spin 0.9s linear infinite;
+      }
+
+      @keyframes app-loading-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #app-loading .spinner {
+          animation-duration: 2.4s;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <app-root>
+      <div id="app-loading">
+        <img
+          src="images/cosmos-logotipo-blanco.png"
+          alt="Cosmos Global Logistics"
+          width="1200"
+          height="184"
+        />
+        <div class="spinner"></div>
+      </div>
+    </app-root>
+  </body>
+</html>

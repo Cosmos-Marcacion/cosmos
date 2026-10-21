@@ -1,0 +1,72 @@
+:host {
+  display: block;
+}
+
+.talks__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.talks__head-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.talks__filter-btn {
+  padding: 0 0.875rem;
+}
+
+.talks__filters {
+  margin-bottom: 1rem;
+}
+
+.talks__grid {
+  display: grid;
+  // Dos columnas en movil para las fechas y los desplegables, que son cortos;
+  // el numero de registro ocupa la fila entera.
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.talks__grid-wide {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 48rem) {
+  .talks__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .talks__grid-wide {
+    grid-column: auto;
+  }
+}
+
+.talks__apply {
+  margin-top: 0.875rem;
+}
+
+.talks__table {
+  overflow: hidden;
+}
+
+.talks__skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.talks__skeleton {
+  height: 4.5rem;
+  border-radius: var(--c-r-md);
+}
+
+.talks__empty-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  color: var(--c-accent-soft);
+}

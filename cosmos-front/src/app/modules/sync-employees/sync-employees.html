@@ -1,0 +1,429 @@
+<div class="p-4 md:p-8">
+  <!-- Header con título y botón de sincronización -->
+  <div
+    class="w-full flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8"
+  >
+    <div class="flex flex-col justify-center gap-2">
+      <h1 class="text-2xl font-bold text-color2">
+        Sincronización de Empleados
+      </h1>
+      <p class="text-color2-60 text-sm">
+        Sincroniza la información de empleados desde el sistema externo
+      </p>
+    </div>
+    <div class="flex items-center gap-3 flex-wrap md:justify-end">
+      <button
+        class="bg-gray-600 text-white px-6 py-3 rounded-md flex items-center justify-between gap-2 gilroy-bold hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
+        (click)="downloadEmployeesCsv()"
+        [disabled]="isDownloadingCsv()"
+      >
+        @if (isDownloadingCsv()) {
+        <svg
+          class="animate-spin size-5"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        Descargando... } @else {
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="size-5"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M12 2.25a.75.75 0 01.75.75v11.69l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06l3.22 3.22V3a.75.75 0 01.75-.75zM6.75 15a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H6.75z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        Descargar CSV }
+      </button>
+      <button
+        class="bg-color1 text-white px-6 py-3 rounded-md flex items-center justify-between gap-2 gilroy-bold hover:bg-color1-80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
+        (click)="syncEmployees()"
+        [disabled]="isSyncing()"
+      >
+        @if (isSyncing()) {
+        <svg
+          class="animate-spin size-5"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        Sincronizando... } @else {
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="size-5"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M4.755 10.059a7.5 7.5 0 0112.548-3.364l1.903 1.903h-3.183a.75.75 0 100 1.5h4.992a.75.75 0 00.75-.75V4.356a.75.75 0 00-1.5 0v3.18l-1.9-1.9A9 9 0 003.306 9.67a.75.75 0 101.45.388zm15.408 3.352a.75.75 0 00-.919.53 7.5 7.5 0 01-12.548 3.364l-1.902-1.903h3.183a.75.75 0 000-1.5H2.984a.75.75 0 00-.75.75v4.992c0 .414.336.75.75.75h4.992a.75.75 0 000-1.5H4.81l1.9 1.9a9 9 0 0015.059-4.035.75.75 0 00-.53-.918z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        Sincronizar Empleados }
+      </button>
+    </div>
+  </div>
+
+  <!-- Ultima ejecucion e historial (CKI11) -->
+  <section class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6" aria-labelledby="sync-history-title">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center gap-4">
+      <h2 id="sync-history-title" class="text-lg font-semibold text-color2">Última sincronización</h2>
+      <button type="button" class="text-sm underline text-color2" (click)="loadRuns()" [disabled]="runsState() === 'loading'">
+        Actualizar
+      </button>
+    </div>
+    <div class="px-6 py-4">
+      @if (runsState() === 'loading') {
+      <p class="text-sm text-gray-600" role="status">Cargando historial...</p>
+      } @else if (runsState() === 'error') {
+      <p class="text-sm text-red-600" role="alert">
+        No se pudo cargar el historial.
+        <button type="button" class="underline font-semibold" (click)="loadRuns()">Reintentar</button>
+      </p>
+      } @else if (!lastRun()) {
+      <p class="text-sm text-gray-600">Todavía no se ha registrado ninguna sincronización.</p>
+      } @else {
+      @let run = lastRun()!;
+      <dl class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
+        <div><dt class="text-gray-600">Fecha</dt><dd class="font-semibold">{{ run.startedAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+        <div>
+          <dt class="text-gray-600">Estado</dt>
+          <dd
+            class="font-semibold"
+            [class.text-green-700]="run.status === 'success'"
+            [class.text-amber-700]="run.status === 'partial' || run.status === 'running'"
+            [class.text-red-700]="run.status === 'failed'"
+          >{{ statusLabel[run.status] }}</dd>
+        </div>
+        <div><dt class="text-gray-600">Procesados</dt><dd class="font-semibold">{{ run.totalProcessed }}</dd></div>
+        <div><dt class="text-gray-600">Creados</dt><dd class="font-semibold">{{ run.newEmployees }}</dd></div>
+        <div><dt class="text-gray-600">Actualizados</dt><dd class="font-semibold">{{ run.existingEmployees }}</dd></div>
+        <div><dt class="text-gray-600">Errores</dt><dd class="font-semibold">{{ run.errorCount }}</dd></div>
+      </dl>
+      @if (run.failureMessage) {
+      <p class="mt-3 text-sm text-red-700">Motivo: {{ run.failureMessage }}</p>
+      }
+      @if (run.errors.length) {
+      <details class="mt-3 text-sm">
+        <summary class="cursor-pointer text-color2 font-semibold">Ver errores ({{ run.errorCount }})</summary>
+        <ul class="mt-2 list-disc pl-5 text-gray-700">
+          @for (error of run.errors; track $index) {
+          <li>{{ error }}</li>
+          }
+        </ul>
+      </details>
+      }
+      @if (run.triggeredBy) {
+      <p class="mt-3 text-xs text-gray-600">Lanzada por {{ run.triggeredBy }}</p>
+      }
+
+      @if (runs().length > 1) {
+      <details class="mt-4 text-sm">
+        <summary class="cursor-pointer text-color2 font-semibold">Historial ({{ runs().length }} ejecuciones)</summary>
+        <div class="mt-2 table-stack table-stack--narrow">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-gray-600">
+                <th scope="col" class="py-1 pr-4">Fecha</th>
+                <th scope="col" class="py-1 pr-4">Estado</th>
+                <th scope="col" class="py-1 pr-4">Procesados</th>
+                <th scope="col" class="py-1 pr-4">Creados</th>
+                <th scope="col" class="py-1 pr-4">Actualizados</th>
+                <th scope="col" class="py-1 pr-4">Errores</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of runs(); track item._id) {
+              <tr class="border-t border-gray-100">
+                <td class="py-1 pr-4" data-label="Fecha">{{ item.startedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td class="py-1 pr-4" data-label="Estado">{{ statusLabel[item.status] }}</td>
+                <td class="py-1 pr-4" data-label="Procesados">{{ item.totalProcessed }}</td>
+                <td class="py-1 pr-4" data-label="Creados">{{ item.newEmployees }}</td>
+                <td class="py-1 pr-4" data-label="Actualizados">{{ item.existingEmployees }}</td>
+                <td class="py-1 pr-4" data-label="Errores">{{ item.errorCount }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </details>
+      }
+      }
+    </div>
+  </section>
+
+  <!-- Resultados de la sincronización -->
+  @if (showResults() && syncResult()) {
+  <div
+    class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+  >
+    <div
+      class="px-6 py-4 border-b border-gray-200 flex justify-between items-center"
+    >
+      <h3 class="text-lg font-semibold text-color2">
+        Resultados de la Sincronización
+      </h3>
+      <button
+        class="text-gray-400 hover:text-gray-600 transition-colors"
+        (click)="clearResults()"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="size-5"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <div class="p-6">
+      <!-- Estadísticas principales -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+          <div class="flex items-center gap-3">
+            <div class="bg-blue-100 p-2 rounded-full">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="size-6 text-blue-600"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+            <div>
+              <p class="text-blue-600 text-sm font-medium">Total Procesados</p>
+              <p class="text-blue-900 text-2xl font-bold">
+                {{ syncResult()?.totalProcessed || 0 }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+          <div class="flex items-center gap-3">
+            <div class="bg-green-100 p-2 rounded-full">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="size-6 text-green-600"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 9a.75.75 0 00-1.5 0v2.25H9a.75.75 0 000 1.5h2.25V15a.75.75 0 001.5 0v-2.25H15a.75.75 0 000-1.5h-2.25V9z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+            <div>
+              <p class="text-green-600 text-sm font-medium">Nuevos Empleados</p>
+              <p class="text-green-900 text-2xl font-bold">
+                {{ syncResult()?.newEmployees || 0 }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-orange-50 rounded-lg p-4 border border-orange-200">
+          <div class="flex items-center gap-3">
+            <div class="bg-orange-100 p-2 rounded-full">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="size-6 text-orange-600"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+            <div>
+              <p class="text-orange-600 text-sm font-medium">
+                Empleados Actualizados
+              </p>
+              <p class="text-orange-900 text-2xl font-bold">
+                {{ syncResult()?.existingEmployees || 0 }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Errores si los hay -->
+      @if (syncResult()?.errors && (syncResult()?.errors?.length || 0) > 0) {
+      <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+        <div class="flex items-center gap-2 mb-3">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="size-5 text-red-600"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <h4 class="text-red-800 font-semibold">
+            Errores Encontrados ({{ syncResult()?.errors?.length || 0 }})
+          </h4>
+        </div>
+        <div class="max-h-40 overflow-y-auto">
+          @for (error of syncResult()?.errors || []; track $index) {
+          <div
+            class="text-red-700 text-sm py-1 border-b border-red-100 last:border-b-0"
+          >
+            {{ error }}
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- Resumen final -->
+      <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+        <p class="text-gray-700 text-sm">
+          <strong>Resumen:</strong>
+          Se procesaron {{ syncResult()?.totalProcessed || 0 }} empleados en
+          total. {{ syncResult()?.newEmployees || 0 }} fueron agregados como
+          nuevos y {{ syncResult()?.existingEmployees || 0 }} ya existían en el
+          sistema. @if (syncResult()?.errors && (syncResult()?.errors?.length ||
+          0) > 0) { Se encontraron {{ syncResult()?.errors?.length || 0 }}
+          errores durante el proceso. }
+        </p>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Estado inicial cuando no hay resultados -->
+  @if (!showResults()) {
+  <div
+    class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center"
+  >
+    <div class="max-w-md mx-auto">
+      <div
+        class="bg-gray-100 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="size-10 text-gray-400"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">
+        Listo para Sincronizar
+      </h3>
+      <p class="text-gray-500 text-sm mb-4">
+        Haz clic en el botón "Sincronizar Empleados" para comenzar el proceso de
+        sincronización desde el sistema externo, o descarga un CSV con el estado
+        actual de los empleados.
+      </p>
+      <div class="flex gap-3 justify-center">
+        <button
+          class="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          (click)="downloadEmployeesCsv()"
+          [disabled]="isDownloadingCsv()"
+        >
+          @if (isDownloadingCsv()) {
+          <svg
+            class="animate-spin size-4 inline mr-2"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          Descargando... } @else {
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="size-4 inline mr-2"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M12 2.25a.75.75 0 01.75.75v11.69l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06l3.22 3.22V3a.75.75 0 01.75-.75zM6.75 15a.75.75 0 000 1.5h10.5a.75.75 0 000-1.5H6.75z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Descargar CSV }
+        </button>
+        <button
+          class="bg-color1 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-color1-80 transition-colors"
+          (click)="syncEmployees()"
+        >
+          Comenzar Sincronización
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

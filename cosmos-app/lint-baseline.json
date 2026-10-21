@@ -1,0 +1,12 @@
+{
+  "@angular-eslint/no-empty-lifecycle-method": 1,
+  "@angular-eslint/prefer-inject": 2,
+  "@angular-eslint/template/click-events-have-key-events": 6,
+  "@angular-eslint/template/interactive-supports-focus": 5,
+  "@angular-eslint/template/label-has-associated-control": 14,
+  "@typescript-eslint/no-unused-expressions": 3,
+  "@typescript-eslint/no-unused-vars": 58,
+  "no-empty": 1,
+  "prefer-const": 2,
+  "preserve-caught-error": 3
+}

@@ -1,0 +1,16 @@
+<div class="app-container">
+  <router-outlet />
+  @if (isNotificationVisible()) {
+  <app-notification />
+  } @if (isConfirmationVisible.visible()) {
+  <app-confirmation />
+  } @if (isLoading | async) {
+  <app-loader />
+  } @if (isCheckinConfirmationVisible | async) {
+  <app-checkin-confirmation />
+  } @if (isSplashVisible | async) {
+  <app-splash />
+  } @if (isPermissionDialogVisible()) {
+  <app-permission-dialog />
+  }
+</div>

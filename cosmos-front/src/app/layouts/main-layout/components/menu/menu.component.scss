@@ -1,0 +1,19 @@
+@use "../../../../../styles/variables" as *;
+
+.icon:hover {
+  transition: all 0.3s ease;
+  transform: scale(1.1);
+}
+
+.selected {
+  span {
+    color: $color2;
+  }
+  svg {
+    color: $color2;
+  }
+}
+
+.icon {
+  width: 30px;
+}

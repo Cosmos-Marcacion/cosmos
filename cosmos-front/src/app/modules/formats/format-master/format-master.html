@@ -1,0 +1,212 @@
+<div class="fm">
+  <header class="fm-head">
+    <div class="fm-head__left">
+      <select class="fm-select" #typeSelect [ngModel]="formatType()" name="formatType"
+        (ngModelChange)="requestType($event)">
+        @for (type of types(); track type.formatType) {
+          <option [value]="type.formatType">
+            {{ type.label }} — v{{ type.version }}{{ type.hasDraft ? ' · borrador' : '' }}
+          </option>
+        }
+      </select>
+
+      <!-- Los cuatro documentos, como pestañas -->
+      <nav class="fm-tabs">
+        @for (document of documents(); track document.id) {
+          <button type="button" class="fm-tab"
+            [class.fm-tab--on]="document.id === openDocument()"
+            (click)="openDocument.set(document.id)">
+            {{ document.label || document.name }}
+          </button>
+        }
+      </nav>
+    </div>
+
+    <div class="fm-head__actions">
+      @if (dirty()) { <span class="fm-dirty">sin guardar</span> }
+      <button type="button" class="fm-btn" [disabled]="loading() || !dirty()"
+        (click)="save()">Guardar</button>
+      <!--
+        Deshabilitado sin decir por qué es una pantalla que no responde. El
+        título dice qué falta, y la lista de abajo dice exactamente qué.
+      -->
+      <button type="button" class="fm-btn fm-btn--primary"
+        [disabled]="loading() || issues().length > 0"
+        [title]="issues().length > 0
+          ? 'Corrige lo que impide publicar y vuelve a guardar'
+          : 'Publica el borrador como versión nueva'"
+        (click)="publish()">Publicar</button>
+
+      <!--
+        El historial sale de "Ajustes" y pasa a la barra. Dentro era una lista
+        de seis líneas con la fecha y un botón: no se podía saber quién cambió
+        qué, que es justo lo que se le pide a un historial de un documento que
+        se firma y se audita.
+      -->
+      <button type="button" class="fm-btn" (click)="historyOpen.set(true)"
+        [attr.aria-expanded]="historyOpen()">
+        Historial
+        @if (versions().length > 0) {
+          <span class="fm-count">{{ versions().length }}</span>
+        }
+      </button>
+
+      <!--
+        Lo que se usa una vez cada muchas: numeración, añadir un bloque,
+        restaurar. Detrás de un desplegable para que no compita con el
+        documento, que es lo que se viene a mirar.
+      -->
+      <details class="fm-more">
+        <summary class="fm-btn fm-btn--ghost">Ajustes</summary>
+        <div class="fm-more__panel">
+          <p class="fm-more__title">Numeración de este documento</p>
+          @if (current(); as document) {
+            <select class="fm-select fm-select--small"
+              [ngModel]="document.numbering?.kind ?? 'none'" name="numberingKind"
+              (ngModelChange)="setNumberingKind($event)">
+              <option value="none">Sin número</option>
+              <option value="own">Serie propia</option>
+              <option value="inherit">Heredar de otro documento</option>
+              <option value="namedCode">Código de nombrada</option>
+            </select>
+            @if (document.numbering?.kind === 'own') {
+              <div class="fm-more__row">
+                <input class="fm-input" [ngModel]="$any(document.numbering).series.prefix"
+                  name="prefix" placeholder="Prefijo"
+                  (ngModelChange)="setSeries('prefix', $event)" />
+                <select class="fm-select fm-select--small"
+                  [ngModel]="$any(document.numbering).series.scope" name="scope"
+                  (ngModelChange)="setSeries('scope', $event)">
+                  <option value="year">Anual</option>
+                  <option value="global">Global</option>
+                </select>
+              </div>
+            }
+            @if (document.numbering?.kind === 'inherit') {
+              <select class="fm-select fm-select--small"
+                [ngModel]="$any(document.numbering).from" name="inheritFrom"
+                (ngModelChange)="setInheritFrom($event)">
+                <option value="">Elige el documento</option>
+                @for (other of documents(); track other.id) {
+                  @if (other.id !== document.id) {
+                    <option [value]="other.id">{{ other.label || other.name }}</option>
+                  }
+                }
+              </select>
+            }
+            <p class="fm-more__sample">
+              Quedará como <strong>{{ numberPreview(document) }}</strong>
+            </p>
+          }
+
+          <hr />
+          <p class="fm-more__title">Añadir bloque</p>
+          @if (catalogError()) {
+            <p class="fm-more__warn">
+              No se pudo cargar la lista de tipos de bloque. Puedes seguir editando; para
+              añadir uno nuevo, recarga la pantalla.
+            </p>
+          }
+          <div class="fm-more__row">
+            <select class="fm-select fm-select--small" [ngModel]="newSectionKind()"
+              name="newSectionKind" (ngModelChange)="newSectionKind.set($event)">
+              <option value="">Tipo…</option>
+              @for (kind of catalog()?.sectionKinds ?? []; track kind) {
+                <option [value]="kind">{{ sectionKindLabel(kind) }}</option>
+              }
+            </select>
+            <button type="button" [disabled]="!newSectionKind()"
+              (click)="addSection(newSectionKind()); newSectionKind.set('')">Añadir</button>
+          </div>
+
+          <hr />
+          <button type="button" class="fm-more__danger"
+            (click)="discard()">Descartar el borrador</button>
+          <button type="button" class="fm-more__danger"
+            (click)="restoreFactory()">Restaurar de fábrica</button>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  @if (message()) { <p class="fm-note fm-note--ok">{{ message() }}</p> }
+  @if (error()) { <p class="fm-note fm-note--error">{{ error() }}</p> }
+
+  <!--
+    Un borrador que se quedo por detras de lo publicado.
+
+    Antes se servia tal cual por encima de la definicion buena: el maestro
+    ensenaba los documentos antiguos, nada decia que hubiera algo mas nuevo
+    debajo, y publicar desde ahi habria devuelto el formato al estado anterior.
+    Ahora se ve lo publicado y el borrador espera aqui, con las dos salidas.
+  -->
+  @if (staleDraft(); as stale) {
+    <div class="fm-stale" role="status">
+      <div class="fm-stale__text">
+        <strong>Hay un borrador sin publicar que se quedó atrás.</strong>
+        Salió de la versión
+        {{ stale.baseVersion === null ? 'anterior' : 'v' + stale.baseVersion }}
+        y lo publicado va por la v{{ stale.publishedVersion }}@if (stale.updatedBy) {,
+        lo dejó {{ stale.updatedBy }}}.
+        Estás viendo lo publicado, que es lo que emite los formatos.
+      </div>
+      <div class="fm-stale__actions">
+        <button type="button" class="fm-btn" (click)="recoverDraft()">
+          Cargar el borrador
+        </button>
+        <button type="button" class="fm-btn fm-btn--ghost" (click)="discard()">
+          Descartarlo
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (issues().length > 0) {
+    <details class="fm-issues">
+      <summary>
+        {{ issues().length === 1 ? 'Una cosa impide' : issues().length + ' cosas impiden' }}
+        publicar. Corrígelas y guarda el borrador.
+      </summary>
+      <ul>
+        @for (issue of issues(); track issue.path + issue.message) {
+          <li>
+            <!--
+              Pulsar el problema abre el documento donde está: con cuatro
+              documentos, leer "la fila no tiene columnas" obligaba a buscarla a
+              mano por todos ellos.
+            -->
+            <button type="button" class="fm-issue" (click)="openIssue(issue.path)">
+              @if (issueLocation(issue.path); as where) {
+                <span class="fm-issue__where">{{ where }}</span>
+              }
+              <span class="fm-issue__what">{{ issue.message }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    </details>
+  }
+
+  @if (current(); as document) {
+    <app-format-builder [document]="document"
+      [documentKey]="formatType() + ':' + document.id"
+      (documentChange)="replaceDocument(document.id, $event)" />
+  } @else if (!loading()) {
+    <p class="fm-note">Selecciona un tipo de formato para empezar.</p>
+  }
+
+  <!--
+    `hasDraft` es solo el borrador **guardado**: lo que todavía no se ha
+    guardado no ha llegado al servidor y no hay con qué compararlo. La barra ya
+    avisa de eso con "sin guardar".
+  -->
+  @if (historyOpen()) {
+    <app-format-history
+      [formatType]="formatType()"
+      [versions]="versions()"
+      [hasDraft]="hasDraft()"
+      [loadError]="versionsError()"
+      (close)="historyOpen.set(false)"
+      (revert)="revert($event)" />
+  }
+</div>

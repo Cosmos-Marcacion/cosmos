@@ -1,0 +1,294 @@
+/**
+ * Perfiles de usuario.
+ *
+ * Sin PrimeNG, como el resto de las pantallas nuevas: HTML y CSS nativos con la
+ * misma linea grafica (tarjetas blancas sobre gris, esquinas redondeadas,
+ * acento azul).
+ */
+
+@use "../../../styles/variables" as vars;
+
+.pf {
+  padding: 1.25rem 1.5rem 3rem;
+  background: #f8fafc;
+  min-height: 100%;
+}
+
+.pf-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+
+  &__title {
+    margin: 0;
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 1.5rem;
+    color: vars.$color1;
+  }
+
+  &__sub {
+    margin: 0.25rem 0 0;
+    max-width: 42rem;
+    font-size: 0.875rem;
+    color: vars.$color1-40;
+  }
+}
+
+.pf-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(22rem, 100%), 1fr));
+  gap: 0.875rem;
+}
+
+.pf-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.125rem;
+  background: #fff;
+  border: 1px solid vars.$color3-20;
+  border-radius: 0.75rem;
+
+  &--off { opacity: 0.6; }
+
+  &__main { min-width: 0; }
+
+  &__name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 1.0625rem;
+    color: vars.$color1;
+  }
+
+  &__desc {
+    margin: 0.25rem 0 0;
+    font-size: 0.8125rem;
+    color: vars.$color1-40;
+  }
+
+  // La lista de pantallas es lo que de verdad define el perfil; se lee mas
+  // que el nombre.
+  &__modules {
+    margin: 0.5rem 0 0;
+    font-size: 0.8125rem;
+    color: vars.$color1;
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    flex: none;
+  }
+}
+
+.pf-tag {
+  padding: 0.0625rem 0.5rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-family: "Gilroy-Regular", sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+
+  &--off { background: #f1f5f9; color: #64748b; }
+}
+
+.pf-note {
+  padding: 1.5rem;
+  text-align: center;
+  color: vars.$color1-40;
+}
+
+// --- botones -------------------------------------------------------------------
+
+.pf-btn {
+  padding: 0.4375rem 0.875rem;
+  border: 1px solid vars.$color3-20;
+  border-radius: 0.5rem;
+  background: #fff;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: vars.$color1;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { border-color: vars.$color4; }
+  &:disabled { opacity: 0.5; cursor: default; }
+
+  &--primary {
+    background: vars.$color4;
+    border-color: vars.$color4;
+    color: #fff;
+  }
+
+  &--danger { color: #b91c1c; border-color: #fecaca; }
+}
+
+// --- ventana --------------------------------------------------------------------
+
+.pf-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgb(15 23 42 / 45%);
+
+  &__panel {
+    display: flex;
+    flex-direction: column;
+    width: min(44rem, 100%);
+    max-height: min(88vh, 50rem);
+    border-radius: 0.875rem;
+    background: #fff;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid vars.$color3-20;
+  }
+
+  &__title {
+    margin: 0;
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 1.125rem;
+  }
+
+  &__close {
+    border: none;
+    background: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: vars.$color1-40;
+    cursor: pointer;
+  }
+
+  &__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  &__foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.875rem 1.25rem;
+    border-top: 1px solid vars.$color3-20;
+  }
+}
+
+.pf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+
+  > span {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: vars.$color1-40;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+}
+
+.pf-bulk {
+  display: flex;
+  gap: 0.25rem;
+  text-transform: none;
+  letter-spacing: 0;
+
+  button {
+    padding: 0.125rem 0.5rem;
+    border: 1px solid vars.$color3-20;
+    border-radius: 0.375rem;
+    background: #fff;
+    font: inherit;
+    font-size: 0.6875rem;
+    cursor: pointer;
+  }
+}
+
+.pf-input {
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid vars.$color3-20;
+  border-radius: 0.5rem;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+// Cada modulo con su explicacion al lado: conceder un permiso sin saber que
+// abre es como no leerlo.
+.pf-modules {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr));
+  gap: 0.5rem;
+}
+
+.pf-module {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid vars.$color3-20;
+  border-radius: 0.625rem;
+  cursor: pointer;
+
+  &--on {
+    border-color: vars.$color4;
+    background: #f0f9ff;
+  }
+
+  input { margin-top: 0.1875rem; }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+
+    strong { font-size: 0.875rem; color: vars.$color1; }
+    small { font-size: 0.75rem; color: vars.$color1-40; }
+  }
+}
+
+.pf-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.pf-warn {
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #fde68a;
+  border-radius: 0.5rem;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.8125rem;
+}

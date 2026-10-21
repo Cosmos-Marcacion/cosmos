@@ -1,0 +1,43 @@
+<div class="lg:block hidden">
+  <app-table
+    [headers]="headers"
+    [data]="data"
+    (optionsEvent)="clickOptions($event.option, $event._id)"
+    [total]="total"
+    [page]="page"
+    [limit]="limit"
+    [showExcelDownload]="showExcelDownload"
+    [excelConfig]="excelConfig"
+    (pageChangeEvent)="pageChange($event)"
+    (excelDownloadEvent)="onExcelDownload($event)"
+    [loading]="loading"
+    [error]="error"
+    [searchTerm]="searchTerm"
+    [emptyMessage]="emptyMessage"
+    [noMatchMessage]="noMatchMessage"
+    [retryable]="retryable"
+    (retryEvent)="retryEvent.emit()"
+  ></app-table>
+</div>
+
+<div class="block lg:hidden">
+  <app-list-table
+    [headers]="headers"
+    [data]="data"
+    (optionsEvent)="clickOptions($event.option, $event._id)"
+    [total]="total"
+    [page]="page"
+    [limit]="limit"
+    [showExcelDownload]="showExcelDownload"
+    [excelConfig]="excelConfig"
+    (pageChangeEvent)="pageChange($event)"
+    (excelDownloadEvent)="onExcelDownload($event)"
+    [loading]="loading"
+    [error]="error"
+    [searchTerm]="searchTerm"
+    [emptyMessage]="emptyMessage"
+    [noMatchMessage]="noMatchMessage"
+    [retryable]="retryable"
+    (retryEvent)="retryEvent.emit()"
+  ></app-list-table>
+</div>

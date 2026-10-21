@@ -1,0 +1,193 @@
+<!-- ===================== Selector de fecha ===================== -->
+<section class="date-bar c-anim-rise-sm">
+  <p class="c-eyebrow">Fecha de trabajo</p>
+
+  <div class="date-bar__row">
+    <button
+      type="button"
+      class="date-bar__nav c-press"
+      (click)="changeDate(-1)"
+      aria-label="Día anterior"
+    >
+      <app-icon name="chevronLeft" />
+    </button>
+
+    <button
+      type="button"
+      class="date-bar__current c-press"
+      (click)="toggleDatePicker()"
+      [attr.aria-expanded]="showDatePicker()"
+    >
+      <app-icon name="calendar" />
+      <span>{{ displayDate() }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="date-bar__nav c-press"
+      (click)="changeDate(1)"
+      aria-label="Día siguiente"
+    >
+      <app-icon name="chevronRight" />
+    </button>
+  </div>
+
+  @if (showDatePicker()) {
+    <input
+      class="date-bar__picker c-anim-rise-sm"
+      type="date"
+      [(ngModel)]="pickerDate"
+      (change)="onDateChange()"
+      aria-label="Elegir fecha"
+    />
+  }
+</section>
+
+<!-- ===================== Contenido ===================== -->
+@if (loading()) {
+  <!--
+    Se conserva la forma de lo que va a llegar en vez de un spinner suelto:
+    así la pantalla no da un salto de maquetación cuando entran los datos.
+  -->
+  <div class="stack" aria-busy="true" aria-label="Cargando nombradas">
+    @for (i of [1, 2, 3]; track i) {
+      <div class="c-skeleton skel-turn"></div>
+      <div class="c-skeleton skel-card"></div>
+    }
+  </div>
+} @else if (hasData()) {
+  <div class="stack">
+    @for (turn of turns(); track turn.turn) {
+      <section class="turn">
+        <button
+          type="button"
+          class="turn__head c-press-sm"
+          (click)="toggleTurn(turn.turn)"
+          [attr.aria-expanded]="isTurnOpen(turn.turn)"
+        >
+          <span class="turn__title">Turno {{ turn.turn }}</span>
+          <span class="turn__meta">
+            <span class="turn__count">{{ turn.counter }}</span>
+            <app-icon
+              name="chevronDown"
+              class="turn__chevron"
+              [class.is-open]="isTurnOpen(turn.turn)"
+            />
+          </span>
+        </button>
+
+        @if (isTurnOpen(turn.turn)) {
+          <div class="turn__body c-stagger">
+            @if (turn.cards.length === 0) {
+              <p class="c-caption">No se encontraron registros</p>
+            }
+
+            @for (card of turn.cards; track card.key) {
+              <article class="named">
+                <button
+                  type="button"
+                  class="named__head"
+                  (click)="toggleCard(card.key)"
+                  [attr.aria-expanded]="isCardOpen(card.key)"
+                >
+                  <span class="named__top">
+                    <span class="named__id">
+                      {{ card.staffVesselId }} · {{ card.staffVesselNumber }}
+                    </span>
+                    <span class="named__meta">
+                      <span class="named__count">{{ card.counter }}</span>
+                      <app-icon
+                        name="chevronDown"
+                        class="named__chevron"
+                        [class.is-open]="isCardOpen(card.key)"
+                      />
+                    </span>
+                  </span>
+
+                  <span class="named__vessel">
+                    {{ card.vesselDescription | cap }}
+                  </span>
+                  <span class="named__sub">
+                    Viaje {{ card.voyageNumber }} · Muelle {{ card.pierDescription | cap }}
+                  </span>
+                </button>
+
+                <!--
+                  Un solo botón: el backend emite el Excel completo de la
+                  nombrada (asistencia, charla, ATS, permiso de trabajo,
+                  inspección de nave e inglés) sobre la plantilla oficial.
+                -->
+                <div class="named__actions">
+                  <button
+                    type="button"
+                    class="named__format c-press"
+                    (click)="downloadFormato(card, $event)"
+                  >
+                    <app-icon name="download" />
+                    Formato
+                  </button>
+                </div>
+
+                @if (isCardOpen(card.key)) {
+                  <ul class="roster">
+                    @for (row of card.rows; track row.staffId) {
+                      <li>
+                        <button
+                          type="button"
+                          class="roster__row c-press-sm"
+                          [class.is-complete]="row.isComplete"
+                          (click)="redirectToEmployeeDetail(row.employeeId, card.staffTransmissionId)"
+                        >
+                          <span class="roster__name">
+                            {{ row.lastName | cap }} {{ row.firstName | cap }}
+                          </span>
+                          <span class="roster__role">{{ row.role | cap }}</span>
+
+                          <span class="roster__foot">
+                            @if (row.isAbsent || !row.lastDate) {
+                              <span class="roster__last">—</span>
+                            } @else {
+                              <span class="roster__last">
+                                {{ row.lastPointName }} · {{ row.lastDate | date: "HH:mm" }}
+                              </span>
+                            }
+
+                            <span
+                              class="c-chip"
+                              [class.c-chip-warning]="row.isAbsent"
+                              [class.c-chip-brand]="!row.isAbsent"
+                            >
+                              {{ row.record }}
+                            </span>
+                          </span>
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                }
+              </article>
+            }
+          </div>
+        }
+      </section>
+    }
+  </div>
+} @else {
+  <div class="c-empty c-anim-rise">
+    <app-icon name="inbox" class="empty__icon" />
+    <h2 class="c-subtitle">No hay información disponible</h2>
+    <p class="c-body">
+      No se encontraron registros para la fecha {{ displayDate() }}.
+    </p>
+    <div class="empty__actions">
+      <button type="button" class="c-btn c-btn-primary c-btn-block" (click)="goToToday()">
+        <app-icon name="calendar" class="w-5 h-5" />
+        Ir a hoy
+      </button>
+      <button type="button" class="c-btn c-btn-ghost c-btn-block" (click)="openDatePicker()">
+        <app-icon name="search" class="w-5 h-5" />
+        Seleccionar otra fecha
+      </button>
+    </div>
+  </div>
+}

@@ -1,0 +1,204 @@
+// Estilos para el componente de huellas digitales
+.fingerprint-container {
+  .status-indicator {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+
+    &.connected {
+      @apply bg-green-100 text-green-800;
+    }
+
+    &.disconnected {
+      @apply bg-red-100 text-red-800;
+    }
+  }
+
+  .fingerprint-scanner {
+    @apply relative w-32 h-32 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center;
+
+    &::before {
+      content: "";
+      @apply absolute inset-0 rounded-full border-4 border-blue-200;
+      animation: pulse 2s infinite;
+    }
+
+    &.scanning {
+      @apply bg-blue-50 border-blue-300;
+
+      &::before {
+        @apply border-blue-400;
+        animation: scanning 1.5s infinite;
+      }
+    }
+  }
+
+  .progress-bar {
+    @apply w-full bg-gray-200 rounded-full h-2 overflow-hidden;
+
+    .progress-fill {
+      @apply bg-blue-600 h-full transition-all duration-300 ease-out;
+    }
+  }
+
+  .user-card {
+    @apply p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200;
+
+    &:hover {
+      @apply border-blue-300 shadow-lg;
+    }
+
+    .user-avatar {
+      @apply w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center;
+    }
+
+    .delete-button {
+      @apply text-red-600 hover:text-red-800 transition-colors duration-200;
+    }
+  }
+
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+
+    &:focus {
+      @apply shadow-sm;
+    }
+
+    &.error {
+      @apply border-red-300 focus:ring-red-500;
+    }
+  }
+
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+
+    &.btn-primary {
+      @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+
+      &:disabled {
+        @apply bg-gray-400 cursor-not-allowed;
+      }
+    }
+
+    &.btn-success {
+      @apply bg-green-600 text-white hover:bg-green-700 focus:ring-green-500;
+    }
+
+    &.btn-danger {
+      @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+    }
+
+    &.btn-secondary {
+      @apply bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500;
+    }
+  }
+
+  .alert {
+    @apply p-4 rounded-lg border;
+
+    &.alert-success {
+      @apply bg-green-50 border-green-200 text-green-800;
+    }
+
+    &.alert-error {
+      @apply bg-red-50 border-red-200 text-red-800;
+    }
+
+    &.alert-info {
+      @apply bg-blue-50 border-blue-200 text-blue-800;
+    }
+  }
+
+  .loading-spinner {
+    @apply animate-spin rounded-full border-2 border-gray-300 border-t-blue-600;
+  }
+
+  // Animaciones
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  @keyframes scanning {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 0.7;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  // Responsive design
+  @media (max-width: 768px) {
+    .fingerprint-scanner {
+      @apply w-24 h-24;
+    }
+
+    .user-card {
+      @apply p-3;
+    }
+
+    .btn {
+      @apply px-3 py-2 text-sm;
+    }
+  }
+
+  // Estados especiales
+  .fingerprint-success {
+    @apply bg-green-50 border-green-200;
+
+    .fingerprint-scanner {
+      @apply bg-green-100 border-green-300;
+    }
+  }
+
+  .fingerprint-error {
+    @apply bg-red-50 border-red-200;
+
+    .fingerprint-scanner {
+      @apply bg-red-100 border-red-300;
+    }
+  }
+
+  .fingerprint-processing {
+    @apply bg-blue-50 border-blue-200;
+
+    .fingerprint-scanner {
+      @apply bg-blue-100 border-blue-300;
+    }
+  }
+}
+
+// Estilos mínimos para identificación
+.identify-container {
+  .btn-identify {
+    @apply px-4 py-2 rounded-md font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-50;
+  }
+  .hint {
+    @apply text-xs text-gray-600;
+  }
+}

@@ -1,0 +1,40 @@
+<div
+  class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="confirmation-message"
+>
+  <div class="bg-white p-5 rounded-xl max-w-sm mx-4 shadow-xl">
+    <p id="confirmation-message" class="font-medium">{{ confirmationService.message() }}</p>
+
+    <!--
+      El detalle dice qué se pierde y qué se conserva. Sin él, "¿Descartar el
+      borrador?" no distingue entre tirar un cambio y tirar una tarde de
+      trabajo.
+    -->
+    @if (confirmationService.options().detail) {
+      <p class="text-sm text-gray-600 mt-2">{{ confirmationService.options().detail }}</p>
+    }
+
+    <div class="flex gap-2 justify-end mt-4">
+      <button
+        class="px-4 py-1 rounded-full border border-gray-300 text-gray-700"
+        (click)="confirmationService.cancel()"
+      >
+        {{ confirmationService.options().cancelLabel || 'Cancelar' }}
+      </button>
+      <!--
+        La acción va a la derecha y nombrada: lo que se lee en el botón es lo
+        único que dice qué va a pasar al pulsarlo.
+      -->
+      <button
+        class="text-white px-4 py-1 rounded-full"
+        [class.bg-red-600]="confirmationService.options().danger"
+        [class.bg-color5]="!confirmationService.options().danger"
+        (click)="confirmationService.confirm()"
+      >
+        {{ confirmationService.options().confirmLabel || 'Sí' }}
+      </button>
+    </div>
+  </div>
+</div>

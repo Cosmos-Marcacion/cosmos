@@ -1,0 +1,132 @@
+name: Deploy
+
+# Despliegue a Azure (Escenario B). Ver infra/azure/README.md.
+#
+# main    -> environment "produccion" (con revisores requeridos)
+# develop -> environment "qa"
+#
+# Primero pasan los gates de qa.yml; si alguno falla no se despliega nada.
+# Despues se despliega solo lo que cambio en el push: el backend como revision
+# nueva de Container Apps (con vuelta atras si no arranca) y el panel en Static
+# Web Apps.
+#
+# Queda inerte hasta que la variable de repositorio AZURE_DEPLOY_ENABLED valga
+# "true": asi el workflow puede llegar a main antes de que Azure exista.
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+# Un despliegue no se cancela a medias: el siguiente espera su turno.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    name: QA
+    uses: ./.github/workflows/qa.yml
+
+  cambios:
+    name: Detectar cambios
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.diff.outputs.backend }}
+      frontend: ${{ steps.diff.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: diff
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          # Sin commit anterior (rama nueva, ejecucion manual) se despliega todo.
+          if [ "$GITHUB_EVENT_NAME" != push ] || [ -z "$BEFORE" ] \
+             || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          files=$(git diff --name-only "$BEFORE" "$GITHUB_SHA")
+          echo "$files"
+          if grep -qE '^(cosmos-back/|infra/azure/deploy-revision\.sh)' <<< "$files"; then b=true; else b=false; fi
+          if grep -qE '^cosmos-front/' <<< "$files"; then f=true; else f=false; fi
+          echo "backend=$b" >> "$GITHUB_OUTPUT"
+          echo "frontend=$f" >> "$GITHUB_OUTPUT"
+
+  backend:
+    name: Backend a Container Apps
+    needs: [qa, cambios]
+    if: >-
+      vars.AZURE_DEPLOY_ENABLED == 'true'
+      && (github.ref_name == 'main' || github.ref_name == 'develop')
+      && needs.cambios.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: ${{ github.ref_name == 'main' && 'produccion' || 'qa' }}
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      IMAGE: ${{ vars.ACR_NAME }}.azurecr.io/cosmos-api:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Construir y subir la imagen
+        run: |
+          az acr login -n "${{ vars.ACR_NAME }}"
+          docker build -t "$IMAGE" cosmos-back
+          docker push "$IMAGE"
+
+      - name: Revision nueva, prueba y promocion
+        run: |
+          az extension add -n containerapp --upgrade -y
+          bash infra/azure/deploy-revision.sh "${{ vars.RG }}" "${{ vars.APP_NAME }}" "$IMAGE" \
+            "r${GITHUB_SHA::7}-${GITHUB_RUN_ATTEMPT}"
+
+  frontend:
+    name: Panel a Static Web Apps
+    needs: [qa, cambios]
+    if: >-
+      vars.AZURE_DEPLOY_ENABLED == 'true'
+      && (github.ref_name == 'main' || github.ref_name == 'develop')
+      && needs.cambios.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ github.ref_name == 'main' && 'produccion' || 'qa' }}
+    defaults:
+      run:
+        working-directory: cosmos-front
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cosmos-front/package-lock.json
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Compilar
+        run: npx ng build --configuration ${{ github.ref_name == 'main' && 'production' || 'qa' }}
+
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.SWA_TOKEN }}
+          action: upload
+          app_location: cosmos-front/dist/cosmos-front/browser
+          skip_app_build: true
+          skip_api_build: true

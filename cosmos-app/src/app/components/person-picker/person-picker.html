@@ -1,0 +1,106 @@
+<div class="person-picker">
+  @if (label()) {
+    <label [attr.for]="uid" class="person-picker__label">
+      {{ label() }}
+      @if (required()) { <span class="person-picker__required" aria-hidden="true">*</span> }
+    </label>
+  }
+
+  <!--
+    Cuando ya hay persona elegida se muestra su ficha en vez del campo: el dato
+    que importa es quién está asignado, no el texto con el que se le buscó.
+  -->
+  @if (hasValue() && !open()) {
+    <div class="person-picker__selected" [class.is-disabled]="disabled()">
+      <span class="person-picker__avatar" aria-hidden="true">{{ value()!.fullName.charAt(0) }}</span>
+      <span class="person-picker__selected-body">
+        <span class="person-picker__selected-name">{{ value()!.fullName }}</span>
+        <span class="person-picker__selected-meta">
+          @if (value()!.document) { <span>DNI {{ value()!.document }}</span> }
+          @if (value()!.document && value()!.position) { <span aria-hidden="true">·</span> }
+          @if (value()!.position) { <span>{{ value()!.position }}</span> }
+        </span>
+      </span>
+      @if (!disabled()) {
+        <button type="button" class="person-picker__action" (click)="openList()"
+          [attr.aria-label]="'Cambiar ' + (label() || 'persona')">
+          Cambiar
+        </button>
+        <button type="button" class="person-picker__clear" (click)="clear($event)"
+          [attr.aria-label]="'Quitar ' + (label() || 'persona')">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M6.3 6.3a1 1 0 0 1 1.4 0L10 8.6l2.3-2.3a1 1 0 1 1 1.4 1.4L11.4 10l2.3 2.3a1 1 0 0 1-1.4 1.4L10 11.4l-2.3 2.3a1 1 0 0 1-1.4-1.4L8.6 10 6.3 7.7a1 1 0 0 1 0-1.4Z" />
+          </svg>
+        </button>
+      }
+    </div>
+  } @else {
+    <div class="person-picker__field" [class.is-open]="open()">
+      <svg class="person-picker__search-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.4 9.8l3.4 3.4a1 1 0 0 0 1.4-1.4l-3.4-3.4A5.5 5.5 0 0 0 9 3.5ZM5.5 9a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0Z" clip-rule="evenodd" />
+      </svg>
+
+      <input
+        [id]="uid"
+        type="text"
+        role="combobox"
+        autocomplete="off"
+        [attr.aria-expanded]="open()"
+        [attr.aria-controls]="uid + '-list'"
+        [attr.aria-activedescendant]="activeIndex() >= 0 ? optionId(activeIndex()) : null"
+        [placeholder]="placeholder()"
+        [value]="query()"
+        [disabled]="disabled()"
+        (focus)="openList()"
+        (input)="onInput($event)"
+        (keydown)="onKeydown($event)"
+      />
+
+      @if (loading()) {
+        <span class="person-picker__spinner" aria-hidden="true"></span>
+      }
+    </div>
+  }
+
+  @if (hint() && !open()) {
+    <p class="person-picker__hint">{{ hint() }}</p>
+  }
+
+  @if (open()) {
+    <div class="person-picker__panel">
+      <ul [id]="uid + '-list'" role="listbox" class="person-picker__list">
+        @for (person of results(); track person.id; let i = $index) {
+          <li
+            [id]="optionId(i)"
+            role="option"
+            [attr.aria-selected]="i === activeIndex()"
+            class="person-picker__option"
+            [class.is-active]="i === activeIndex()"
+            (mouseenter)="activeIndex.set(i)"
+            (click)="select(person)"
+          >
+            <span class="person-picker__avatar" aria-hidden="true">{{ person.fullName.charAt(0) }}</span>
+            <span class="person-picker__option-body">
+              <span class="person-picker__option-name">{{ person.fullName }}</span>
+              <span class="person-picker__option-meta">
+                <span class="person-picker__doc">{{ person.document }}</span>
+                <span aria-hidden="true">·</span>
+                <span>{{ person.position }}</span>
+              </span>
+            </span>
+          </li>
+        }
+      </ul>
+
+      @if (showEmpty()) {
+        <p class="person-picker__empty">
+          Nadie coincide con «{{ query() }}». Prueba con el apellido o el número de documento.
+        </p>
+      }
+
+      @if (loading() && results().length === 0) {
+        <p class="person-picker__empty">Buscando…</p>
+      }
+    </div>
+  }
+</div>

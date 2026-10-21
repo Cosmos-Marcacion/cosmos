@@ -1,0 +1,109 @@
+<header class="talks__head c-anim-rise-sm">
+  <div>
+    <h1 class="c-title">Capacitaciones</h1>
+    <p class="c-caption">{{ total() }} registradas</p>
+  </div>
+
+  <div class="talks__head-actions">
+    <!--
+      Los filtros se pliegan. Ocupaban cinco campos siempre desplegados, media
+      pantalla de un móvil antes de ver el primer resultado.
+    -->
+    <button
+      type="button"
+      class="c-btn c-btn-ghost talks__filter-btn"
+      (click)="toggleFilters()"
+      [attr.aria-expanded]="filtersOpen()"
+    >
+      <app-icon name="search" class="w-5 h-5" />
+      Filtros
+    </button>
+    <button type="button" class="c-btn c-btn-primary" (click)="addTalk()">
+      <app-icon name="plus" class="w-5 h-5" />
+      Agregar
+    </button>
+  </div>
+</header>
+
+@if (filtersOpen()) {
+  <section class="c-card c-card-pad talks__filters c-anim-rise-sm">
+    <div class="talks__grid">
+      <div class="c-field">
+        <label class="c-label" for="f-start">Fecha inicio</label>
+        <input class="c-input" id="f-start" type="date" [(ngModel)]="filters.startDate" name="startDate" />
+      </div>
+
+      <div class="c-field">
+        <label class="c-label" for="f-end">Fecha fin</label>
+        <input class="c-input" id="f-end" type="date" [(ngModel)]="filters.endDate" name="endDate" />
+      </div>
+
+      <div class="c-field">
+        <label class="c-label" for="f-turn">Turno</label>
+        <select class="c-input" id="f-turn" [(ngModel)]="filters.turn" name="turn">
+          <option value="" [selected]="!filters.turn">Todos</option>
+          @for (turn of turns; track turn) {
+            <option [value]="turn" [selected]="turn === filters.turn">{{ turn }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="c-field">
+        <label class="c-label" for="f-type">Tipo</label>
+        <select class="c-input" id="f-type" [(ngModel)]="filters.type" name="type">
+          <option value="" [selected]="!filters.type">Todos</option>
+          @for (type of talkTypes; track type) {
+            <option [value]="type" [selected]="type === filters.type">{{ type }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="c-field talks__grid-wide">
+        <label class="c-label" for="f-register">Número de registro</label>
+        <input
+          class="c-input"
+          id="f-register"
+          type="text"
+          inputmode="numeric"
+          placeholder="Ingrese registro"
+          [(ngModel)]="filters.registerNumber"
+          name="registerNumber"
+        />
+      </div>
+    </div>
+
+    <button type="button" class="c-btn c-btn-primary c-btn-block talks__apply" (click)="search()">
+      Aplicar filtros
+    </button>
+  </section>
+}
+
+@if (loading()) {
+  <div class="talks__skeletons" aria-busy="true" aria-label="Cargando capacitaciones">
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="c-skeleton talks__skeleton"></div>
+    }
+  </div>
+} @else if (talks().length > 0) {
+  <div class="c-card talks__table c-anim-rise-sm">
+    <app-data
+      [total]="total()"
+      [page]="page()"
+      [limit]="limit()"
+      [headers]="headers"
+      [data]="talks()"
+      (optionsEvent)="clickOptions($event.option, $event._id)"
+      (pageChangeEvent)="loadMore($event)"
+    />
+  </div>
+} @else {
+  <div class="c-empty c-anim-rise">
+    <app-icon name="book" class="talks__empty-icon" />
+    <h2 class="c-subtitle">No se encontraron capacitaciones</h2>
+    <p class="c-body">Prueba con otro rango de fechas o crea la primera.</p>
+    <button type="button" class="c-btn c-btn-primary" (click)="addTalk()">
+      <app-icon name="plus" class="w-5 h-5" />
+      Agregar capacitación
+    </button>
+  </div>
+}

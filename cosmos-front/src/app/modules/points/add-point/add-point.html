@@ -1,0 +1,152 @@
+<div class="flex w-full justify-between items-center px-10 py-5">
+  <button
+    class="bg-color1 text-white px-4 py-2 rounded-xl gilroy-bold flex items-center gap-2"
+    (click)="goBack()"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="size-6"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+      />
+    </svg>
+    Regresar
+  </button>
+</div>
+
+<div class="px-10">
+  <form
+    [formGroup]="form"
+    (ngSubmit)="save()"
+    class="flex flex-col gap-5 p-10 bg-white rounded-xl xl:w-1/2"
+  >
+    <div class="flex flex-col gap-2">
+      <label for="portId" class="text-color1">Puerto *</label>
+      <select
+        name="portId"
+        id="portId"
+        class="w-full p-3 rounded-md border border-color2"
+        formControlName="portId"
+      >
+        <option value="">Seleccionar puerto</option>
+        @for (port of ports(); track port._id) {
+        <option [value]="port._id">{{ port.name }}</option>
+        }
+      </select>
+      @if (portId?.errors && portId?.touched) {
+      <p class="text-red-500">
+        {{ portId?.errors?.['required'] ? 'El puerto es requerido' : '' }}
+      </p>
+      }
+    </div>
+    <div class="flex flex-col gap-2">
+      <label for="name" class="text-color1">Nombre *</label>
+      <input
+        type="text"
+        id="name"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="name"
+        placeholder="Ingrese un nombre"
+        maxlength="100"
+        aria-describedby="name-error"
+        [attr.aria-invalid]="name?.invalid && name?.touched"
+      />
+      @if (name?.errors && name?.touched) {
+      <p id="name-error" class="text-red-500">
+        @if (name?.errors?.['required']) { El nombre es requerido. }
+        @else if (name?.errors?.['catalogName']) { Solo letras, números, espacios y los signos . , - / ( ) #. }
+        @else if (name?.errors?.['maxlength']) { El nombre no puede pasar de 100 caracteres. }
+      </p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="dependOnId" class="text-color1">Depende de</label>
+      <select
+        name="dependOnId"
+        id="dependOnId"
+        class="w-full p-3 rounded-md border border-color2"
+        formControlName="dependOnId"
+        aria-describedby="dependOnId-hint"
+        [attr.aria-busy]="loadingPoints()"
+      >
+        <option value="">
+          {{ loadingPoints() ? 'Cargando puntos...' : 'Sin dependencia' }}
+        </option>
+        @for (point of dependencyOptions(); track point._id) {
+        <option [value]="point._id">{{ point.name }}</option>
+        }
+      </select>
+      <p id="dependOnId-hint" class="text-sm text-gray-600">
+        @if (!portId?.value) {
+        Elige primero el puerto: solo se puede depender de un punto del mismo puerto.
+        } @else {
+        Solo se listan los puntos del puerto elegido.
+        }
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="previousTolerance" class="text-color1"
+        >Tolerancia anterior (minutos)</label
+      >
+      <input
+        type="text"
+        inputmode="numeric"
+        id="previousTolerance"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="previousTolerance"
+        maxlength="3"
+        aria-describedby="previousTolerance-hint"
+        [attr.aria-invalid]="previousTolerance?.invalid && previousTolerance?.touched"
+      />
+      <p
+        id="previousTolerance-hint"
+        class="text-sm"
+        [class.text-red-500]="previousTolerance?.invalid && previousTolerance?.touched"
+        [class.text-gray-600]="!(previousTolerance?.invalid && previousTolerance?.touched)"
+      >
+        Número entero de {{ toleranceMin }} a {{ toleranceMax }}.
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="nextTolerance" class="text-color1"
+        >Tolerancia siguiente (minutos)</label
+      >
+      <input
+        type="text"
+        inputmode="numeric"
+        id="nextTolerance"
+        class="w-full p-3 rounded-xl border border-color1-40"
+        formControlName="nextTolerance"
+        maxlength="3"
+        aria-describedby="nextTolerance-hint"
+        [attr.aria-invalid]="nextTolerance?.invalid && nextTolerance?.touched"
+      />
+      <p
+        id="nextTolerance-hint"
+        class="text-sm"
+        [class.text-red-500]="nextTolerance?.invalid && nextTolerance?.touched"
+        [class.text-gray-600]="!(nextTolerance?.invalid && nextTolerance?.touched)"
+      >
+        Número entero de {{ toleranceMin }} a {{ toleranceMax }}.
+      </p>
+    </div>
+
+    <button
+      class="mt-5 bg-color2 text-white px-4 py-3 rounded-xl gilroy-bold disabled:opacity-60 disabled:cursor-not-allowed w-1/2"
+      type="submit"
+      [disabled]="form.invalid || saving()"
+    >
+      {{ saving() ? 'GUARDANDO...' : 'GUARDAR' }}
+    </button>
+  </form>
+</div>

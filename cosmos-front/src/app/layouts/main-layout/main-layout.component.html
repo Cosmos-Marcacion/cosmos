@@ -1,0 +1,174 @@
+<!--
+  Alto `h-dvh` y no `h-screen`: en el móvil 100vh incluye la barra del
+  navegador, y el final de cada pantalla quedaba debajo de ella, cortado.
+-->
+<div class="flex h-dvh bg-white">
+  <!--
+    Columna de modulos en pantalla grande. Se pliega a una barra de iconos:
+    ocupaba unos 230 px de forma permanente y no habia manera de recuperarlos.
+  -->
+  <div
+    class="hidden lg:flex flex-col gap-4 h-dvh shrink-0 border-r border-color3-20 transition-all duration-200"
+    [class.p-8]="!menuPlegado()"
+    [class.px-3]="menuPlegado()"
+    [class.py-6]="menuPlegado()"
+  >
+    <div class="flex items-center" [class.justify-center]="menuPlegado()" [class.justify-between]="!menuPlegado()">
+      @if (!menuPlegado()) {
+        <button type="button" (click)="goHome()" aria-label="Ir a la pantalla principal">
+          <img
+            src="/images/cosmos-logotipo.png"
+            alt="Cosmos Global Logistics"
+            width="200"
+          />
+        </button>
+      }
+      <button
+        type="button"
+        class="p-2 rounded-md hover:bg-color7 text-color1"
+        (click)="togglePlegado()"
+        [attr.aria-expanded]="!menuPlegado()"
+        [attr.aria-label]="menuPlegado() ? 'Mostrar el menú' : 'Ocultar el menú'"
+      >
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+    <div class="mt-6 h-full">
+      <app-menu [compact]="menuPlegado()"></app-menu>
+    </div>
+  </div>
+
+  <div
+    [class.show-menu]="menuVisible"
+    [class.hide-menu]="!menuVisible"
+    class="lg:hidden main-menu flex flex-col gap-4 border-r border-color3-20 absolute z-10 bg-white h-full"
+  >
+    <div class="items-start justify-between rounded-full flex">
+      <button type="button" (click)="goHome()" aria-label="Ir a la pantalla principal">
+        <img
+          src="/images/cosmos-logotipo.png"
+          alt="Cosmos Global Logistics"
+          class="h-8 w-auto"
+        />
+      </button>
+      <button type="button" (click)="toggleMenu()" aria-label="Cerrar el menú">
+        <img src="/images/menu.svg" alt="" class="w-6" />
+      </button>
+    </div>
+    <div class="mt-10 h-full">
+      <app-menu (closeMenu)="toggleMenu()"></app-menu>
+    </div>
+  </div>
+
+  <!--
+    `min-w-0` es lo que impide el scroll horizontal de toda la página. Un hijo
+    flex no encoge por debajo del ancho de su contenido, así que una tabla o una
+    fila de filtros ancha estiraba esta columna más allá de la ventana y se
+    llevaba la cabecera con ella. Con esto lo ancho se desplaza dentro de su
+    propio contenedor.
+  -->
+  <div class="flex-1 min-w-0 bg-color7 flex flex-col">
+    <!--
+      Cabecera baja a proposito: con `p-4` y un titulo de `text-2xl` se llevaba
+      unos 72 px en todas las pantallas, y lo que se consulta esta debajo.
+    -->
+    <header
+      class="flex justify-between items-center gap-3 px-4 sm:px-6 py-3 bg-white shadow-xs border-b border-color3-20"
+    >
+      <div class="lg:hidden block">
+        <button type="button" (click)="toggleMenu()" aria-label="Abrir el menú">
+          <img src="/images/menu.svg" alt="" class="w-6" />
+        </button>
+      </div>
+      <div class="min-w-0 flex-1">
+        <h1 class="text-color1 text-lg sm:text-xl gilroy-extra-bold truncate text-center lg:text-left">
+          {{ title() }}
+        </h1>
+      </div>
+
+      <div class="flex items-center gap-2 relative shrink-0">
+        <img
+          class="w-9 h-9 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity duration-200"
+          [src]="user?.image || '/images/avatar.jpg'"
+          alt=""
+          (click)="toggleProfileMenu()"
+        />
+
+        <!-- Menú desplegable del perfil -->
+        @if (profileMenuVisible) {
+        <div
+          class="absolute top-12 right-0 bg-white rounded-lg shadow-lg border border-color3-20 py-3 px-4 min-w-64 z-50 profile-menu"
+        >
+          <!-- Botón de cerrar -->
+          <div class="flex justify-end mb-2">
+            <button
+              (click)="closeProfileMenu()"
+              class="text-color2 hover:text-color1 transition-colors duration-200 p-1 close-button"
+              aria-label="Cerrar menú de perfil"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="w-5 h-5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6 18 18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-3 mb-3">
+            <img
+              class="w-12 h-12 rounded-full object-cover"
+              [src]="user?.image || '/images/avatar.jpg'"
+              alt=""
+            />
+            <div class="flex-1">
+              <p class="text-color1 text-sm gilroy-bold">
+                {{ user?.name || "Usuario" }}
+              </p>
+              <p class="text-color2 text-xs">
+                {{ user?.email || "email@ejemplo.com" }}
+              </p>
+            </div>
+          </div>
+          <div class="border-t border-color3-20 pt-2">
+            <p class="text-color2 text-xs">
+              {{ user?.role?.name || "Rol no asignado" }}
+            </p>
+          </div>
+        </div>
+        }
+      </div>
+    </header>
+
+    @if (menuVisible) {
+    <div
+      class="bg-color1 absolute top-0 left-0 w-full h-full z-[5] opacity-80"
+    ></div>
+    } @if (profileMenuVisible) {
+    <div
+      class="bg-transparent absolute top-0 left-0 w-full h-full z-40"
+      (click)="onBackdropClick()"
+    ></div>
+    }
+    <!--
+      `relative` hace de este contenedor la referencia de todo lo `absolute`
+      que no tenga otra. Sin ella, el `caption` oculto de las tablas del panel
+      (`sr-only`) se colocaba respecto al documento: lo alargaba por debajo del
+      layout y aparecía un segundo scroll, el de la página, con una franja en
+      blanco al final.
+    -->
+    <div class="layout-outlet relative flex-1 min-h-0 overflow-y-auto">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,120 @@
+<div class="pf">
+  <header class="pf-head">
+    <div>
+      <h1 class="pf-head__title">Perfiles</h1>
+      <p class="pf-head__sub">
+        Un perfil decide a qué pantallas entra quien lo tiene. Son las mismas
+        opciones que salen en el menú.
+      </p>
+    </div>
+    <button type="button" class="pf-btn pf-btn--primary" (click)="newProfile()">
+      Nuevo perfil
+    </button>
+  </header>
+
+  @if (loading()) {
+    <p class="pf-note">Cargando perfiles…</p>
+  } @else {
+    <div class="pf-list">
+      @for (profile of profiles(); track profile._id) {
+        <article class="pf-card" [class.pf-card--off]="profile.active === false">
+          <div class="pf-card__main">
+            <h2 class="pf-card__name">
+              {{ profile.name }}
+              @if (isOwn(profile)) { <span class="pf-tag">Tu perfil</span> }
+              @if (profile.active === false) { <span class="pf-tag pf-tag--off">Inactivo</span> }
+            </h2>
+            @if (profile.description) {
+              <p class="pf-card__desc">{{ profile.description }}</p>
+            }
+            <p class="pf-card__modules">{{ labelsOf(profile) }}</p>
+          </div>
+          <div class="pf-card__actions">
+            <button type="button" class="pf-btn" (click)="edit(profile)">Editar</button>
+            @if (!isOwn(profile)) {
+              <button type="button" class="pf-btn pf-btn--danger" (click)="remove(profile)">
+                Eliminar
+              </button>
+            }
+          </div>
+        </article>
+      } @empty {
+        <p class="pf-note">Todavía no hay perfiles.</p>
+      }
+    </div>
+  }
+
+  @if (draft(); as editing) {
+    <div class="pf-modal" (click)="close()">
+      <div class="pf-modal__panel" role="dialog" aria-modal="true"
+        (click)="$event.stopPropagation()">
+        <header class="pf-modal__head">
+          <h2 class="pf-modal__title">
+            {{ editing._id ? 'Editar perfil' : 'Nuevo perfil' }}
+          </h2>
+          <button type="button" class="pf-modal__close" (click)="close()" aria-label="Cerrar">×</button>
+        </header>
+
+        <div class="pf-modal__body">
+          <label class="pf-field">
+            <span>Nombre</span>
+            <input class="pf-input" type="text" name="name" placeholder="Supervisor de turno"
+              [ngModel]="editing.name" (ngModelChange)="setName($event)" />
+          </label>
+
+          <label class="pf-field">
+            <span>Para qué sirve</span>
+            <input class="pf-input" type="text" name="description"
+              placeholder="Opera la jornada y emite los formatos"
+              [ngModel]="editing.description" (ngModelChange)="setDescription($event)" />
+          </label>
+
+          <div class="pf-field">
+            <span class="pf-field__row">
+              Pantallas a las que entra
+              <span class="pf-bulk">
+                <button type="button" (click)="all()">Todas</button>
+                <button type="button" (click)="none()">Ninguna</button>
+              </span>
+            </span>
+
+            <div class="pf-modules">
+              @for (module of modules(); track module.key) {
+                <label class="pf-module" [class.pf-module--on]="has(module.key)">
+                  <input type="checkbox" [checked]="has(module.key)"
+                    (change)="toggle(module.key)" />
+                  <span class="pf-module__text">
+                    <strong>{{ module.label }}</strong>
+                    <small>{{ module.description }}</small>
+                  </span>
+                </label>
+              }
+            </div>
+          </div>
+
+          <label class="pf-check">
+            <input type="checkbox" [checked]="editing.active"
+              (change)="setActive($any($event.target).checked)" />
+            <span>El perfil se puede asignar a usuarios</span>
+          </label>
+
+          @if (lockingSelf()) {
+            <p class="pf-warn">
+              Estás quitándole a tu propio perfil el acceso a Perfiles. Si no hay
+              otro usuario que pueda entrar aquí, no podrás deshacerlo desde la
+              plataforma.
+            </p>
+          }
+        </div>
+
+        <footer class="pf-modal__foot">
+          <button type="button" class="pf-btn" (click)="close()">Cancelar</button>
+          <button type="button" class="pf-btn pf-btn--primary" (click)="save()"
+            [disabled]="saving()">
+            {{ saving() ? 'Guardando…' : 'Guardar perfil' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,305 @@
+@use "../../../../styles/variables" as vars;
+
+.nb {
+  padding: 1.25rem;
+  min-height: 100vh;
+  background: vars.$color7;
+}
+
+@media (min-width: 768px) {
+  .nb { padding: 1.5rem 2rem; }
+}
+
+// --- filtros -----------------------------------------------------------------
+
+.nb-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  background: #fff;
+  border: 1px solid vars.$color3-20;
+  border-radius: 0.75rem;
+}
+
+.nb-datenav {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  // En un móvil de 360 px las flechas, la fecha y "Hoy" no cabían en una fila
+  // y "Hoy" quedaba fuera de la tarjeta. La fecha cede hasta donde se sigue
+  // leyendo entera; si aun así no cabe, "Hoy" baja a la línea siguiente.
+  flex-wrap: wrap;
+  max-width: 100%;
+
+  // Base fija y no `auto`: el salto de línea se decide con la base, y con el
+  // ancho natural del campo "Hoy" bajaba ya a 390 px, donde cabe.
+  input {
+    flex: 1 1 9.75rem;
+    min-width: 9.75rem;
+    padding: 0.625rem 0.8125rem;
+    border: 1px solid vars.$color3-40;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    color: vars.$color1;
+
+    &:focus {
+      outline: none;
+      border-color: vars.$color2;
+      box-shadow: 0 0 0 3px vars.$color2-20;
+    }
+  }
+}
+
+.nb-datenav__step {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  border: 1px solid vars.$color3-40;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: vars.$color1;
+  cursor: pointer;
+
+  svg { width: 1.125rem; height: 1.125rem; }
+  &:hover { background: vars.$color7; }
+}
+
+.nb-today {
+  flex: none;
+  padding: 0.5625rem 0.9375rem;
+  border: 1px solid vars.$color2-40;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: vars.$color2;
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.9375rem;
+  cursor: pointer;
+
+  &:hover { background: vars.$color2-20; }
+}
+
+.nb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  label {
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 0.875rem;
+    color: vars.$text-muted;
+  }
+
+  select,
+  input {
+    padding: 0.625rem 0.8125rem;
+    border: 1px solid vars.$color3-40;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    color: vars.$color1;
+    background: #fff;
+
+    &:focus {
+      outline: none;
+      border-color: vars.$color2;
+      box-shadow: 0 0 0 3px vars.$color2-20;
+    }
+  }
+
+  &--grow { flex: 1; min-width: min(12rem, 100%); }
+}
+
+.nb-summary {
+  margin-left: auto;
+  font-size: 0.9375rem;
+  color: vars.$text-muted;
+
+  strong { color: vars.$color1; font-family: "Gilroy-Bold", sans-serif; }
+}
+
+// --- tarjetas ----------------------------------------------------------------
+
+.nb-grid {
+  display: grid;
+  // `min(23rem, 100%)`: con un minimo fijo de 23rem la columna no cabia en un
+  // movil de 390 px y la pagina entera se desplazaba en horizontal.
+  grid-template-columns: repeat(auto-fill, minmax(min(23rem, 100%), 1fr));
+  gap: 1rem;
+}
+
+.nb-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1.375rem;
+  background: #fff;
+  border: 1px solid vars.$color3-20;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+
+  &:hover {
+    border-color: vars.$color2-40;
+    box-shadow: 0 8px 20px vars.$color1-20;
+    transform: translateY(-1px);
+  }
+
+  // El foco lo lleva el boton del titulo, pero se dibuja en la tarjeta entera.
+  &:focus-within:has(.nb-card__open:focus-visible) {
+    outline: 2px solid vars.$color2;
+    outline-offset: 2px;
+  }
+}
+
+.nb-card { position: relative; }
+
+.nb-card__open {
+  all: unset;
+  cursor: pointer;
+
+  // Area de clic de toda la tarjeta.
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 0.75rem;
+  }
+}
+
+.nb-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.nb-card__identity { min-width: 0; }
+
+.nb-card__title {
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 1.25rem;
+  color: vars.$color1;
+  text-transform: capitalize;
+}
+
+.nb-card__meta {
+  margin-top: 0.125rem;
+  font-size: 0.875rem;
+  color: vars.$text-muted;
+}
+
+.nb-badge {
+  flex: none;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-family: "Gilroy-Bold", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+
+  &--success { background: vars.$color4; color: #fff; }
+  &--warning { background: vars.$color5; color: #fff; }
+}
+
+.nb-card__attendance-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.875rem;
+  color: vars.$text-muted;
+  margin-bottom: 0.3125rem;
+
+  strong {
+    font-family: "Gilroy-Bold", sans-serif;
+    font-size: 1.0625rem;
+    color: vars.$color1;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.nb-bar {
+  height: 0.375rem;
+  border-radius: 999px;
+  background: vars.$color3-20;
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    background: vars.$color2;
+    transition: width 0.3s;
+  }
+}
+
+.nb-card__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.625rem;
+
+  dt {
+    font-size: 0.8125rem;
+    color: vars.$text-subtle;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  dd {
+    font-size: 0.9375rem;
+    color: vars.$color1;
+    font-family: "Gilroy-Bold", sans-serif;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.nb-card__nofmt {
+  color: vars.$color6;
+}
+
+.nb-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid vars.$color3-20;
+}
+
+.nb-card__last {
+  font-size: 0.8125rem;
+  color: vars.$text-subtle;
+}
+
+.nb-warn { color: vars.$color5; }
+
+.nb-btn {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  padding: 0.5625rem 0.9375rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: vars.$color2;
+  color: #fff;
+  font-family: "Gilroy-Bold", sans-serif;
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { background: vars.$color1; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &:focus-visible { outline: 2px solid vars.$color1; outline-offset: 2px; }
+}
+
+.nb-empty {
+  padding: 3rem 1.25rem;
+  text-align: center;
+  color: vars.$text-subtle;
+  background: #fff;
+  border: 1px solid vars.$color3-20;
+  border-radius: 0.75rem;
+}

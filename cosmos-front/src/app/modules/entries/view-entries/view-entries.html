@@ -1,0 +1,219 @@
+<div class="flex w-full justify-between items-center gap-3 flex-wrap px-4 sm:px-10 py-5">
+  <button
+    class="bg-color1 text-white px-4 py-2 rounded-xl gilroy-bold flex items-center gap-2"
+    (click)="goBack()"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="size-6"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+      />
+    </svg>
+    Regresar
+  </button>
+
+  @if (canCreate()) {
+  <button
+    class="bg-color2 text-white px-4 py-2 rounded-xl gilroy-bold flex items-center gap-2 disabled:opacity-50"
+    [disabled]="editingId() !== null"
+    (click)="startNew()"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-5" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+    </svg>
+    Agregar marcación
+  </button>
+  }
+</div>
+
+<div class="px-4 sm:px-10 pb-6 flex flex-col gap-4">
+  <!-- Quién y qué jornada: sin esto la ficha era una tabla sin contexto. -->
+  <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 flex flex-col gap-1">
+    <h2 class="gilroy-bold text-lg text-color2">
+      @if (employee(); as person) {
+      {{ person.firstName }} {{ person.lastName }}
+      <span class="text-sm text-gray-500 gilroy-regular">· DNI {{ person.document }}</span>
+      } @else {
+      Marcaciones del trabajador
+      }
+    </h2>
+    <p class="text-sm text-gray-600">
+      Jornada {{ workerDateIso | date:'dd/MM/yyyy' }}
+      @if (named(); as n) {
+      · {{ n.shift_description }} · {{ n.staff_transmission_id }} - {{ n.staff_vessel_number }} - {{ n.vessel_description }}
+      }
+    </p>
+    <p class="text-sm text-gray-500">
+      Pulsa <strong>Editar</strong> en una fila para cambiar el punto, la fecha, la hora o el motivo sin salir de esta pantalla.
+    </p>
+  </div>
+
+  <!-- En estrecho, cada marcación es una tarjeta (`table-stack`, styles.scss). -->
+  <div class="bg-white rounded-xl shadow-lg table-stack table-stack--narrow">
+    <table class="min-w-full">
+      <thead class="bg-white text-color2">
+        <tr>
+          <th class="px-4 sm:px-6 py-3 text-left">Punto</th>
+          <th class="px-4 sm:px-6 py-3 text-left">Fecha</th>
+          <th class="px-4 sm:px-6 py-3 text-left">Hora</th>
+          <th class="px-4 sm:px-6 py-3 text-left">Motivo</th>
+          <th class="px-4 sm:px-6 py-3 text-left">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (entry of entries(); track entry._id) {
+        @if (editingId() === entry._id) {
+        <tr class="border-t border-color3-20 bg-color1-10">
+          <ng-container [ngTemplateOutlet]="editor" />
+        </tr>
+        } @else {
+        <tr class="border-t border-color3-20 hover:bg-color1-10">
+          <td class="px-4 sm:px-6 py-3" data-label="Punto">
+            {{ entry.pointId?.name ?? 'Punto eliminado' }}
+            @if (entry.isAbsence) {
+            <span class="ml-1 text-xs px-2 py-0.5 rounded-full bg-color5 text-white">Falta</span>
+            }
+          </td>
+          <td class="px-4 sm:px-6 py-3" data-label="Fecha">{{ entry.date | date:'dd/MM/yyyy' }}</td>
+          <td class="px-4 sm:px-6 py-3" data-label="Hora">{{ entry.date | date:'HH:mm' }}</td>
+          <td class="px-4 sm:px-6 py-3" data-label="Motivo">{{ entry.observation || 'Normal' }}</td>
+          <td class="px-4 sm:px-6 py-3" data-label="Acciones">
+            <div class="flex items-center gap-2 flex-wrap">
+              <button
+                class="text-white bg-color1 px-3 py-1.5 rounded-lg flex items-center gap-1 text-sm disabled:opacity-50"
+                aria-label="Editar marcación"
+                [disabled]="editingId() !== null"
+                (click)="startEdit(entry)"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4" aria-hidden="true">
+                  <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+                </svg>
+                Editar
+              </button>
+              <button
+                class="text-color5 border border-color5 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50"
+                aria-label="Eliminar marcación"
+                [disabled]="editingId() !== null"
+                (click)="deletePoint(entry)"
+              >
+                Eliminar
+              </button>
+            </div>
+          </td>
+        </tr>
+        }
+        } @empty {
+        @if (loaded() && editingId() !== NEW_ENTRY) {
+        <tr>
+          <td class="px-4 sm:px-6 py-6 text-center text-gray-500" colspan="5">
+            No hay marcaciones registradas
+          </td>
+        </tr>
+        }
+        }
+        @if (editingId() === NEW_ENTRY) {
+        <tr class="border-t border-color3-20 bg-color1-10">
+          <ng-container [ngTemplateOutlet]="editor" />
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Lo que le falta al recorrido, con acceso directo para registrarlo. -->
+  @if (loaded() && canCreate() && missingPoints().length > 0) {
+  <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 flex flex-col gap-3">
+    <h3 class="gilroy-bold text-color2">Puntos sin marcar</h3>
+    <div class="flex flex-wrap gap-2">
+      @for (point of missingPoints(); track point._id) {
+      <button
+        class="border border-color1 text-color1 px-3 py-1.5 rounded-lg text-sm flex items-center gap-1 hover:bg-color1-10 disabled:opacity-50"
+        [disabled]="editingId() !== null"
+        (click)="startNew(point._id)"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Registrar {{ point.name }}
+      </button>
+      }
+    </div>
+  </div>
+  }
+</div>
+
+<!-- Celdas de la fila en edición; la misma para corregir y para registrar. -->
+<ng-template #editor>
+  <td class="px-4 sm:px-6 py-3 align-top" data-label="Punto">
+    <select
+      class="w-full p-2 rounded-lg border border-color1-40"
+      aria-label="Punto de marcación"
+      (change)="setDraft('pointId', $event)"
+    >
+      <option value="" [selected]="!draft().pointId">Seleccione un punto</option>
+      @for (point of points(); track point._id) {
+      <option [value]="point._id" [selected]="point._id === draft().pointId">{{ point.name }}</option>
+      }
+    </select>
+  </td>
+  <td class="px-4 sm:px-6 py-3 align-top" data-label="Fecha">
+    <input
+      type="date"
+      class="w-full p-2 rounded-lg border border-color1-40"
+      aria-label="Fecha de la marcación"
+      [value]="draft().date"
+      (input)="setDraft('date', $event)"
+    />
+  </td>
+  <td class="px-4 sm:px-6 py-3 align-top" data-label="Hora">
+    <input
+      type="time"
+      class="w-full p-2 rounded-lg border border-color1-40"
+      aria-label="Hora de la marcación"
+      [value]="draft().time"
+      (input)="setDraft('time', $event)"
+    />
+    @if (draft().time && !isValidTime()) {
+    <p class="text-red-500 text-xs mt-1">Hora no válida</p>
+    }
+  </td>
+  <td class="px-4 sm:px-6 py-3 align-top" data-label="Motivo">
+    <select
+      class="w-full p-2 rounded-lg border border-color1-40"
+      aria-label="Motivo"
+      (change)="setDraft('observation', $event)"
+    >
+      <option value="" [selected]="!draft().observation">Normal</option>
+      @for (observation of observations; track observation) {
+      <option [value]="observation" [selected]="observation === draft().observation">{{ observation }}</option>
+      }
+    </select>
+  </td>
+  <td class="px-4 sm:px-6 py-3 align-top" data-label="Acciones">
+    <div class="flex items-center gap-2 flex-wrap">
+      <button
+        class="text-white bg-color2 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50"
+        aria-label="Guardar marcación"
+        [disabled]="!canSave()"
+        (click)="save()"
+      >
+        {{ isSaving() ? 'Guardando…' : 'Guardar' }}
+      </button>
+      <button
+        class="bg-gray-100 text-color2 px-3 py-1.5 rounded-lg text-sm"
+        [disabled]="isSaving()"
+        (click)="cancelEdit()"
+      >
+        Cancelar
+      </button>
+    </div>
+  </td>
+</ng-template>

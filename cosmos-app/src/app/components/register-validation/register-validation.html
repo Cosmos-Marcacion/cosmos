@@ -1,0 +1,102 @@
+<div class="p-6 bg-white rounded-md shadow-xs">
+  @if(points()[0] && points()[0].named && points()[0].turn ) {
+  <div
+    class="flex gap-2 justify-between items-center bg-color1 p-2 rounded-md mb-5 px-3"
+  >
+    <p class="text-center font-bold text-white w-1/2 text-left">
+      {{ points()[0].named }}
+    </p>
+    <p class="text-center font-bold text-white w-1/2 text-right">
+      {{ points()[0].turn }}
+    </p>
+  </div>
+  }
+  <div>
+    <div class="flex justify-center items-center gap-4">
+      <img
+        class="w-20 h-20 rounded-full object-cover"
+        src="{{employee().image || '/images/user.png'}}"
+        alt="logo"
+      />
+      <div>
+        <h1 class="text-2xl font-bold text-color1 capitalize">
+          {{employee().firstName}} {{employee().lastName}}
+        </h1>
+      </div>
+    </div>
+  </div>
+
+  @if (status() === 'loading') {
+  <div class="flex flex-col items-center gap-3 mt-8" role="status" aria-live="polite">
+    <span class="c-spinner" aria-hidden="true"></span>
+    <p class="text-color1">Buscando tus puntos de marcación...</p>
+  </div>
+  } @else if (status() === 'unavailable') {
+  <div class="text-center mt-8 flex flex-col items-center gap-3" role="alert">
+    <p class="text-xl text-color6 gilroy-bold">{{ reason() }}</p>
+    <p class="text-sm text-color1">Si debería poder marcar hoy, avisa a tu supervisor.</p>
+    <button type="button" class="c-btn c-btn-primary" (click)="goBack()">Volver a marcación</button>
+  </div>
+  } @else if (status() === 'error') {
+  <div class="text-center mt-8 flex flex-col items-center gap-3" role="alert">
+    <p class="text-xl text-color6 gilroy-bold">No se pudieron cargar los puntos de marcación.</p>
+    <p class="text-sm text-color1">Revisa tu conexión e inténtalo de nuevo.</p>
+    <button type="button" class="c-btn c-btn-primary" (click)="getPoints()">Reintentar</button>
+    <button type="button" class="c-btn c-btn-ghost" (click)="goBack()">Volver a marcación</button>
+  </div>
+  } @else if(isAbsence()) {
+  <h1 class="text-center text-2xl font-bold mt-6 text-color1-80">
+    Se ha registrado como falta. <br />Comuníquese con el administrador.
+  </h1>
+  }@else{
+  <h1 class="text-center text-2xl font-bold mt-6 text-color1-80">
+    Selecciona el punto de registro
+  </h1>
+
+  <div class="flex flex-col gap-4 mt-6">
+    @for(point of points(); track point._id){
+    <div class="flex items-center gap-4">
+      @if(point.isChecked) {
+      <div
+        [ngClass]="{'bg-color4': point.isChecked}"
+        class="flex flex-col items-center justify-center rounded-lg p-3"
+      >
+        <span
+          [ngClass]="{'text-white': point.isChecked, 'text-gray-600': !point.isChecked}"
+          class="font-bold text-lg"
+        >
+          {{point.dateCheck| date:'HH:mm'}}
+        </span>
+      </div>
+      }
+      <button
+        (click)="register(point._id, point.namedId || '')"
+        [ngClass]="{'bg-color4': point.isChecked, 'bg-color2': !point.isChecked, 'bg-color1-20': lastPointChecked() && !point.isChecked}"
+        [disabled]="point.isChecked || lastPointChecked()"
+        class="border border-0 text-white rounded-md p-2 py-4 relative flex-1 font-bold"
+      >
+        {{point.name}} @if(point.isChecked) {
+        <div class="absolute top-4 right-5">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="m4.5 12.75 6 6 9-13.5"
+            />
+          </svg>
+        </div>
+        }
+      </button>
+    </div>
+    }
+  </div>
+
+  }
+</div>

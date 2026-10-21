@@ -1,0 +1,12 @@
+tr.dragging {
+  opacity: 0.5;
+  background-color: #f0f0f0;
+}
+
+tr.drag-over {
+  border-top: 2px solid #007099;
+}
+
+tr {
+  cursor: move;
+}

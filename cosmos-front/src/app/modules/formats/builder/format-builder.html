@@ -1,0 +1,350 @@
+@if (model(); as document) {
+<div class="fb" [class.fb--datos-cerrado]="!datosAbierto()"
+  [class.fb--detalles-cerrado]="!detallesAbierto()">
+
+  <!-- Paleta de datos -->
+  <aside class="fb-palette" [class.fb-palette--cerrado]="!datosAbierto()">
+    <div class="fb-panelhead">
+      @if (datosAbierto()) {
+        <h3 class="fb-palette__title">Datos</h3>
+      }
+      <button type="button" class="fb-panelhead__toggle" (click)="togglePanelDatos()"
+        [attr.aria-expanded]="datosAbierto()"
+        [attr.aria-label]="datosAbierto() ? 'Ocultar los datos' : 'Mostrar los datos'"
+        [title]="datosAbierto() ? 'Ocultar los datos' : 'Mostrar los datos'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+
+    @if (datosAbierto()) {
+    <p class="fb-palette__hint">Arrastra un dato sobre una casilla.</p>
+    <input class="fb-search" type="search" placeholder="Buscar dato…"
+      [ngModel]="search()" (ngModelChange)="search.set($event)" name="search" />
+
+    <!--
+      Los datos van por grupos y solo uno esta abierto.
+      Los veinticinco seguidos no caben en la columna, y este panel no se
+      desplaza: lo que se desplaza es el documento. Con un grupo abierto cabe
+      siempre, porque el mayor tiene nueve.
+    -->
+    <div class="fb-palette__list">
+      @for (group of filteredGroups(); track group.group) {
+        <button type="button" class="fb-palette__group"
+          [class.fb-palette__group--on]="isGroupOpen(group.group)"
+          (click)="toggleGroup(group.group)">
+          <span>{{ group.group }}</span>
+          <span class="fb-palette__count">{{ group.fields.length }}</span>
+        </button>
+        @if (isGroupOpen(group.group)) {
+        @for (field of group.fields; track field.id) {
+          <div class="fb-chip" draggable="true"
+            (dragstart)="startDrag(field)" (dragend)="endDrag()"
+            (click)="applyField(field)"
+            [title]="field.sample ? 'Imprime, por ejemplo: ' + field.sample : field.label">
+            <span class="fb-chip__grip">⠿</span>
+            <span class="fb-chip__label">{{ field.label }}</span>
+          </div>
+        }
+        }
+      } @empty {
+        <p class="fb-muted">Ningún dato coincide.</p>
+      }
+    </div>
+    }
+  </aside>
+
+  <!-- El documento: secciones, filas y columnas -->
+  <section class="fb-canvas">
+    <div class="fb-canvas__bar">
+      <button type="button" class="fb-tool" [disabled]="!canUndo" (click)="undo()"
+        title="Deshacer (Ctrl+Z)">↶ Deshacer</button>
+      <button type="button" class="fb-tool" [disabled]="!canRedo" (click)="redo()"
+        title="Rehacer (Ctrl+Shift+Z)">↷ Rehacer</button>
+      <span class="fb-canvas__spacer"></span>
+      <!--
+        Ajustar al ancho: la escala sale del sitio que le queda al documento,
+        no de mover la barra a ojo. Se recalcula al plegar un panel y al
+        cambiar el tamano de la ventana.
+      -->
+      <button type="button" class="fb-tool" (click)="ajustarAlAncho()"
+        title="Ajustar el documento al ancho disponible">Ajustar al ancho</button>
+      <label class="fb-zoom">
+        Zoom
+        <input type="range" min="0.6" max="1.6" step="0.1" [ngModel]="zoom()"
+          (ngModelChange)="zoomManual(+$event)" name="zoom" />
+      </label>
+    </div>
+
+    <div class="fb-page-wrap" #lienzo>
+      <article class="fb-page" #hoja [style.zoom]="zoom()"
+        [class.fb-page--landscape]="document.orientation === 'landscape'">
+
+        <button type="button" class="fb-insert fb-insert--section" (click)="addSection(0)">
+          + Sección
+        </button>
+
+        @for (section of sections; track section.id; let sectionIndex = $index) {
+          <section class="fb-section" [class.fb-section--off]="section.visible === false">
+            <header class="fb-section__bar">
+              <input class="fb-section__title" [ngModel]="section.title ?? ''"
+                [name]="'t-' + section.id" placeholder="Sección sin título"
+                [class.fb-section__title--on]="isSectionSelected(section.id)"
+                (focus)="selectSection(section.id)"
+                (ngModelChange)="setSectionTitle(section.id, $event)" />
+              <span class="fb-section__tools">
+                <button type="button" title="Subir" [disabled]="sectionIndex === 0"
+                  (click)="moveSection(sectionIndex, -1)">↑</button>
+                <button type="button" title="Bajar"
+                  [disabled]="sectionIndex === sections.length - 1"
+                  (click)="moveSection(sectionIndex, 1)">↓</button>
+                <button type="button" (click)="toggleSectionVisible(section.id)">
+                  {{ section.visible === false ? 'Mostrar' : 'Ocultar' }}
+                </button>
+                <button type="button" class="fb-danger-link"
+                  (click)="removeSection(section.id)">Eliminar</button>
+              </span>
+            </header>
+
+            @if (section.kind === 'rows') {
+              <button type="button" class="fb-insert" (click)="insertRow(section.id, 0)">
+                + Fila
+              </button>
+
+              @for (row of rowsOf(section); track row.id; let rowIndex = $index) {
+                <div class="fb-rowwrap">
+                  <div class="fb-rowtools">
+                    <button type="button" title="Subir" [disabled]="rowIndex === 0"
+                      (click)="moveRow(section.id, rowIndex, -1)">↑</button>
+                    <button type="button" title="Bajar"
+                      [disabled]="rowIndex === rowsOf(section).length - 1"
+                      (click)="moveRow(section.id, rowIndex, 1)">↓</button>
+                    <button type="button" title="Duplicar"
+                      (click)="duplicateRow(section.id, row.id)">⧉</button>
+                    <button type="button" title="Eliminar la fila" class="fb-danger-link"
+                      (click)="removeRow(section.id, row.id)">×</button>
+                  </div>
+
+                  <div class="fb-row" [style.grid-template-columns]="rowTemplate(row)"
+                    [style.min-height.mm]="row.minHeightMm">
+                    @for (cell of row.cells; track cell.id) {
+                      <div class="fb-cell"
+                        [class.fb-cell--on]="isCellSelected(cell.id)"
+                        [class.fb-cell--drop]="hoverTarget() === cell.id"
+                        [class.fb-cell--bold]="cell.bold"
+                        [class.fb-cell--fill]="cell.fill"
+                        [class.fb-cell--boxed]="cell.boxed !== false"
+                        [class.fb-cell--data]="isBound(cell)"
+                        [style.text-align]="cell.align ?? 'left'"
+                        (click)="selectCell(section.id, row.id, cell.id)"
+                        (dragover)="$event.preventDefault(); hover(cell.id)"
+                        (dragleave)="hover('')"
+                        (drop)="$event.preventDefault(); dropOn(section.id, row.id, cell.id)">
+
+                        @switch (cell.content.kind) {
+                          @case ('data') {
+                            <span class="fb-data">{{ dataLabel(cell) }}</span>
+                          }
+                          @case ('signature') {
+                            <span class="fb-data">{{ dataLabel(cell) }}</span>
+                          }
+                          @case ('check') {
+                            <!-- Una casilla que se marca sola lleva su dato
+                                 dentro; sin distinguirla, se ve igual que una
+                                 de rellenar a mano y se pierde al editarla. -->
+                            <span class="fb-check"
+                              [class.fb-check--auto]="$any(cell.content).when"
+                              [class.fb-check--on]="$any(cell.content).checked && !$any(cell.content).when"
+                              [title]="checkHint(cell)">
+                              @if ($any(cell.content).checked && !$any(cell.content).when) { X }
+                            </span>
+                          }
+                          @case ('image') {
+                            <span class="fb-imgs">
+                              @for (image of $any(cell.content).images; track image.sha1) {
+                                <img [src]="imageUrl(image.sha1)" [alt]="image.alt"
+                                  (error)="onImageError($event)" />
+                              }
+                              @if ($any(cell.content).text) {
+                                <span class="fb-caption">{{ $any(cell.content).text }}</span>
+                              }
+                            </span>
+                          }
+                          @case ('text') {
+                            @if ($any(cell.content).marked) {
+                              <span class="fb-marked" title="Sale marcada con una X">{{ markedText($any(cell.content).text) }}</span>
+                            } @else { {{ $any(cell.content).text }} }
+                          }
+                          @default { <span class="fb-blank">—</span> }
+                        }
+
+                        <!-- Partir esta casilla en dos. Es el gesto con el que
+                             se construye una fila: empieza entera y se parte. -->
+                        <button type="button" class="fb-split" title="Partir en dos"
+                          (click)="$event.stopPropagation(); splitCell(section.id, row.id, cell.id)">+</button>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <button type="button" class="fb-insert"
+                  (click)="insertRow(section.id, rowIndex + 1)">+ Fila</button>
+              }
+            } @else {
+              <p class="fb-fixed">
+                Bloque de {{ section.kind === 'table' ? 'lista de personal' : section.kind }}.
+                Su contenido lo pone la jornada.
+              </p>
+            }
+          </section>
+
+          <button type="button" class="fb-insert fb-insert--section"
+            (click)="addSection(sectionIndex + 1)">+ Sección</button>
+        }
+      </article>
+    </div>
+  </section>
+
+  <!-- Panel de la selección -->
+  <aside class="fb-inspector" [class.fb-inspector--cerrado]="!detallesAbierto()">
+    <div class="fb-panelhead">
+      @if (detallesAbierto()) {
+        <h3 class="fb-palette__title">Detalles</h3>
+      }
+      <button type="button" class="fb-panelhead__toggle" (click)="togglePanelDetalles()"
+        [attr.aria-expanded]="detallesAbierto()"
+        [attr.aria-label]="detallesAbierto() ? 'Ocultar los detalles' : 'Mostrar los detalles'"
+        [title]="detallesAbierto() ? 'Ocultar los detalles' : 'Mostrar los detalles'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+
+    @if (detallesAbierto()) {
+    @if (selectedCell(); as cell) {
+      <header class="fb-inspector__head">
+        <strong>Casilla</strong>
+        @if (selectedSection(); as section) {
+          <span class="fb-muted">en {{ section.title || 'el documento' }}</span>
+        }
+      </header>
+
+      <label class="fb-field">
+        <span>Texto</span>
+        <textarea class="fb-input" rows="2" name="text" [ngModel]="textOf(cell)"
+          [disabled]="isBound(cell)"
+          (ngModelChange)="setText($event)"></textarea>
+      </label>
+
+      <div class="fb-field">
+        <span>Imprime</span>
+        @if (isBound(cell)) {
+          <div class="fb-bound">
+            <span class="fb-data">{{ dataLabel(cell) }}</span>
+            <button type="button" class="fb-x" (click)="clearField()"
+              title="Quitar el dato y volver a texto fijo">×</button>
+          </div>
+        } @else {
+          <select class="fb-input" name="bind" [ngModel]="''"
+            (ngModelChange)="applyFieldAt($event)">
+            <option value="">Texto fijo</option>
+            @for (field of allFields; track field.id; let i = $index) {
+              <option [value]="i">{{ field.label }}</option>
+            }
+          </select>
+          <p class="fb-hint">O arrastra un dato de la izquierda sobre el documento.</p>
+        }
+      </div>
+
+      <label class="fb-field">
+        <span>Tipo de casilla</span>
+        <select class="fb-input" name="kind" [ngModel]="cell.content.kind"
+          [disabled]="isBound(cell) || cell.content.kind === 'image'"
+          (ngModelChange)="setKind($event)">
+          <option value="text">Texto</option>
+          <option value="check">Casilla para marcar</option>
+          <option value="blank">En blanco</option>
+        </select>
+        @if (checkHint(cell)) {
+          <p class="fb-hint">{{ checkHint(cell) }}</p>
+        }
+      </label>
+
+      @if (canMark(cell)) {
+        <div class="fb-field">
+          <span>Marca</span>
+          <button type="button" class="fb-toggle" data-testid="fb-marcar"
+            [class.fb-toggle--on]="isMarked(cell)" [attr.aria-pressed]="isMarked(cell)"
+            (click)="toggleMark()">
+            {{ isMarked(cell) ? 'Quitar la X' : 'Marcar con X' }}
+          </button>
+          <p class="fb-hint">
+            @if (cell.content.kind === 'text') {
+              Sale con la X y el rótulo: «SI» imprime «X SI» y «(&nbsp;&nbsp;)» imprime «( X )».
+            } @else {
+              Imprime una X dentro del recuadro en todas las jornadas.
+            }
+          </p>
+        </div>
+      }
+
+      <label class="fb-field">
+        <span>Ancho ({{ cell.width }}%)</span>
+        <input class="fb-input" type="range" min="5" max="95" step="1" name="width"
+          [ngModel]="cell.width" (ngModelChange)="setCellWidth($event)" />
+        <p class="fb-hint">El resto de la fila se ajusta para seguir sumando 100%.</p>
+      </label>
+
+      <div class="fb-group">
+        <button type="button" class="fb-toggle" [class.fb-toggle--on]="cell.bold"
+          (click)="toggle('bold')">Negrita</button>
+        <button type="button" class="fb-toggle" [class.fb-toggle--on]="cell.fill"
+          (click)="toggle('fill')">Fondo</button>
+        <button type="button" class="fb-toggle" [class.fb-toggle--on]="cell.boxed !== false"
+          (click)="toggle('boxed')">Recuadro</button>
+      </div>
+
+      <div class="fb-group">
+        <button type="button" class="fb-toggle"
+          [class.fb-toggle--on]="(cell.align ?? 'left') === 'left'"
+          (click)="setAlign('left')">Izq.</button>
+        <button type="button" class="fb-toggle" [class.fb-toggle--on]="cell.align === 'center'"
+          (click)="setAlign('center')">Centro</button>
+        <button type="button" class="fb-toggle" [class.fb-toggle--on]="cell.align === 'right'"
+          (click)="setAlign('right')">Der.</button>
+      </div>
+
+      @if (selection(); as current) {
+        <div class="fb-group">
+          <button type="button" class="fb-toggle"
+            (click)="splitCell(current.sectionId, current.rowId!, current.cellId!)">
+            Partir en dos
+          </button>
+          <button type="button" class="fb-toggle"
+            (click)="mergeWithNext(current.sectionId, current.rowId!, current.cellId!)">
+            Unir con la siguiente
+          </button>
+        </div>
+        <button type="button" class="fb-danger"
+          (click)="removeCell(current.sectionId, current.rowId!, current.cellId!)">
+          Eliminar la columna
+        </button>
+      }
+    } @else {
+      <div class="fb-inspector__empty">
+        <p><strong>Pulsa una casilla</strong> para cambiarla.</p>
+        <ul>
+          <li>Arrastra un dato de la izquierda sobre una casilla.</li>
+          <li><span class="fb-plus">+ Fila</span> añade una fila donde lo pulses.</li>
+          <li>El <span class="fb-plus">+</span> de una casilla la parte en dos.</li>
+          <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> deshace, <kbd>Supr</kbd> vacía la casilla.</li>
+          <li><kbd>X</kbd> marca la casilla («SI», «NA», un recuadro vacío).</li>
+        </ul>
+      </div>
+    }
+    }
+  </aside>
+</div>
+}

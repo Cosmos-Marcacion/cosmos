@@ -1,0 +1,175 @@
+name: QA nocturno
+
+# Lo que no cabe en el gate de cada cambio.
+#
+# La distincion no es de importancia sino de coste y de determinismo: la carga
+# necesita minutos y un entorno parecido a produccion, y la regresion visual
+# depende de que las instantaneas se hayan generado en el mismo sistema. Meter
+# esto en cada pull request alargaria la espera y anadiria fallos intermitentes
+# donde el gate tiene que ser tajante.
+
+on:
+  schedule:
+    # 03:00 en Lima (UTC-5). El puerto esta parado y el sistema externo de
+    # nombradas responde sin competir con el turno.
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'API contra la que medir'
+        required: false
+        default: 'http://localhost:3000/api/v1'
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  # ------------------------------------------------------- regresion visual
+  visual:
+    name: Regresion visual
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: cosmos-front
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --user 1001
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: cosmos-front/package-lock.json
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Comparar instantaneas
+        # Falla si no hay instantaneas para Linux: es informacion, no un
+        # obstaculo. Se generan una vez con
+        # `npx playwright test --grep @visual --update-snapshots` dentro de esta
+        # misma imagen y se suben al repositorio.
+        run: npx playwright test --grep @visual
+        env:
+          CI: 'true'
+
+      - name: Guardar diferencias
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diferencias-visuales
+          path: |
+            cosmos-front/playwright-report/
+            cosmos-front/test-results/
+          retention-days: 30
+
+  # ------------------------------------------------------------ rendimiento
+  rendimiento:
+    name: Carga del cambio de turno
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      mongo:
+        image: mongo:7
+        ports: ['27017:27017']
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ping:1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: cosmos-back/package-lock.json
+
+      - name: Preparar el backend
+        working-directory: cosmos-back
+        run: |
+          npm ci
+          npm run build
+
+      - name: Levantar el backend
+        working-directory: cosmos-back
+        run: |
+          npm run start:prod &
+          # Espera activa en vez de un `sleep` fijo: con `sleep` o se espera de
+          # mas en cada corrida o se mide un servidor que aun no arranco.
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:3000/health > /dev/null; then
+              echo "Backend listo tras ${i}s."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "El backend no respondio en 60 s."
+          exit 1
+        env:
+          MONGO_URI: mongodb://localhost:27017/cosmos-perf
+          JWT_SECRET: secreto-solo-para-medir
+          PORT: '3000'
+          NODE_ENV: production
+
+      - name: Instalar k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update -qq
+          sudo apt-get install -y k6
+
+      - name: Prueba de humo
+        run: k6 run perf/smoke.js
+        env:
+          BASE_URL: ${{ github.event.inputs.base_url || 'http://localhost:3000/api/v1' }}
+
+      - name: Prueba de carga
+        run: k6 run perf/carga.js
+        env:
+          BASE_URL: ${{ github.event.inputs.base_url || 'http://localhost:3000/api/v1' }}
+
+      - name: Guardar resultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-rendimiento
+          path: perf/resultados/
+          retention-days: 30
+
+  # ------------------------------------------ vulnerabilidades sin excepcion
+  auditoria-completa:
+    name: Auditoria sin excepciones
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # No bloquea: su trabajo es que la deuda siga siendo visible. El gate diario
+    # perdona lo que hay en `audit-allowlist.json`; esta corrida recuerda cuanto
+    # se esta perdonando, para que la lista no se convierta en un cajon.
+    continue-on-error: true
+
+    strategy:
+      matrix:
+        proyecto: [cosmos-back, cosmos-front, cosmos-app]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Instalar dependencias
+        working-directory: ${{ matrix.proyecto }}
+        run: npm install --legacy-peer-deps --ignore-scripts
+
+      - name: Informe completo
+        working-directory: ${{ matrix.proyecto }}
+        run: npm audit || true

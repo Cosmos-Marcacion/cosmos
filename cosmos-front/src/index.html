@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cosmos CheckIn</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#003d53" />
+    <meta
+      name="description"
+      content="Control de marcaciones de personal portuario - Cosmos Global Logistics"
+    />
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/png" sizes="512x512" href="favicon.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
+    <style>
+      /* Pantalla de carga previa al arranque de Angular: evita el destello en
+         blanco entre que se pinta el documento y se monta la aplicación. El
+         contenido de <app-root> se reemplaza solo al bootstrapear. */
+      #app-loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        background: #ffffff;
+        z-index: 9999;
+      }
+
+      #app-loading img {
+        width: min(280px, 60vw);
+        height: auto;
+      }
+
+      #app-loading .bar {
+        width: min(280px, 60vw);
+        height: 3px;
+        border-radius: 999px;
+        background: rgba(0, 61, 83, 0.15);
+        overflow: hidden;
+      }
+
+      #app-loading .bar::after {
+        content: '';
+        display: block;
+        width: 40%;
+        height: 100%;
+        border-radius: 999px;
+        background: #003d53;
+        animation: app-loading-slide 1.1s ease-in-out infinite;
+      }
+
+      @keyframes app-loading-slide {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(250%);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #app-loading .bar::after {
+          animation: none;
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <app-root>
+      <div id="app-loading">
+        <img
+          src="images/cosmos-logotipo.png"
+          alt="Cosmos Global Logistics"
+          width="1200"
+          height="184"
+        />
+        <div class="bar"></div>
+      </div>
+    </app-root>
+  </body>
+</html>

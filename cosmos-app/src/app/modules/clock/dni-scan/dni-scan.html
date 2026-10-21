@@ -1,0 +1,49 @@
+<div class="scanner-container">
+  <zxing-scanner
+    [(device)]="dispositivoSeleccionado"
+    (scanSuccess)="manejarEscaneoExitoso($event)"
+    (camerasFound)="onCamerasFound($event)"
+    [formats]="formatosPermitidos"
+    [enable]="scannerEnabled()"
+  >
+  </zxing-scanner>
+
+  <div id="scan-status" role="status" aria-live="polite" class="text-center px-5 mt-4">
+    @switch (status()) {
+      @case ('loading') {
+        <p class="text-color1 flex items-center justify-center gap-2">
+          <span class="c-spinner" aria-hidden="true"></span>
+          Buscando el documento {{ searched() }}...
+        </p>
+      }
+      @case ('not-found') {
+        <p class="text-color6 gilroy-bold">No encontramos a nadie con el documento {{ searched() }}.</p>
+        <p class="text-sm text-color1">Pide al supervisor que te registre, o ingresa el número a mano.</p>
+      }
+      @case ('unreadable') {
+        <p class="text-color6 gilroy-bold">El código leído no tiene un número de documento.</p>
+        <p class="text-sm text-color1">Acerca el carné o el DNI y vuelve a intentarlo.</p>
+      }
+      @case ('error') {
+        <p class="text-color6 gilroy-bold">No se pudo consultar el documento.</p>
+        <p class="text-sm text-color1">Revisa tu conexión e inténtalo de nuevo.</p>
+      }
+    }
+  </div>
+
+  <div class="flex flex-col justify-center gap-2 px-5">
+    @if (status() === 'not-found' || status() === 'unreadable' || status() === 'error') {
+      <button type="button" class="c-btn c-btn-primary c-btn-block mt-2" (click)="scanAgain()">
+        Escanear de nuevo
+      </button>
+    }
+    <button
+      type="button"
+      (click)="onCancelar()"
+      class="mt-2 w-full rounded-lg bg-color1 px-4 py-4 text-white shadow-sm transition-colors hover:bg-color1-80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-color1 gilroy-bold"
+      aria-label="Cancelar y volver a marcación"
+    >
+      Cancelar
+    </button>
+  </div>
+</div>

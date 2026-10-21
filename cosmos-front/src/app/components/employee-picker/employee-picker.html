@@ -1,0 +1,96 @@
+<div class="flex flex-col gap-2">
+  <label [attr.for]="uid" class="text-color1">
+    {{ label() }}@if (required()) { <span aria-hidden="true">*</span> }
+  </label>
+
+  <!--
+    `relative` ancla la lista al campo. Aqui basta con posicion absoluta: el
+    generador es una pantalla completa y ningun antecesor la recorta. Si alguna
+    vez se usa dentro de un modal con scroll habra que sacarla a la capa
+    superior, como hace person-picker.
+  -->
+  <div class="relative">
+    <div
+      class="flex items-center gap-2 w-full p-3 rounded-md border border-color2 bg-white"
+      [class.opacity-60]="disabled()"
+    >
+      <svg class="w-5 h-5 shrink-0 text-color2" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 3.4 9.8l3.4 3.4a1 1 0 0 0 1.4-1.4l-3.4-3.4A5.5 5.5 0 0 0 9 3.5ZM5.5 9a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0Z" clip-rule="evenodd" />
+      </svg>
+
+      <!--
+        `aria-controls` solo cuando la lista existe: apuntar a un id que no
+        esta en el documento es un valor invalido y axe lo marca.
+      -->
+      <input
+        [id]="uid"
+        type="text"
+        role="combobox"
+        autocomplete="off"
+        class="flex-1 min-w-0 outline-none bg-transparent"
+        [attr.aria-expanded]="open()"
+        [attr.aria-controls]="open() ? uid + '-list' : null"
+        [attr.aria-autocomplete]="'list'"
+        [attr.aria-activedescendant]="activeIndex() >= 0 ? optionId(activeIndex()) : null"
+        [placeholder]="selected() ? displayName(selected()) : placeholder()"
+        [value]="open() ? query() : displayName(selected())"
+        [disabled]="disabled()"
+        (focus)="openList()"
+        (click)="openList()"
+        (input)="onInput($event)"
+        (keydown)="onKeydown($event)"
+      />
+
+      @if (selected() && !disabled()) {
+        <button
+          type="button"
+          class="shrink-0 text-color1-60 hover:text-color6"
+          (click)="clear($event)"
+          [attr.aria-label]="'Quitar ' + label()"
+        >
+          <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M6.3 6.3a1 1 0 0 1 1.4 0L10 8.6l2.3-2.3a1 1 0 1 1 1.4 1.4L11.4 10l2.3 2.3a1 1 0 0 1-1.4 1.4L10 11.4l-2.3 2.3a1 1 0 0 1-1.4-1.4L8.6 10 6.3 7.7a1 1 0 0 1 0-1.4Z" />
+          </svg>
+        </button>
+      }
+    </div>
+
+    @if (open()) {
+      <div class="absolute z-30 left-0 right-0 top-full mt-1 bg-white rounded-md border border-color3-20 shadow-lg overflow-hidden">
+        <ul
+          [id]="uid + '-list'"
+          role="listbox"
+          [attr.aria-label]="label()"
+          class="max-h-72 overflow-y-auto"
+        >
+          @for (employee of results(); track employee._id; let i = $index) {
+            <li
+              [id]="optionId(i)"
+              role="option"
+              [attr.aria-selected]="employee._id === value()"
+              class="flex items-center gap-3 px-3 py-2 cursor-pointer"
+              [class.bg-color3-20]="i === activeIndex()"
+              (mouseenter)="activeIndex.set(i)"
+              (click)="select(employee)"
+            >
+              <span class="flex flex-col min-w-0">
+                <span class="truncate text-color1">{{ employee.lastName }} {{ employee.firstName }}</span>
+                <span class="text-sm text-color1-60">{{ employee.document }}</span>
+              </span>
+            </li>
+          }
+        </ul>
+
+        @if (showEmpty()) {
+          <p class="px-3 py-3 text-sm text-color1-60">
+            Nadie coincide con «{{ query() }}». Prueba con el apellido o el documento.
+          </p>
+        }
+
+        @if (employees().length === 0) {
+          <p class="px-3 py-3 text-sm text-color1-60">No hay empleados que mostrar.</p>
+        }
+      </div>
+    }
+  </div>
+</div>

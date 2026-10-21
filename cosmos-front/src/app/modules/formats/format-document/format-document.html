@@ -1,0 +1,204 @@
+@for (document of documents; track document.id) {
+  <article class="fd-sheet" [class.fd-sheet--landscape]="document.orientation === 'landscape'"
+    [attr.data-print-pages]="document.printPages ?? 1">
+    <!-- El contenido va envuelto para poder escalarlo al imprimir; ver fitToPages(). -->
+    <div class="fd-sheet__content">
+    @for (section of document.sections; track section.id) {
+
+      @switch (section.kind) {
+
+        @case ('header') {
+          @let header = asHeader(section);
+          <header class="fd-header">
+            <div class="fd-header__brand">
+              @if (header.logo) {
+                <img class="fd-header__logo" [src]="'/assets/format/' + header.logo.sha1 + '.png'"
+                  [alt]="header.logo.alt" />
+              }
+              <h1 class="fd-header__title">{{ header.title }}</h1>
+            </div>
+            <dl class="fd-header__meta">
+              @if (header.documentCode) {
+                <div><dt>Código</dt><dd>{{ header.documentCode }}</dd></div>
+              }
+              @if (header.documentVersion) {
+                <div><dt>Versión</dt><dd>{{ header.documentVersion }}</dd></div>
+              }
+              @if (header.documentDate) {
+                <div><dt>Fecha</dt><dd>{{ header.documentDate }}</dd></div>
+              }
+              @if (document.number) {
+                <div><dt>N°</dt><dd class="fd-header__number">{{ document.number }}</dd></div>
+              }
+              @if (header.pages !== null) {
+                <!--
+                  La hoja original lo lleva escrito a mano como "Página: 1 de 1",
+                  que deja de ser cierto en cuanto el personal no cabe. Aquí lo
+                  pone el modelo, que es quien sabe cuántas hay.
+                -->
+                <div><dt>Página</dt><dd>1 de {{ header.pages }}</dd></div>
+              }
+            </dl>
+          </header>
+          @if (header.fields.length > 0) {
+            <div class="fd-fields" [style.grid-template-columns]="gridColumns(1)">
+              @for (field of header.fields; track field.id) {
+                <span class="fd-fields__label">{{ field.label }}</span>
+                <span class="fd-fields__value">{{ field.value }}</span>
+              }
+            </div>
+          }
+        }
+
+        @case ('fields') {
+          @let fields = asFields(section);
+          @if (fields.title) {
+            <h2 class="fd-section-title">{{ fields.title }}</h2>
+          }
+          <div class="fd-fields" [style.grid-template-columns]="gridColumns(fields.columns)">
+            @for (field of fields.fields; track field.id) {
+              <span class="fd-fields__label">{{ field.label }}</span>
+              <span class="fd-fields__value">{{ field.value }}</span>
+            }
+          </div>
+        }
+
+        @case ('checklist') {
+          @let checklist = asChecklist(section);
+          @if (checklist.title) {
+            <h2 class="fd-section-title">{{ checklist.title }}</h2>
+          }
+          <div class="fd-checklist" [style.grid-template-columns]="checklistColumns(checklist.columns)">
+            @for (item of checklist.items; track item.id) {
+              <span class="fd-checklist__box" [class.fd-checklist__box--checked]="item.checked"
+                [attr.aria-label]="item.checked ? 'Marcado' : 'Sin marcar'">
+                @if (item.checked) { X }
+              </span>
+              <span class="fd-checklist__label">
+                @if (item.image) {
+                  <img class="fd-checklist__image"
+                    [src]="'/assets/format/' + item.image.sha1 + '.png'" [alt]="item.image.alt" />
+                }
+                {{ item.label }}
+              </span>
+            }
+          </div>
+        }
+
+        @case ('table') {
+          @let table = asTable(section);
+          @if (table.title) {
+            <h2 class="fd-section-title">{{ table.title }}</h2>
+          }
+          <table class="fd-table">
+            <!--
+              `thead` y no una cabecera repetida a mano: el navegador la
+              reimprime en cada página al cortar, que es lo que la plantilla
+              conseguía intercalando cabeceras entre las filas de personal.
+            -->
+            <thead>
+              <tr>
+                @for (column of table.columns; track column.id; let i = $index) {
+                  <th [style.width]="columnWidth(table, i)" [style.text-align]="column.align">
+                    {{ column.label }}
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of table.rows; track $index; let r = $index) {
+                <tr>
+                  @for (cell of row; track $index; let i = $index) {
+                    <td [style.text-align]="table.columns[i].align">
+                      <!--
+                        La firma registrada de esta persona, si la tiene y si
+                        esta columna la imprime. La casilla sigue vacía por
+                        debajo: quien no la tenga firma a mano, como siempre.
+                      -->
+                      @if (tableSignature(table, r, i); as firma) {
+                        <img class="fd-signature" [src]="firma"
+                          alt="Firma registrada" (error)="onImageError($event)" />
+                      } @else {
+                        {{ cell }}
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+
+        @case ('rows') {
+          @let block = asRows(section);
+          @if (block.title) {
+            <h2 class="fd-section-title">{{ block.title }}</h2>
+          }
+          <!--
+            El bloque es una lista de filas, y cada fila se reparte en columnas
+            por porcentaje. No hay retícula previa ni coordenadas: la posición
+            de una celda la da su sitio en la fila.
+          -->
+          <div class="fd-rows">
+            @for (row of block.rows; track row.id) {
+              <div class="fd-row" [style.grid-template-columns]="rowTemplate(row)"
+                [style.min-height.mm]="row.minHeightMm">
+                @for (cell of row.cells; track cell.id) {
+                  <div class="fd-cell"
+                    [class.fd-cell--bold]="cell.bold"
+                    [class.fd-cell--fill]="cell.fill"
+                    [class.fd-cell--boxed]="cell.boxed"
+                    [style.text-align]="cell.align">
+                    @switch (cell.kind) {
+                      @case ('check') {
+                        <span class="fd-check" [class.fd-check--on]="cell.checked">
+                          @if (cell.checked) { X }
+                        </span>
+                      }
+                      @case ('image') {
+                        <span class="fd-imgs">
+                          @for (image of cell.images ?? []; track image.sha1) {
+                            <img [src]="imageUrl(image.sha1)" [alt]="image.alt"
+                              [style.width.mm]="image.widthMm"
+                              [style.height.mm]="image.heightMm"
+                              (error)="onImageError($event)" />
+                          }
+                          @if (cell.text) { <span class="fd-caption">{{ cell.text }}</span> }
+                        </span>
+                      }
+                      @case ('signature') {
+                        @if (cell.signatureUrl) {
+                          <img class="fd-signature" [src]="cell.signatureUrl"
+                            alt="Firma registrada" (error)="onImageError($event)" />
+                        }
+                      }
+                      @default { {{ cell.text }} }
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        @case ('signatures') {
+          @let signatures = asSignatures(section);
+          @if (signatures.title) {
+            <h2 class="fd-section-title">{{ signatures.title }}</h2>
+          }
+          <div class="fd-signatures"
+            [style.grid-template-columns]="'repeat(' + signatures.columns + ', minmax(0, 1fr))'">
+            @for (slot of signatures.slots; track slot.id) {
+              <div class="fd-signatures__slot">
+                <div class="fd-signatures__space"></div>
+                <div class="fd-signatures__name">{{ slot.name }}</div>
+                <div class="fd-signatures__label">{{ slot.label }}</div>
+              </div>
+            }
+          </div>
+        }
+      }
+    }
+    </div>
+  </article>
+}

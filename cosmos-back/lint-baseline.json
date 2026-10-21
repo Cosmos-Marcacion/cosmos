@@ -1,0 +1,15 @@
+{
+  "@typescript-eslint/no-base-to-string": 2,
+  "@typescript-eslint/no-floating-promises": 6,
+  "@typescript-eslint/no-unnecessary-type-assertion": 19,
+  "@typescript-eslint/no-unsafe-argument": 224,
+  "@typescript-eslint/no-unsafe-assignment": 482,
+  "@typescript-eslint/no-unsafe-call": 238,
+  "@typescript-eslint/no-unsafe-enum-comparison": 1,
+  "@typescript-eslint/no-unsafe-member-access": 1140,
+  "@typescript-eslint/no-unsafe-return": 116,
+  "@typescript-eslint/no-unused-vars": 25,
+  "@typescript-eslint/require-await": 118,
+  "@typescript-eslint/unbound-method": 107,
+  "prettier/prettier": 5141
+}

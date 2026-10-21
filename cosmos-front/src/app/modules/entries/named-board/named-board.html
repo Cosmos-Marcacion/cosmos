@@ -1,0 +1,136 @@
+<div class="nb">
+
+  <!-- Filtros del día -->
+  <div class="nb-filters">
+    <div class="nb-datenav">
+      <button type="button" class="nb-datenav__step" (click)="changeDate(-1)" aria-label="Día anterior">
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M12.7 15.7a1 1 0 0 1-1.4 0l-5-5a1 1 0 0 1 0-1.4l5-5a1 1 0 1 1 1.4 1.4L8.4 10l4.3 4.3a1 1 0 0 1 0 1.4Z" clip-rule="evenodd" />
+        </svg>
+      </button>
+      <input type="date" [(ngModel)]="workerDate" (change)="load()" aria-label="Día de trabajo" />
+      <button type="button" class="nb-datenav__step" (click)="changeDate(1)" aria-label="Día siguiente">
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M7.3 4.3a1 1 0 0 1 1.4 0l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 0 1-1.4-1.4l4.3-4.3-4.3-4.3a1 1 0 0 1 0-1.4Z" clip-rule="evenodd" />
+        </svg>
+      </button>
+      <button type="button" class="nb-today" (click)="today()">Hoy</button>
+    </div>
+
+    <div class="nb-field">
+      <label for="nb-turn">Turno</label>
+      <select id="nb-turn" [(ngModel)]="selectedTurn" (change)="load()">
+        <option value="">Todos</option>
+        @for (turn of turns; track turn) { <option [value]="turn">{{ turn }}</option> }
+      </select>
+    </div>
+
+    <div class="nb-field nb-field--grow">
+      <label for="nb-search">Buscar</label>
+      <input id="nb-search" type="search" placeholder="Nave, nombrada o viaje"
+        [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
+    </div>
+
+    @if (!loading() && summary().total > 0) {
+      <p class="nb-summary">
+        <strong>{{ summary().total }}</strong> nombradas ·
+        <strong>{{ summary().ready }}</strong> listas ·
+        <strong>{{ summary().assisted }}/{{ summary().staff }}</strong> con marcación
+      </p>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="nb-empty">Cargando nombradas…</div>
+  } @else if (loadError()) {
+    <div class="nb-empty" role="alert">
+      No se pudieron cargar las nombradas.
+      <button type="button" class="nb-today" (click)="load()">Reintentar</button>
+    </div>
+  } @else if (visibleRows().length === 0) {
+    @if (searchTerm().trim() && rows().length > 0) {
+      <div class="nb-empty" role="status">
+        Ninguna nombrada coincide con «{{ searchTerm().trim() }}». Prueba con la nave, el número de nombrada o el viaje.
+      </div>
+    } @else {
+      <div class="nb-empty" role="status">No hay nombradas para esta fecha y turno. Cambia el día o el turno.</div>
+    }
+  } @else {
+    <div class="nb-grid">
+      @for (row of visibleRows(); track row.staffTransmissionId) {
+        <!--
+          La tarjeta entera abre el detalle: el boton del titulo se extiende
+          sobre toda la tarjeta. Antes la tarjeta era ella misma un
+          role="button" con otro boton dentro, que los lectores de pantalla no
+          anuncian bien y que hacia que Enter sobre la descarga abriera tambien
+          el detalle (CKI12). La descarga queda por encima del area del titulo.
+        -->
+        <article class="nb-card">
+
+          <header class="nb-card__head">
+            <div class="nb-card__identity">
+              <h2 class="nb-card__title">
+                <button type="button" class="nb-card__open"
+                  [attr.aria-label]="'Abrir nombrada ' + row.staffVesselId + ' de ' + row.vesselDescription"
+                  (click)="open(row)">{{ row.vesselDescription }}</button>
+              </h2>
+              <p class="nb-card__meta">
+                Nombrada {{ row.staffVesselId }} · {{ row.shiftDescription }} ·
+                Muelle {{ row.pierDescription || '—' }} · Viaje {{ row.voyageNumber || '—' }}
+              </p>
+            </div>
+            @if (row.ready) {
+              <span class="nb-badge nb-badge--success">Lista</span>
+            } @else {
+              <span class="nb-badge nb-badge--warning">Falta configurar</span>
+            }
+          </header>
+
+          <div class="nb-card__attendance">
+            <div class="nb-card__attendance-head">
+              <span>Marcación de ingreso</span>
+              <strong>{{ row.assistCount }} / {{ row.staffCount }}</strong>
+            </div>
+            <div class="nb-bar" role="img" [attr.aria-label]="attendanceRate(row) + '% del personal con marcación'">
+              <span [style.width.%]="attendanceRate(row)"></span>
+            </div>
+          </div>
+
+          <dl class="nb-card__facts">
+            <div>
+              <dt>Tipo de nave</dt>
+              <dd [title]="row.formatType ? 'Formato ' + formatLabel(row.formatType) : 'Este tipo de nave no tiene formato'">
+                {{ vesselTypeLabel(row) }}
+                @if (!row.formatType) { <span class="nb-card__nofmt">· sin formato</span> }
+              </dd>
+            </div>
+            <div>
+              <dt>Jefe de cubierta</dt>
+              <dd>{{ row.jefeCubierta?.fullName || 'Sin asignar' }}</dd>
+            </div>
+            <div>
+              <dt>Capacitación</dt>
+              <dd>{{ talkLabel(row) }}</dd>
+            </div>
+          </dl>
+
+          <footer class="nb-card__foot">
+            @if (row.lastFormat) {
+              <span class="nb-card__last">
+                Último formato {{ row.lastFormat.generatedAt | date: 'dd/MM HH:mm' }}
+                @if (row.lastFormat.pages > 1) { <span>· {{ row.lastFormat.pages }} págs.</span> }
+              </span>
+            } @else {
+              <span class="nb-card__last">Sin formatos emitidos</span>
+            }
+
+            <button type="button" class="nb-btn" (click)="download(row, $event)"
+              [disabled]="downloadingId() === row.staffTransmissionId">
+              {{ downloadingId() === row.staffTransmissionId ? 'Generando…' : 'Descargar formato' }}
+            </button>
+          </footer>
+        </article>
+      }
+    </div>
+  }
+</div>

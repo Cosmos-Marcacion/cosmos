@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paleta corporativa Cosmos Global Logistics, derivada del color del
+         isotipo y el logotipo (#003D53). Se mantiene alineada con
+         src/styles/variables.scss del proyecto Angular. -->
+    <color name="cosmosBrand">#003D53</color>
+
+    <color name="colorPrimary">#003D53</color>
+    <color name="colorPrimaryDark">#002736</color>
+    <color name="colorAccent">#0087B8</color>
+    <color name="colorPrimaryVariant">#004D69</color>
+    <color name="colorSecondary">#0087B8</color>
+    <color name="colorSecondaryVariant">#006387</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorOnSecondary">#FFFFFF</color>
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorOnSurface">#003D53</color>
+    <color name="colorBackground">#F3F8F9</color>
+    <color name="colorOnBackground">#003D53</color>
+    <color name="colorError">#C62828</color>
+    <color name="colorOnError">#FFFFFF</color>
+</resources>

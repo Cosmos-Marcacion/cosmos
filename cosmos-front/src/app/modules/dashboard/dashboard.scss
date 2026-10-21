@@ -1,0 +1,41 @@
+/* Mantener proporción visual de tarjetas */
+.card-fixed-aspect {
+  aspect-ratio: 16 / 9;
+}
+
+/* Estilos para selectores de límite */
+.limit-selector {
+  @apply text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors;
+
+  &:hover {
+    @apply border-gray-400;
+  }
+}
+
+/* Estilos para información de paginación */
+.pagination-info {
+  @apply mt-4 text-sm text-gray-600 text-center bg-gray-50 py-2 px-4 rounded-md border border-gray-200;
+}
+
+/* Estilos para contenedor de controles de tabla */
+.table-controls {
+  @apply flex items-center gap-4;
+
+  .limit-controls {
+    @apply flex items-center gap-2;
+
+    label {
+      @apply text-sm text-gray-600 font-medium;
+    }
+  }
+}
+
+/* Grafico sin datos: ocupa el alto del lienzo para que la tarjeta no salte. */
+.chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  padding: 0 1rem;
+  text-align: center;
+}

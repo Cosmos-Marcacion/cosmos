@@ -1,0 +1,147 @@
+<div class="p-4 md:p-6 lg:p-8 min-h-screen bg-gray-50">
+  <div
+    class="w-full flex flex-col lg:flex-row lg:justify-end lg:items-end gap-4 mb-6"
+  >
+    <div class="flex items-end gap-4 xl:flex-row flex-col w-full">
+      <div class="flex flex-col gap-2 w-full xl:w-auto">
+        <label class="text-color1-40 text-sm font-bold">Día de trabajo</label>
+        <input
+          type="date"
+          [(ngModel)]="workerDate"
+          (change)="search()"
+          class="w-full p-3 rounded-md border border-color2 focus-ring"
+        />
+      </div>
+
+      <button
+        class="bg-color1 text-white px-4 py-3 rounded-md flex items-center justify-center gap-2 gilroy-bold text-sm md:text-base hover:bg-color1/90 transition-colors w-full sm:w-auto"
+        (click)="addEntry()"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="size-4 md:size-5"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        Agregar
+      </button>
+    </div>
+  </div>
+
+  <div
+    class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden p-5 flex flex-col gap-4"
+  >
+    <div class="flex gap-4 justify-end xl:flex-row flex-col">
+      <div class="flex flex-col gap-2">
+        <label class="text-color1-40 text-sm font-bold">Buscar</label>
+        <div class="relative">
+          <input
+            type="search"
+            placeholder="Por nombre"
+            [(ngModel)]="searchTerm"
+            (input)="searchByName()"
+            class="w-full p-3 rounded-md border border-color2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 size-5 text-gray-400"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-color1-40 text-sm font-bold">Navío</label>
+        <select
+          [(ngModel)]="selectedShip"
+          (change)="search()"
+          class="w-full p-3 rounded-md border border-color2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="">Todos</option>
+          @for (ship of ships; track ship) {
+          <option [value]="ship">{{ ship }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-color1-40 text-sm font-bold">Cargo</label>
+        <select
+          [(ngModel)]="selectedPosition"
+          (change)="search()"
+          class="w-full p-3 rounded-md border border-color2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="">Todos</option>
+          @for (position of positions; track position) {
+          <option [value]="position">{{ position }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label class="text-color1-40 text-sm font-bold">Turno</label>
+        <select
+          [(ngModel)]="selectedTurn"
+          (change)="search()"
+          class="w-full p-3 rounded-md border border-color2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="">Todos</option>
+          @for (turn of turns; track turn) {
+          <option [value]="turn">{{ turn }}</option>
+          }
+        </select>
+      </div>
+    </div>
+    <!--
+      Los formatos (asistencia, ATS y permiso de trabajo) ya no se arman en el
+      navegador: el backend emite un unico Excel por nombrada sobre la plantilla
+      oficial. Esta pantalla queda solo como listado por trabajador.
+    -->
+    <div class="flex items-center justify-end gap-2 flex-wrap">
+      <a
+        routerLink="/marcaciones"
+        class="report-button bg-blue-800 text-white px-4 py-3 rounded-md flex items-center justify-center gap-2 gilroy-bold text-sm md:text-base hover:bg-blue-900 transition-colors w-full sm:w-auto"
+        style="height: 45px"
+      >
+        <span>DESCARGAR FORMATOS POR NOMBRADA</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <!-- <app-data
+      [headers]="headers"
+      [data]="entries"
+      [total]="total"
+      [page]="page"
+      [limit]="limit"
+      [showExcelDownload]="true"
+      [excelConfig]="getExcelConfig()"
+      (pageChangeEvent)="pageChange($event)"
+      (excelDownloadEvent)="onExcelDownload($event)"
+    ></app-data> -->
+
+    <app-server-table
+      caption="Marcaciones"
+      [headers]="headers"
+      [data]="entries"
+      (pageChangeEvent)="pageChange($event)"
+      [limit]="limit"
+      [page]="page"
+      [total]="total"
+      [searchTerm]="searchTerm"
+    ></app-server-table>
+  </div>
+</div>

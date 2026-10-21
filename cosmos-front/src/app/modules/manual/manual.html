@@ -1,0 +1,360 @@
+<!-- Texto con **negrita**: se pinta por tramos, sin innerHTML. -->
+<ng-template #txt let-text>@for (s of segments(text); track $index) {@if (s.strong) {<strong>{{ s.text }}</strong>} @else {{{ s.text }}}}</ng-template>
+
+<div class="mn">
+  <header class="mn-top">
+    <button
+      type="button"
+      class="mn-top__menu"
+      (click)="menuAbierto.set(!menuAbierto())"
+      [attr.aria-expanded]="menuAbierto()"
+      aria-controls="mn-indice"
+      aria-label="Ver los temas"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+
+    <a routerLink="/manual" class="mn-top__brand" (click)="query.set('')">
+      <img src="/images/cosmos-isotipo.png" alt="" width="32" height="32" />
+      <span>Manual de uso</span>
+    </a>
+
+    <div class="mn-search" role="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" /><path stroke-linecap="round" d="m20 20-3.5-3.5" />
+      </svg>
+      <input
+        #buscador
+        type="search"
+        placeholder="Buscar: firma, remate, contraseña..."
+        aria-label="Buscar en el manual"
+        [value]="query()"
+        (input)="buscar($any($event.target).value)"
+        (keydown.enter)="abrirPrimero()"
+      />
+      @if (query()) {
+        <button type="button" class="mn-search__clear" (click)="limpiarBusqueda()" aria-label="Limpiar la búsqueda">×</button>
+      } @else {
+        <kbd class="mn-search__kbd" aria-hidden="true">/</kbd>
+      }
+    </div>
+
+    <div class="mn-filter" role="group" aria-label="Mostrar temas de">
+      <button type="button" [attr.aria-pressed]="filtro() === 'todo'" (click)="filtro.set('todo')">Todo</button>
+      <button type="button" [attr.aria-pressed]="filtro() === 'web'" (click)="filtro.set('web')">Panel web</button>
+      <button type="button" [attr.aria-pressed]="filtro() === 'app'" (click)="filtro.set('app')">App móvil</button>
+    </div>
+
+    <a class="mn-top__go" href="/">Ir a la plataforma</a>
+  </header>
+
+  <div class="mn-body">
+    <nav id="mn-indice" class="mn-nav" [class.is-open]="menuAbierto()" aria-label="Temas del manual">
+      @for (grupo of indice(); track grupo.area.id) {
+        <p class="mn-nav__area">{{ grupo.area.label }}</p>
+        <ul>
+          @for (tema of grupo.temas; track tema.id) {
+            <li>
+              <a
+                [routerLink]="['/manual', tema.id]"
+                [class.is-active]="article()?.id === tema.id"
+                [attr.aria-current]="article()?.id === tema.id ? 'page' : null"
+                (click)="query.set(''); menuAbierto.set(false)"
+              >
+                <span>{{ tema.title }}</span>
+                @if (temaCompleto(tema)) {
+                  <span class="mn-nav__done" title="Pasos completados">✓</span>
+                }
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </nav>
+    @if (menuAbierto()) {
+      <div class="mn-veil" (click)="menuAbierto.set(false)" aria-hidden="true"></div>
+    }
+
+    <main class="mn-main" #contenido>
+      @let a = article();
+      @if (buscando()) {
+        <!-- Resultados de búsqueda -->
+        <section class="mn-results" aria-live="polite">
+          <h1 class="mn-h1">
+            {{ resultados().length }} {{ resultados().length === 1 ? 'tema' : 'temas' }} para «{{ query() }}»
+          </h1>
+          @for (hit of resultados(); track hit.article.id) {
+            <button type="button" class="mn-result" (click)="abrir(hit.article.id)">
+              <span class="mn-chip">{{ areaDe(hit.article.area) }}</span>
+              <span class="mn-result__title">{{ hit.article.title }}</span>
+              <span class="mn-result__text">{{ hit.excerpt }}</span>
+            </button>
+          } @empty {
+            <div class="mn-empty">
+              <p>No encontramos nada con «{{ query() }}».</p>
+              <p>Prueba con otra palabra, o revisa <a routerLink="/manual/problemas" (click)="query.set('')">Resolver un problema</a>.</p>
+            </div>
+          }
+        </section>
+      } @else if (notFound()) {
+        <section class="mn-empty">
+          <h1 class="mn-h1">Este tema no existe</h1>
+          <p>Puede que el enlace sea antiguo. Busca arriba o vuelve a la <a routerLink="/manual">portada del manual</a>.</p>
+        </section>
+      } @else if (a) {
+        <!-- Tema -->
+        <article class="mn-article">
+          <nav class="mn-crumbs" aria-label="Ubicación">
+            <a routerLink="/manual">Manual</a>
+            <span aria-hidden="true">›</span>
+            <span>{{ areaDe(a.area) }}</span>
+          </nav>
+          <h1 class="mn-h1">{{ a.title }}</h1>
+          <p class="mn-lead">{{ a.summary }}</p>
+          <div class="mn-meta">
+            @for (quien of a.audience ?? []; track quien) {
+              <span class="mn-chip">{{ quien }}</span>
+            }
+            @if (a.where) {
+              <span class="mn-chip mn-chip--where" title="Dónde está">{{ a.where }}</span>
+            }
+            <span class="mn-meta__spacer"></span>
+            <button type="button" class="mn-tool" (click)="copiarEnlace()">{{ copiado() ? 'Enlace copiado' : 'Copiar enlace' }}</button>
+            <button type="button" class="mn-tool" (click)="imprimir()">Imprimir</button>
+          </div>
+
+          @for (b of a.blocks; track $index) {
+            @switch (b.t) {
+              @case ('p') {
+                <p class="mn-p"><ng-container *ngTemplateOutlet="txt; context: { $implicit: b.text }" /></p>
+              }
+              @case ('h') {
+                <h2 class="mn-h2">{{ b.text }}</h2>
+              }
+              @case ('list') {
+                <ul class="mn-list">
+                  @for (item of b.items; track $index) {
+                    <li><ng-container *ngTemplateOutlet="txt; context: { $implicit: item }" /></li>
+                  }
+                </ul>
+              }
+              @case ('steps') {
+                @let hechosGrupo = cuantosHechos(b.id, b.items.length);
+                <section class="mn-steps" [attr.aria-label]="b.title">
+                  <header class="mn-steps__head">
+                    <h2 class="mn-h2">{{ b.title }}</h2>
+                    <span class="mn-steps__count">{{ hechosGrupo }} de {{ b.items.length }}</span>
+                    @if (hechosGrupo) {
+                      <button type="button" class="mn-link" (click)="reiniciarPasos(b.id, b.items.length)">Reiniciar</button>
+                    }
+                  </header>
+                  <div class="mn-bar" aria-hidden="true">
+                    <span [style.width.%]="(hechosGrupo / b.items.length) * 100"></span>
+                  </div>
+                  <ol>
+                    @for (paso of b.items; track $index; let i = $index) {
+                      <li [class.is-done]="pasoHecho(b.id, i)">
+                        <label>
+                          <input type="checkbox" [checked]="pasoHecho(b.id, i)" (change)="alternarPaso(b.id, i)" />
+                          <span class="mn-steps__n" aria-hidden="true">{{ i + 1 }}</span>
+                          <span class="mn-steps__text"><ng-container *ngTemplateOutlet="txt; context: { $implicit: paso }" /></span>
+                        </label>
+                      </li>
+                    }
+                  </ol>
+                  @if (hechosGrupo === b.items.length) {
+                    <p class="mn-steps__done" role="status">Listo: completaste todos los pasos.</p>
+                  }
+                </section>
+              }
+              @case ('table') {
+                <div class="mn-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        @for (h of b.head; track $index) { <th scope="col">{{ h }}</th> }
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (row of b.rows; track $index) {
+                        <tr>
+                          @for (cell of row; track $index; let c = $index) {
+                            <td [attr.data-label]="b.head[c]"><ng-container *ngTemplateOutlet="txt; context: { $implicit: cell }" /></td>
+                          }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+              @case ('note') {
+                <aside class="mn-note" [attr.data-tone]="b.tone">
+                  <strong class="mn-note__label">{{ b.tone === 'warn' ? 'Atención' : b.tone === 'tip' ? 'Consejo' : 'Bueno saber' }}</strong>
+                  <span><ng-container *ngTemplateOutlet="txt; context: { $implicit: b.text }" /></span>
+                </aside>
+              }
+              @case ('ui') {
+                @if (b.title) { <h2 class="mn-h2">{{ b.title }}</h2> }
+                <dl class="mn-ui">
+                  @for (item of b.items; track $index) {
+                    <div>
+                      <dt>{{ item.label }}</dt>
+                      <dd><ng-container *ngTemplateOutlet="txt; context: { $implicit: item.desc }" /></dd>
+                    </div>
+                  }
+                </dl>
+              }
+              @case ('faq') {
+                <div class="mn-faq">
+                  @for (item of b.items; track $index) {
+                    <details>
+                      <summary>{{ item.q }}</summary>
+                      <p><ng-container *ngTemplateOutlet="txt; context: { $implicit: item.a }" /></p>
+                    </details>
+                  }
+                </div>
+              }
+              @case ('troubleshooter') {
+                <section class="mn-ts">
+                  <p class="mn-p">1. ¿Dónde ocurre?</p>
+                  <div class="mn-filter mn-filter--light" role="group" aria-label="Dónde ocurre">
+                    <button type="button" [attr.aria-pressed]="problemaArea() === 'app'" (click)="elegirProblemaArea('app')">En la app del teléfono</button>
+                    <button type="button" [attr.aria-pressed]="problemaArea() === 'web'" (click)="elegirProblemaArea('web')">En el panel web</button>
+                  </div>
+                  <p class="mn-p">2. ¿Qué te pasa?</p>
+                  <div class="mn-ts__list">
+                    @for (p of problemas(); track p.id) {
+                      <button
+                        type="button"
+                        class="mn-ts__option"
+                        [class.is-active]="problemaId() === p.id"
+                        [attr.aria-expanded]="problemaId() === p.id"
+                        (click)="problemaId.set(problemaId() === p.id ? null : p.id)"
+                      >{{ p.symptom }}</button>
+                      @if (problemaId() === p.id) {
+                        <div class="mn-ts__answer" role="region" [attr.aria-label]="p.symptom">
+                          <p><strong>Por qué pasa:</strong> {{ p.cause }}</p>
+                          <p><strong>Cómo resolverlo:</strong></p>
+                          <ol>
+                            @for (f of p.fix; track $index) {
+                              <li><ng-container *ngTemplateOutlet="txt; context: { $implicit: f }" /></li>
+                            }
+                          </ol>
+                          @if (p.articleId) {
+                            <button type="button" class="mn-link" (click)="abrir(p.articleId)">Ver el tema completo →</button>
+                          }
+                        </div>
+                      }
+                    }
+                  </div>
+                </section>
+              }
+              @case ('glossary') {
+                <div class="mn-search mn-search--inline">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" /><path stroke-linecap="round" d="m20 20-3.5-3.5" />
+                  </svg>
+                  <input
+                    type="search"
+                    placeholder="Filtrar términos"
+                    aria-label="Filtrar el glosario"
+                    [value]="glosarioFiltro()"
+                    (input)="glosarioFiltro.set($any($event.target).value)"
+                  />
+                </div>
+                <dl class="mn-ui mn-ui--glossary">
+                  @for (g of glosario(); track g.term) {
+                    <div>
+                      <dt>{{ g.term }}</dt>
+                      <dd>{{ g.definition }}</dd>
+                    </div>
+                  } @empty {
+                    <p class="mn-p">Ningún término coincide.</p>
+                  }
+                </dl>
+              }
+              @case ('related') {
+                <section class="mn-related">
+                  <h2 class="mn-h2">Temas relacionados</h2>
+                  <div class="mn-related__grid">
+                    @for (id of b.ids; track id) {
+                      @let rel = findArticle(id);
+                      @if (rel) {
+                        <a class="mn-card mn-card--small" [routerLink]="['/manual', rel.id]">
+                          <span class="mn-chip">{{ areaDe(rel.area) }}</span>
+                          <strong>{{ rel.title }}</strong>
+                        </a>
+                      }
+                    }
+                  </div>
+                </section>
+              }
+            }
+          }
+
+          <nav class="mn-pager" aria-label="Tema anterior y siguiente">
+            @if (anterior(); as prev) {
+              <a class="mn-pager__link" [routerLink]="['/manual', prev.id]">
+                <small>← Anterior</small>
+                <span>{{ prev.title }}</span>
+              </a>
+            } @else { <span></span> }
+            @if (siguiente(); as next) {
+              <a class="mn-pager__link mn-pager__link--next" [routerLink]="['/manual', next.id]">
+                <small>Siguiente →</small>
+                <span>{{ next.title }}</span>
+              </a>
+            }
+          </nav>
+        </article>
+      } @else {
+        <!-- Portada -->
+        <section class="mn-home">
+          <div class="mn-hero">
+            <p class="mn-hero__kicker">Cosmos Check-In · {{ totalTemas }} temas</p>
+            <h1 class="mn-hero__title">¿Qué necesitas hacer?</h1>
+            <p class="mn-hero__text">
+              Todo lo que se puede hacer en el panel web y en la app del teléfono, paso a paso.
+              Busca arriba, elige tu función o empieza por una sección.
+            </p>
+          </div>
+
+          <div class="mn-roles">
+            <div class="mn-filter mn-filter--light" role="tablist" aria-label="Tu función">
+              @for (r of roles; track r.id) {
+                <button type="button" role="tab" [attr.aria-selected]="rolId() === r.id" (click)="rolId.set(r.id)">{{ r.label }}</button>
+              }
+            </div>
+            <p class="mn-roles__desc">{{ rol().description }}</p>
+            <div class="mn-roles__tasks" role="tabpanel">
+              @for (t of rol().tasks; track t.articleId + t.label) {
+                <button type="button" class="mn-task" (click)="abrir(t.articleId)">
+                  <span>{{ t.label }}</span>
+                  <span aria-hidden="true">→</span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <h2 class="mn-h2">Secciones</h2>
+          <div class="mn-cards">
+            @for (grupo of indice(); track grupo.area.id) {
+              <a class="mn-card" [routerLink]="['/manual', grupo.temas[0].id]">
+                <span class="mn-chip">{{ grupo.temas.length }} temas</span>
+                <strong>{{ grupo.area.label }}</strong>
+                <span>{{ grupo.area.description }}</span>
+              </a>
+            }
+          </div>
+
+          <aside class="mn-note" data-tone="tip">
+            <strong class="mn-note__label">Consejo</strong>
+            <span>Pulsa <kbd>/</kbd> para buscar desde cualquier tema. En las guías con pasos puedes ir marcando lo que ya hiciste: el manual lo recuerda en este navegador.</span>
+          </aside>
+        </section>
+      }
+    </main>
+  </div>
+</div>

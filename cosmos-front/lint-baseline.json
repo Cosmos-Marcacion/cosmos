@@ -1,0 +1,11 @@
+{
+  "@angular-eslint/no-output-native": 1,
+  "@angular-eslint/prefer-inject": 5,
+  "@angular-eslint/template/click-events-have-key-events": 19,
+  "@angular-eslint/template/interactive-supports-focus": 17,
+  "@angular-eslint/template/label-has-associated-control": 5,
+  "@angular-eslint/template/prefer-control-flow": 3,
+  "@typescript-eslint/no-unused-vars": 15,
+  "@typescript-eslint/no-wrapper-object-types": 4,
+  "no-useless-assignment": 2
+}

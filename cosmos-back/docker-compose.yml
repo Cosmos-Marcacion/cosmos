@@ -1,0 +1,11 @@
+services:
+  nestjs-api:
+    build: .
+    container_name: nestjs_app
+    ports:
+      - "3023:3023" # Mapea el puerto 3000 del contenedor al 3000 del servidor
+    restart: always
+    env_file:        # <-- AÑADIR ESTO
+      - .env         # <-- AÑADIR ESTO
+    environment:
+      - NODE_ENV=production

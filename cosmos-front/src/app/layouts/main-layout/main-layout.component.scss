@@ -1,0 +1,80 @@
+.main-menu {
+  width: 0;
+  overflow: hidden;
+  padding-top: 30px;
+  padding-bottom: 30px;
+  padding-left: 0;
+  padding-right: 0;
+  height: 100dvh;
+
+  transition: width 0.2s ease-in-out, padding 0.2s ease-in-out;
+}
+
+.show-menu {
+  animation: showMenu 0.2s ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+.hide-menu {
+  animation: hideMenu 0.2s ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes showMenu {
+  0% {
+    width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  100% {
+    width: 320px;
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+}
+
+@keyframes hideMenu {
+  0% {
+    width: 320px;
+    padding-left: 30px;
+    padding-right: 30px;
+  }
+  100% {
+    width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+// Estilos para el menú de perfil
+.profile-menu {
+  animation: slideDown 0.2s ease-out;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+
+  .close-button {
+    border-radius: 4px;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive para mobile
+@media (max-width: 768px) {
+  .profile-menu {
+    min-width: 280px;
+    right: -10px;
+  }
+}
