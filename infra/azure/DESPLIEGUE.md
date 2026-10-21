@@ -48,12 +48,20 @@ servidor de AWS con Coolify (`98.87.37.45`).
 No hace falta editarlo. El instalador ignora `MONGO_URI`, `JWT_SECRET`, `PORT` y
 `WEBAUTHN_*` del archivo y los fija el por cada ambiente.
 
-> **Importante para QA.** Si solo se pasa `prod.env`, QA usa las mismas
-> credenciales de terceros que produccion: el mismo bucket de S3, el mismo
-> correo SMTP y el mismo Visma. QA podria subir archivos al bucket real y
-> enviar correos reales. Si no se quiere, crear un `qa.env` (copia de
-> `prod.env`) con otro bucket (`AWS_S3_BUCKET_NAME`) y otro remitente o
-> servidor SMTP.
+**No hace falta un `qa.env`.** El instalador lo crea solo (`~/qa.env`) a
+partir de `prod.env`, con las mismas credenciales de S3, correo y Visma, pero
+aislado en lo que QA escribe:
+
+- **Archivos:** QA los guarda en el mismo bucket, bajo la carpeta `qa/`
+  (`AWS_S3_KEY_PREFIX=qa/`). No toca los de produccion.
+- **Correo:** todo lo que QA envie (codigos de recuperacion de contrasena) va
+  al `SOPORTE_EMAIL`, con el destinatario original en el asunto
+  (`MAIL_REDIRECT_TO`). QA trabaja con una copia de los usuarios reales y asi
+  no les escribe.
+- **Visma:** se comparte; la API solo consulta datos, no escribe.
+
+Si se quiere cambiar algo de QA, editar `~/qa.env` en Cloud Shell y relanzar el
+instalador: lo reutiliza y no lo sobreescribe.
 
 ### 1.3 Version de Mongo
 
@@ -77,7 +85,7 @@ exporta `MONGO_VERSION=6.0`.
 2. Pulsar el icono `>_` de la barra superior y elegir **Bash**.
 3. Si pide almacenamiento la primera vez, aceptar el que propone.
 
-### 2.2 Subir `prod.env` (y `qa.env` si lo hay)
+### 2.2 Subir `prod.env`
 
 Barra de Cloud Shell > **Manage files** > **Upload** > elegir el archivo. Queda
 en la carpeta personal (`~/prod.env`). Comprobar:
@@ -125,7 +133,7 @@ export SUB=<id-de-la-suscripcion>
 export SOPORTE_EMAIL=<correo-que-recibe-alertas>
 # export MONGO_VERSION=6.0                    # solo si la 1.3 dio otra version
 
-./infra/azure/instalar.sh ~/prod.env          # o: ~/prod.env ~/qa.env
+./infra/azure/instalar.sh ~/prod.env          # crea ~/qa.env solo
 ```
 
 ### 2.5 Que vas a ver
@@ -314,7 +322,9 @@ En `https://qa.cosmos.com.pe`:
 - [ ] Marcacion completa (entrada y salida) desde la app o el panel.
 - [ ] Consulta de reportes.
 - [ ] Generar un formato y descargarlo en PDF. Es lo mas pesado: valida memoria y LibreOffice.
-- [ ] Subir un archivo (va a S3).
+- [ ] Subir un archivo: debe quedar en el bucket bajo `qa/`.
+- [ ] Recuperar la contrasena de un usuario: el codigo llega al `SOPORTE_EMAIL`,
+      no al usuario, con `[QA para <correo>]` en el asunto.
 - [ ] Sincronizacion con Visma.
 
 Si algo falla, los registros de la API:

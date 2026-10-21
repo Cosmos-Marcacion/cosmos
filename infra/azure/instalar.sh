@@ -24,7 +24,8 @@
 #
 # Archivos .env: las variables del backend exportadas de Coolify, fuera del
 # repositorio. MONGO_URI y JWT_SECRET se ignoran: los genera el instalador. Si
-# no se pasa el de QA, se usa el de produccion.
+# no se pasa el de QA, se crea ~/qa.env desde el de produccion, con los
+# archivos de S3 bajo qa/ y el correo desviado al de soporte.
 set -Eeuo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -201,6 +202,31 @@ cf_bajar_ttl() { # <nombre>: TTL 300 sin cambiar el destino
   done
 }
 
+# Sin qa.env, se crea desde el de produccion: mismas credenciales de terceros,
+# pero aislado en lo que QA escribe. Los archivos van a S3 bajo qa/ y todo el
+# correo al de soporte, porque QA trabaja con una copia de los usuarios reales.
+# Si ya existe de una ejecucion anterior se respeta, por si se edito a mano.
+preparar_qa_env() {
+  [ -z "$ENV_FILE_QA" ] || return 0
+  ENV_FILE_QA="$HOME/qa.env"
+  if [ -f "$ENV_FILE_QA" ]; then
+    info "QA usa $ENV_FILE_QA, creado en una ejecucion anterior."
+    return 0
+  fi
+  {
+    echo "# Generado por instalar.sh desde $(basename "$ENV_FILE_PROD") el $(date '+%d/%m/%Y %H:%M')."
+    echo "# Mismas credenciales que produccion, aislado en lo que QA escribe:"
+    echo "#   archivos de S3 bajo qa/ y todo el correo a $SOPORTE_EMAIL."
+    echo "# Se puede editar: el instalador lo reutiliza en las siguientes ejecuciones."
+    grep -vE '^[[:space:]]*(export[[:space:]]+)?(AWS_S3_KEY_PREFIX|MAIL_REDIRECT_TO)[[:space:]]*=' "$ENV_FILE_PROD" || true
+    echo
+    echo "AWS_S3_KEY_PREFIX=qa/"
+    echo "MAIL_REDIRECT_TO=$SOPORTE_EMAIL"
+  } > "$ENV_FILE_QA"
+  chmod 600 "$ENV_FILE_QA"
+  info "Creado $ENV_FILE_QA desde $ENV_FILE_PROD (S3 bajo qa/, correo a $SOPORTE_EMAIL)."
+}
+
 # ============================================================ comprobaciones
 comprobar() {
   paso "Comprobaciones previas"
@@ -211,6 +237,7 @@ comprobar() {
   [[ "$REGIONES_SWA" == *" $LOC "* ]] || error "Static Web Apps no existe en '$LOC'. Usar una de:$REGIONES_SWA"
   [ -f "$REPO/cosmos-back/Dockerfile" ] || error "lanzar desde un clon del repositorio (no encuentro cosmos-back/Dockerfile)"
   [ -f "$ENV_FILE_PROD" ] || error "no existe el archivo $ENV_FILE_PROD"
+  preparar_qa_env
   [ -f "$ENV_FILE_QA" ] || error "no existe el archivo $ENV_FILE_QA"
   leer_env "$ENV_FILE_PROD" > /dev/null; leer_env "$ENV_FILE_QA" > /dev/null
 
@@ -843,6 +870,6 @@ case "${1:-}" in
     [ -n "${1:-}" ] || exit 1 ;;
   *)
     ENV_FILE_PROD="$1"
-    ENV_FILE_QA="${2:-$1}"
+    ENV_FILE_QA="${2:-}"     # vacio: lo crea preparar_qa_env
     instalar ;;
 esac

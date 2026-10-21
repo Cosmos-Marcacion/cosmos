@@ -4,7 +4,7 @@ import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import axios from 'axios'
 import { UploadService } from './upload.service'
 
-const send = jest.fn()
+const send = jest.fn<Promise<unknown>, [unknown]>()
 
 jest.mock('@aws-sdk/client-s3', () => {
   const actual = jest.requireActual('@aws-sdk/client-s3')
@@ -45,6 +45,7 @@ describe('UploadService', () => {
               if (!(clave in config)) throw new Error(`falta ${clave}`)
               return config[clave]
             }),
+            get: jest.fn((clave: string) => config[clave]),
           },
         },
       ],
@@ -133,6 +134,38 @@ describe('UploadService', () => {
       await expect(service.deleteFile('qr-1.png')).rejects.toThrow(
         /Error al eliminar el archivo de S3/
       )
+    })
+  })
+
+  describe('prefijo de ambiente (AWS_S3_KEY_PREFIX)', () => {
+    // QA comparte bucket con produccion: sin prefijo pisaria sus archivos.
+    beforeEach(() => {
+      config.AWS_S3_KEY_PREFIX = 'qa/'
+    })
+    afterEach(() => {
+      delete config.AWS_S3_KEY_PREFIX
+    })
+
+    it('sube bajo el prefijo y la url lo incluye', async () => {
+      const url = await service.uploadImageBuffer(Buffer.from('png'), 'qr-1.png')
+
+      const comando = send.mock.calls[0][0] as PutObjectCommand
+      expect(comando.input.Key).toBe('qa/qr-1.png')
+      expect(url).toBe('https://s3.us-east-1.amazonaws.com/cosmos-archivos/qa/qr-1.png')
+    })
+
+    it('borra bajo el mismo prefijo con el que subio', async () => {
+      await service.deleteFile('qr-1.png')
+
+      const comando = send.mock.calls[0][0] as DeleteObjectCommand
+      expect(comando.input.Key).toBe('qa/qr-1.png')
+    })
+
+    it('no duplica el prefijo si la clave ya lo trae', async () => {
+      await service.deleteFile('qa/qr-1.png')
+
+      const comando = send.mock.calls[0][0] as DeleteObjectCommand
+      expect(comando.input.Key).toBe('qa/qr-1.png')
     })
   })
 

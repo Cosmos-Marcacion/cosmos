@@ -45,11 +45,16 @@ export class MailService {
     // acompaña al nombre de la aplicación, que ya aparece como texto al lado.
     // La imagen la sirve el frontend desde `public/images`.
     const { toEmail, code, appName = 'Cosmos', logoUrl = 'https://checkin.cosmos.com.pe/images/cosmos-isotipo-blanco.png' } = params
-    const subject = `${appName} - Código de verificación`
+    // Con MAIL_REDIRECT_TO (QA) todo el correo va a esa direccion: QA trabaja
+    // con una copia de los usuarios reales y no debe escribirles. El asunto
+    // conserva a quien iba dirigido para poder probar el flujo igual.
+    const redirect = process.env.MAIL_REDIRECT_TO?.trim()
+    const baseSubject = `${appName} - Código de verificación`
+    const subject = redirect ? `[QA para ${toEmail}] ${baseSubject}` : baseSubject
     const html = this.buildPasswordResetHtml({ code, appName, logoUrl })
     await this.transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.USER_EMAIL || `no-reply@${new URL(logoUrl).hostname}`,
-      to: toEmail,
+      to: redirect || toEmail,
       subject,
       html,
     })

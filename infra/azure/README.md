@@ -13,14 +13,17 @@ En Azure Cloud Shell (Bash):
 gh auth login                          # el repo es privado; tambien configura GitHub solo
 gh repo clone Cosmos-Marcacion/cosmos && cd cosmos
 tmux new -s cosmos                     # Cloud Shell corta sesiones inactivas
-export CF_API_TOKEN=<token>            # opcional: crea los DNS en Cloudflare
-SUB=<id-suscripcion> SOPORTE_EMAIL=<correo> ./infra/azure/instalar.sh ~/prod.env ~/qa.env
+SUB=<id-suscripcion> SOPORTE_EMAIL=<correo> ./infra/azure/instalar.sh ~/prod.env
 ```
 
-`prod.env` y `qa.env` son las variables del backend exportadas de Coolify,
-subidas a Cloud Shell (fuera del repositorio). Si solo se pasa uno, sirve para
-los dos. No hace falta editarlos: `MONGO_URI`, `JWT_SECRET`, `PORT`,
-`WEBAUTHN_*` y `CORS_EXTRA_ORIGINS` los fija el instalador por ambiente.
+`prod.env` son las variables del backend exportadas de Coolify, subidas a
+Cloud Shell (fuera del repositorio). No hace falta editarlo: `MONGO_URI`,
+`JWT_SECRET`, `PORT`, `WEBAUTHN_*` y `CORS_EXTRA_ORIGINS` los fija el
+instalador por ambiente.
+
+QA no necesita archivo propio: se crea `~/qa.env` desde `prod.env`, con los
+archivos de S3 bajo `qa/` (`AWS_S3_KEY_PREFIX`) y el correo desviado al de
+soporte (`MAIL_REDIRECT_TO`). Si se pasa un segundo archivo, se usa ese.
 
 Tarda de 40 a 60 minutos. Si algo falla, dice en que paso y por que; se
 corrige y se relanza el mismo comando: lo creado se respeta.
