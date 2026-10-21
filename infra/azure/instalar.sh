@@ -232,12 +232,12 @@ preparar_qa_env() {
 acr_existe() { az acr show -n "$1" -o none 2> /dev/null; }
 st_existe() { az storage account show -n "$1" -o none 2> /dev/null; }
 kv_existe() { az keyvault show -n "$1" -o none 2> /dev/null; }
-nombre_global() { # <descripcion> <nombre> <funcion-existe> <comando check...>
-  local que="$1" n="$2" ex="$3" r="" i; shift 3
+nombre_global() { # <estricto|aviso> <descripcion> <nombre> <funcion-existe> <comando check...>
+  local modo="$1" que="$2" n="$3" ex="$4" r="" err="$TMP/check-err" i; shift 4
   "$ex" "$n" && return 0
-  for i in 1 2 3 4 5; do
-    r=$("$@" --query nameAvailable -o tsv 2> /dev/null) && break
-    info "sin respuesta de Azure al comprobar $que '$n'; reintento $i/5 en 10s..."
+  for i in 1 2 3; do
+    r=$("$@" --query nameAvailable -o tsv 2> "$err") && break
+    info "sin respuesta de Azure al comprobar $que '$n'; reintento $i/3 en 10s..."
     sleep 10
   done
   case "$r" in
@@ -245,8 +245,10 @@ nombre_global() { # <descripcion> <nombre> <funcion-existe> <comando check...>
     # Ocupado: puede ser nuestro y haber fallado la consulta de antes.
     false) reintentar 3 10 "$ex" "$n" && return 0
            error "$que '$n' ya existe en otra suscripcion: cambiar PROY (export PROY=otro) y relanzar" ;;
-    *) error "no se pudo comprobar $que '$n': Azure no responde. Relanzar en unos minutos" ;;
   esac
+  info "Azure dijo: $(tail -n 1 "$err" 2> /dev/null)"
+  [ "$modo" = aviso ] || error "no se pudo comprobar $que '$n'. Relanzar en unos minutos"
+  info "No se pudo comprobar $que '$n'; se sigue. Si estuviera ocupado, fallara al crearlo."
 }
 
 # ============================================================ comprobaciones
@@ -277,13 +279,13 @@ comprobar() {
   az bicep version > /dev/null 2>&1 || az bicep install
 
   # Nombres globales: mejor saberlo ahora que a mitad de instalacion.
-  nombre_global "el registro" "$ACR" acr_existe az acr check-name -n "$ACR"
-  nombre_global "la cuenta de almacenamiento" "$ST" st_existe az storage account check-name -n "$ST"
+  nombre_global estricto "el registro" "$ACR" acr_existe az acr check-name -n "$ACR"
+  nombre_global estricto "la cuenta de almacenamiento" "$ST" st_existe az storage account check-name -n "$ST"
   local kv
   for kv in "$KV_PROD" "$KV_QA"; do
     # Uno borrado se recupera al instalar: su nombre sigue siendo nuestro.
     [ -n "$(reintentar 3 10 az keyvault list-deleted --query "[?name=='$kv'].name" -o tsv)" ] && continue
-    nombre_global "el Key Vault" "$kv" kv_existe az rest --method post       --uri "https://management.azure.com/subscriptions/$SUB/providers/Microsoft.KeyVault/checkNameAvailability?api-version=2022-07-01"       --body "{\"name\":\"$kv\",\"type\":\"Microsoft.KeyVault/vaults\"}"
+    nombre_global aviso "el Key Vault" "$kv" kv_existe az rest --method post       --uri "https://management.azure.com/subscriptions/$SUB/providers/Microsoft.KeyVault/checkNameAvailability?api-version=2022-07-01"       --body "{\"name\":\"$kv\",\"type\":\"Microsoft.KeyVault/vaults\"}"
   done
   info "Todo listo para empezar."
 }
