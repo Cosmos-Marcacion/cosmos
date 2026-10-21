@@ -1,5 +1,7 @@
 # Escenario B: Azure PaaS
 
+> Paso a paso completo, desde la instalacion hasta el corte: [DESPLIEGUE.md](DESPLIEGUE.md).
+
 Codigo para ejecutar la guia de aprovisionamiento del 21/10/2026, adaptado al
 monorepo `Cosmos-Marcacion/cosmos`. Todo se instala con un solo script.
 
@@ -8,9 +10,9 @@ monorepo `Cosmos-Marcacion/cosmos`. Todo se instala con un solo script.
 En Azure Cloud Shell (Bash):
 
 ```bash
-git clone https://github.com/Cosmos-Marcacion/cosmos.git && cd cosmos
+gh auth login                          # el repo es privado; tambien configura GitHub solo
+gh repo clone Cosmos-Marcacion/cosmos && cd cosmos
 tmux new -s cosmos                     # Cloud Shell corta sesiones inactivas
-gh auth login                          # opcional: configura GitHub solo
 export CF_API_TOKEN=<token>            # opcional: crea los DNS en Cloudflare
 SUB=<id-suscripcion> SOPORTE_EMAIL=<correo> ./infra/azure/instalar.sh ~/prod.env ~/qa.env
 ```

@@ -3,8 +3,8 @@
 #
 # Se lanza en Azure Cloud Shell (Bash), desde la raiz del repositorio:
 #
-#   git clone https://github.com/Cosmos-Marcacion/cosmos.git && cd cosmos
-#   tmux new -s cosmos        # Cloud Shell corta las sesiones inactivas; tmux las mantiene
+#   gh auth login && gh repo clone Cosmos-Marcacion/cosmos && cd cosmos   (repo privado)
+#   tmux new -s cosmos       # Cloud Shell corta las sesiones inactivas; tmux las mantiene
 #   SUB=<id> SOPORTE_EMAIL=<correo> ./infra/azure/instalar.sh ~/prod.env [~/qa.env]
 #
 # Crea todo lo de la guia salvo el corte: bases, registro, Key Vault, imagenes,
