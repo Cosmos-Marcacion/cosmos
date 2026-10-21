@@ -248,7 +248,7 @@ comprobar() {
   local roles
   roles=$(az role assignment list --assignee "$(yo)" --scope "/subscriptions/$SUB" --include-inherited --query "[].roleDefinitionName" -o tsv 2>/dev/null || true)
   if ! grep -qx Owner <<< "$roles"; then
-    info "AVISO: no veo el rol Owner asignado directamente. Si viene por un grupo, no pasa nada; si no tienes Owner, fallara al asignar permisos (paso 7)."
+    info "AVISO: no veo el rol Owner asignado directamente. Si viene por un grupo, no pasa nada; si no tienes Owner, fallara al asignar permisos, en el paso del Key Vault."
   fi
 
   az extension add --name containerapp --upgrade -y -o none 2>/dev/null || true
