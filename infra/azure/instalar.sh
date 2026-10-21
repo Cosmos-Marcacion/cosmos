@@ -248,7 +248,7 @@ comprobar() {
   local roles
   roles=$(az role assignment list --assignee "$(yo)" --scope "/subscriptions/$SUB" --include-inherited --query "[].roleDefinitionName" -o tsv 2>/dev/null || true)
   if ! grep -qx Owner <<< "$roles"; then
-    info "AVISO: no veo el rol Owner directo (puede venir de un grupo). Sin Owner fallaran las asignaciones de roles."
+    info "AVISO: no veo el rol Owner asignado directamente. Si viene por un grupo, no pasa nada; si no tienes Owner, fallara al asignar permisos (paso 7)."
   fi
 
   az extension add --name containerapp --upgrade -y -o none 2>/dev/null || true
@@ -277,9 +277,15 @@ comprobar() {
 proveedores() {
   paso "Proveedores de recursos (paso 2)"
   local p ps="Microsoft.App Microsoft.OperationalInsights Microsoft.ContainerRegistry Microsoft.KeyVault Microsoft.DocumentDB Microsoft.Web Microsoft.Storage Microsoft.Insights Microsoft.ManagedIdentity"
-  for p in $ps; do az provider register --namespace "$p" -o none; done
+  # register devuelve enseguida y avisa con un WARNING que la activacion sigue:
+  # se oculta y se espera aqui, que dice que falta.
+  for p in $ps; do az provider register --namespace "$p" -o none 2> /dev/null; done
   registrado() { [ "$(az provider show -n "$1" --query registrationState -o tsv)" = Registered ]; }
-  for p in $ps; do reintentar 40 15 registrado "$p" || error "el proveedor $p no termina de registrarse"; done
+  for p in $ps; do
+    registrado "$p" && continue
+    info "Activando $p en la suscripcion (la primera vez tarda de 2 a 10 min; no cortar)..."
+    reintentar 40 15 registrado "$p" || error "el proveedor $p no termina de registrarse"
+  done
   info "Proveedores registrados."
 }
 
