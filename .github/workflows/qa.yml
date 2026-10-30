@@ -27,6 +27,9 @@ concurrency:
 
 env:
   NODE_VERSION: '22'
+  # Los tests de fechas construyen horas locales y comparan con la hora de Lima;
+  # el runner va en UTC y sin esto cada fecha sale un dia antes.
+  TZ: America/Lima
 
 jobs:
   # ---------------------------------------------------------------- backend

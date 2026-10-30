@@ -47,7 +47,7 @@ rules:
           regex: (?i).*(secret|passwd|password|apikey|api_key|accesskey|private_key).*
       - metavariable-regex:
           metavariable: $VALUE
-          regex: ^(?!test|fake|dummy|example|changeme|placeholder).{12,}$
+          regex: ^(?!test|fake|dummy|example|changeme|placeholder)[^ ]{12,}$
     paths:
       exclude:
         - "*.spec.ts"

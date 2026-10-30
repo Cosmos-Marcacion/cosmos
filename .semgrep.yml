@@ -103,7 +103,9 @@ rules:
           regex: (?i).*(secret|passwd|password|apikey|api_key|accesskey|private_key).*
       - metavariable-regex:
           metavariable: $VALUE
-          regex: ^(?!test|fake|dummy|example|changeme|placeholder).{12,}$
+          # Sin espacios: un secreto no los lleva y un mensaje al usuario si
+          # ("La contraseña debe tener al menos 8 caracteres...").
+          regex: ^(?!test|fake|dummy|example|changeme|placeholder)[^ ]{12,}$
     paths:
       exclude:
         - "*.spec.ts"
