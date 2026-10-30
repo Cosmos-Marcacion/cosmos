@@ -47,7 +47,7 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/mongoose": "^11.0.3",
     "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-express": "^11.2.8",
     "@nestjs/serve-static": "^5.0.3",
     "@nestjs/swagger": "^11.2.0",
     "@simplewebauthn/server": "^13.1.2",
@@ -69,8 +69,8 @@
     "face-api.js": "^0.22.2",
     "fflate": "^0.8.2",
     "mongoose": "^8.16.1",
-    "multer": "^2.0.2",
-    "nodemailer": "^7.0.6",
+    "multer": "^2.5.0",
+    "nodemailer": "^10.3.1",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.2.2",
@@ -106,5 +106,10 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
+  },
+  "overrides": {
+    "node-fetch": "^2.7.0",
+    "multer": "^2.5.0",
+    "brace-expansion@^1": "^1.1.21"
   }
 }

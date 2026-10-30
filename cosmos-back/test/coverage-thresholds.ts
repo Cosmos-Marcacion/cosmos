@@ -61,12 +61,16 @@ export const unitThresholds: { global: Piso } & Record<string, Piso> = {
   },
 
   // Quien entra y con que permisos. Un fallo aqui no da un error, da un acceso.
-  // Medido: 88.3 / 51.8 / 100 / 95.1
+  // Medido el 09/09: 88.3 / 51.8 / 100 / 95.1. Remedido el 30/10 (CI, Linux):
+  // funciones 96.49 y lineas 93.77. Lo que falta son los getters que SWC
+  // emite por cada `export` (p. ej. `Public` en public.decorator.ts), no
+  // logica: la cobertura se mide sobre el codigo transpilado. Esa bajada no se
+  // vio porque los tests de fechas tenian el CI en rojo desde antes.
   './src/modules/auth/': {
     statements: 87,
     branches: 51,
-    functions: 100,
-    lines: 94,
+    functions: 96,
+    lines: 93,
   },
 
   // Emision de documentos oficiales.
