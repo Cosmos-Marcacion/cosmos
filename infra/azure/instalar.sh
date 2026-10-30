@@ -278,6 +278,9 @@ comprobar() {
   az extension add --name containerapp --upgrade -y -o none 2>/dev/null || true
   az bicep version > /dev/null 2>&1 || az bicep install
 
+  # Sin el proveedor registrado, check-name responde "Subscription ... not found".
+  proveedores
+
   # Nombres globales: mejor saberlo ahora que a mitad de instalacion.
   nombre_global estricto "el registro" "$ACR" acr_existe az acr check-name -n "$ACR"
   nombre_global estricto "la cuenta de almacenamiento" "$ST" st_existe az storage account check-name -n "$ST"
@@ -858,7 +861,6 @@ resumen() {
 
 instalar() {
   comprobar
-  proveedores
   grupos
   base
   base_datos qa
