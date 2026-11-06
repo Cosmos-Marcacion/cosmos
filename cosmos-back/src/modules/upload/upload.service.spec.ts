@@ -226,4 +226,98 @@ describe('UploadService', () => {
       expect(llamadasAGet()).toHaveLength(0)
     })
   })
+
+  describe('Azure Blob (STORAGE_PROVIDER=azure)', () => {
+    const azure: Record<string, string> = {
+      STORAGE_PROVIDER: 'azure',
+      AZURE_STORAGE_ACCOUNT: 'stcosmosckarchivos',
+      AZURE_STORAGE_CONTAINER: 'archivos',
+      AZURE_CLIENT_ID: 'id-cliente',
+      IDENTITY_ENDPOINT: 'http://localhost:42356/msi/token',
+      IDENTITY_HEADER: 'cabecera',
+    }
+    const aws = { ...config }
+    const BLOB = 'https://stcosmosckarchivos.blob.core.windows.net/archivos'
+    const token = () => ({ data: { access_token: 'tok', expires_on: String(Math.floor(Date.now() / 1000) + 3600) } })
+
+    beforeEach(() => {
+      // Sin variables de AWS: en Azure no deben hacer falta.
+      for (const k of Object.keys(aws)) delete config[k]
+      Object.assign(config, azure)
+      ;(axios.get as jest.Mock).mockResolvedValue(token())
+      ;(axios.put as jest.Mock).mockResolvedValue({ status: 201 })
+      ;(axios.delete as jest.Mock).mockResolvedValue({ status: 202 })
+    })
+    afterEach(() => {
+      for (const k of Object.keys(azure)) delete config[k]
+      delete config.AWS_S3_KEY_PREFIX
+      Object.assign(config, aws)
+    })
+
+    it('sube con PUT al contenedor y devuelve la url publica codificada', async () => {
+      const url = await service.uploadImage(
+        { buffer: Buffer.from('jpeg'), mimetype: 'image/jpeg' } as Express.Multer.File,
+        'fotos/mi foto.jpg'
+      )
+
+      expect(url).toBe(`${BLOB}/fotos/mi%20foto.jpg`)
+      const [destino, cuerpo, opciones] = (axios.put as jest.Mock).mock.calls[0]
+      expect(destino).toBe(url)
+      expect(Buffer.isBuffer(cuerpo)).toBe(true)
+      expect(opciones.headers).toMatchObject({
+        Authorization: 'Bearer tok',
+        'x-ms-blob-type': 'BlockBlob',
+        'x-ms-blob-content-type': 'image/jpeg',
+      })
+      expect(send).not.toHaveBeenCalled()
+    })
+
+    it('pide el token a la identidad indicada y lo reutiliza', async () => {
+      await service.uploadImageBuffer(Buffer.from('a'), 'a.png')
+      await service.uploadImageBuffer(Buffer.from('b'), 'b.png')
+
+      const pedidas = llamadasAGet().filter(c => c[0] === azure.IDENTITY_ENDPOINT)
+      expect(pedidas).toHaveLength(1)
+      expect(pedidas[0][1]).toMatchObject({
+        params: { resource: 'https://storage.azure.com/', client_id: 'id-cliente' },
+        headers: { 'X-IDENTITY-HEADER': 'cabecera' },
+      })
+    })
+
+    it('sin identidad administrada falla con contexto', async () => {
+      delete config.IDENTITY_ENDPOINT
+
+      await expect(service.uploadImageBuffer(Buffer.from('x'), 'k.png')).rejects.toThrow(
+        /Error al subir el archivo a Azure Blob: sin identidad administrada/
+      )
+    })
+
+    it('aplica el prefijo de ambiente', async () => {
+      config.AWS_S3_KEY_PREFIX = 'qa/'
+
+      await expect(service.uploadImageBuffer(Buffer.from('x'), 'qr-1.png')).resolves.toBe(`${BLOB}/qa/qr-1.png`)
+    })
+
+    it('borra con DELETE y acepta que ya no exista', async () => {
+      await expect(service.deleteFile('qr-1.png')).resolves.toEqual({
+        message: 'Archivo qr-1.png eliminado exitosamente.',
+      })
+      const [destino, opciones] = (axios.delete as jest.Mock).mock.calls[0]
+      expect(destino).toBe(`${BLOB}/qr-1.png`)
+      expect(opciones.validateStatus(404)).toBe(true)
+      expect(opciones.validateStatus(403)).toBe(false)
+    })
+
+    it('el proxy admite la cuenta configurada y S3, y ninguna otra', async () => {
+      expect(service.isStoredFileUrl(`${BLOB}/firma.png`)).toBe(true)
+      expect(service.isStoredFileUrl(S3_IMAGEN)).toBe(true)
+      expect(service.isStoredFileUrl('https://otracuenta.blob.core.windows.net/archivos/firma.png')).toBe(false)
+      expect(service.isStoredFileUrl('http://stcosmosckarchivos.blob.core.windows.net/archivos/firma.png')).toBe(false)
+    })
+  })
+
+  it('sin STORAGE_PROVIDER sigue en S3', () => {
+    expect(service.provider).toBe('s3')
+    expect(service.isStoredFileUrl('https://stcosmosckarchivos.blob.core.windows.net/archivos/x.png')).toBe(false)
+  })
 })

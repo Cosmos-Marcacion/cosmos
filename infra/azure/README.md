@@ -69,6 +69,10 @@ lista de pendientes del final.
 | `documentdb.bicep` | Cluster DocumentDB |
 | `deploy-revision.sh` | Despliegue con revision a 0 %, prueba y promocion; lo usa `deploy.yml` |
 | `mongo-backup/` | Imagen del respaldo semanal y del ping de QA |
+| `migrar-archivos.sh` | Pasa firmas, fotos y QR de S3 a Azure Blob (`st<PROY>archivos`), cambia la API y reescribe las urls; `revertir` lo deshace |
+| `archivos/` | Inventario y reescritura de urls (los usa `migrar-archivos.sh` con mongosh) |
+| `lib-mongo.sh` | Funciones comunes de los dos scripts de migracion |
+| `migrar-datos.sh` | Copia la base `cosmos` de Atlas a DocumentDB (`qa` = ensayo, `prod` = corte), con indices y conteos |
 | `conteos.js` | Validacion de datos origen contra destino (paso 20.4) |
 | `../../.github/workflows/deploy.yml` | CI/CD: gates de `qa.yml`, despues backend y panel |
 

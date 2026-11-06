@@ -22,6 +22,11 @@ export ID_PROD="id-$PROY-api-prod" ID_QA="id-$PROY-api-qa" ID_RESPALDO="id-$PROY
 export DB_PROD="docdb-$PROY-prod" DB_QA="docdb-$PROY-qa"
 export SWA_PROD="swa-$PROY-prod" SWA_QA="swa-$PROY-qa"
 export ST="st${PROY}respaldos"
+# Archivos de la app (firmas, fotos, QR), en lugar de S3. Lectura publica por
+# blob, como hoy en S3: el panel los muestra con <img>. Un contenedor por
+# ambiente, y cada API solo puede escribir en el suyo. Ver migrar-archivos.sh.
+export ST_ARCHIVOS="st${PROY}archivos"
+export CONT_ARCHIVOS_PROD="archivos" CONT_ARCHIVOS_QA="archivos-qa"
 export JOB_BACKUP="job-respaldo-semanal" JOB_PING="job-ping-qa"
 export ID_GITHUB="id-github-deploy"
 
