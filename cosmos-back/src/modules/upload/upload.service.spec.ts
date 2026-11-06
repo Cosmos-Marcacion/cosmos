@@ -308,7 +308,7 @@ describe('UploadService', () => {
       expect(opciones.validateStatus(403)).toBe(false)
     })
 
-    it('el proxy admite la cuenta configurada y S3, y ninguna otra', async () => {
+    it('el proxy admite la cuenta configurada y S3, y ninguna otra', () => {
       expect(service.isStoredFileUrl(`${BLOB}/firma.png`)).toBe(true)
       expect(service.isStoredFileUrl(S3_IMAGEN)).toBe(true)
       expect(service.isStoredFileUrl('https://otracuenta.blob.core.windows.net/archivos/firma.png')).toBe(false)
