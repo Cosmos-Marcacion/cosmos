@@ -65,11 +65,11 @@ export class UploadService {
     return `${prefix}${key}`
   }
 
-  async uploadImageBuffer(file: Buffer, rawKey: string) {
+  uploadImageBuffer(file: Buffer, rawKey: string): Promise<string> {
     return this.put(file, rawKey, 'image/png')
   }
 
-  async uploadImage(file: Express.Multer.File, rawKey: string) {
+  uploadImage(file: Express.Multer.File, rawKey: string): Promise<string> {
     return this.put(file.buffer, rawKey, file.mimetype)
   }
 
