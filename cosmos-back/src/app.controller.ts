@@ -5,12 +5,15 @@ import { AppService } from './app.service';
 import { Response } from 'express';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { ConfigService } from '@nestjs/config';
+import { storageProvider } from './modules/upload/upload.service';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
     @InjectConnection() private readonly db: Connection,
+    private readonly config: ConfigService,
   ) { }
 
   @Get()
@@ -22,10 +25,18 @@ export class AppController {
    * Sonda de vida: responde mientras el proceso este en pie, aunque la base no.
    * Si fallara con la base caida, Azure reiniciaria todas las replicas por un
    * corte de red que no se arregla reiniciando.
+   *
+   * `storage` dice donde se guardan los archivos (s3 o azure): lo consulta
+   * infra/azure/migrar-archivos.sh antes de reescribir las urls.
    */
   @Get('health')
   health() {
-    return { status: 'ok', db: this.dbState(), timestamp: new Date().toISOString() };
+    return {
+      status: 'ok',
+      db: this.dbState(),
+      storage: storageProvider(this.config),
+      timestamp: new Date().toISOString(),
+    };
   }
 
   /**

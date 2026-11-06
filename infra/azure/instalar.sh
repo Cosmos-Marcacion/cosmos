@@ -440,6 +440,14 @@ app() { # <prod|qa> <archivo.env>
     fi
   done < <(leer_env "$file")
 
+  # Las variables del almacenamiento de archivos las pone migrar-archivos.sh
+  # en la app, no estan en el .env: se conservan para que relanzar el
+  # instalador no devuelva la API a S3.
+  local guardadas
+  guardadas=$(az containerapp show -g "$RG" -n "$APP" -o json 2>/dev/null \
+    | jq -r '.properties.template.containers[0].env[]? | select(.name | test("^(STORAGE_PROVIDER|STORAGE_KEY_PREFIX|AZURE_STORAGE_ACCOUNT|AZURE_STORAGE_CONTAINER|AZURE_CLIENT_ID)$")) | select(.value != null) | "\(.name)=\(.value)"' || true)
+  while IFS= read -r kv; do [ -n "$kv" ] && plain+=("$kv"); done <<< "$guardadas"
+
   swa_host=$(az staticwebapp show -g "$RG" -n "$SWA" --query defaultHostname -o tsv)
   plain+=("NODE_ENV=production" "PORT=$API_PORT" "TZ=America/Lima"
           "WEBAUTHN_RP_ID=$FRONT" "WEBAUTHN_ORIGIN=https://$FRONT"

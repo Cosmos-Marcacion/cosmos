@@ -10,7 +10,7 @@
     ]
   },
   "globalHeaders": {
-    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.amazonaws.com https://apicheckin.cosmos.com.pe https://api-qa.cosmos.com.pe; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://apicheckin.cosmos.com.pe https://api-qa.cosmos.com.pe; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.amazonaws.com https://stcosmosckarchivos.blob.core.windows.net https://apicheckin.cosmos.com.pe https://api-qa.cosmos.com.pe; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://apicheckin.cosmos.com.pe https://api-qa.cosmos.com.pe; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "strict-origin-when-cross-origin",
